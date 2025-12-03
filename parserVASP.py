@@ -1,0 +1,181 @@
+#!/usr/bin/env python
+
+#
+# VASP parsers
+#
+
+import re
+import sys
+import os.path
+from math import sqrt
+import numpy as np
+from RamanLib import flatten, MAT_m_VEC, T
+
+def parsePOSCAR(poscar_fh):
+    # modified subroutine from phonopy 1.8.3 (New BSD license)
+    #
+    poscar_fh.seek(0) # just in case
+    lines = poscar_fh.readlines()
+    #
+    scale = float(lines[1])
+    if scale < 0.0:
+        vol = -scale
+        cell = np.zeros((3, 3))
+        norm = np.zeros((3))
+        for i in range(3):
+            # Get the first three numbers from the line
+            cell[i, :] = [float(x) for x in lines[i+2].split()[0:3]]
+        #
+        # set lattice constant, reset it later
+        alat = np.power(vol/np.linalg.det(cell), 1./3)
+        for i in range(3):
+            # Get the first three numbers from the line
+            cell[i, :] = [float(x) * alat for x in lines[i+2].split()[0:3]]
+            norm[i] = np.linalg.norm(cell[i, :])
+        #      
+        b = cell
+    #
+    else:
+        b = []
+        for i in range(2, 5):
+            b.append([float(x)*scale for x in lines[i].split()[:3]])
+        #
+        vol = b[0][0]*b[1][1]*b[2][2] + b[1][0]*b[2][1]*b[0][2] + b[2][0]*b[0][1]*b[1][2] - \
+              b[0][2]*b[1][1]*b[2][0] - b[2][1]*b[1][2]*b[0][0] - b[2][2]*b[0][1]*b[1][0]
+        #
+    #
+    try:
+        num_atoms = [int(x) for x in lines[5].split()]
+        line_at = 6
+    except ValueError:
+        num_atoms = [int(x) for x in lines[6].split()]
+        line_at = 7
+    atom_types = [str(x) for x in lines[line_at-2].split()]
+    nat = sum(num_atoms)
+    #
+    seldyn = 0
+    if lines[line_at][0].lower() == 's':
+        seldyn = 1
+        line_at += 1
+    #
+    if (lines[line_at][0].lower() == 'c' or lines[line_at][0].lower() == 'k'):
+        is_scaled = False
+    else:
+        is_scaled = True
+    #
+    line_at += 1
+    #
+    positions = []
+    for i in range(line_at, line_at + nat):
+        pos = [float(x) for x in lines[i].split()[:3]]
+        #
+        if is_scaled:
+            pos = MAT_m_VEC(T(b), pos)
+        #
+        positions.append(pos)
+    #
+    poscar_header = ''.join(lines[1:line_at-1-seldyn]) # will add title and 'Cartesian' later
+    return nat, vol, b, positions, poscar_header, num_atoms, atom_types
+#
+
+def parseOUTCAR(outcar_fh, nat):
+    eigvals = [ 0.0 for i in range(nat*3) ]
+    eigvecs = [ 0.0 for i in range(nat*3) ]
+    norms   = [ 0.0 for i in range(nat*3) ]
+    #
+    outcar_fh.seek(0) # just in case
+    while True:
+        line = outcar_fh.readline()
+        if not line:
+            break
+        #
+        if "Eigenvectors after division by SQRT(mass)" in line:
+            outcar_fh.readline() # empty line
+            outcar_fh.readline() # Eigenvectors and eigenvalues of the dynamical matrix
+            outcar_fh.readline() # ----------------------------------------------------
+            outcar_fh.readline() # empty line
+            #
+            for i in range(nat*3): # all frequencies should be supplied, regardless of those requested to calculate
+                outcar_fh.readline() # empty line
+                p = re.search(r'^\s*(\d+).+?([\.\d]+) cm-1', outcar_fh.readline())
+                eigvals[i] = float(p.group(2))
+                # look for imaginary modes
+                if p.group(0)[7] == 'i':
+                    eigvals[i] = -eigvals[i]
+                #
+                outcar_fh.readline() # X         Y         Z           dx          dy          dz
+                eigvec = []
+                #
+                for j in range(nat):
+                    tmp = outcar_fh.readline().split()
+                    # stupid VASP spacing bug...
+                    if len(tmp) < 6:
+                        tmp3 = []
+                        for s in range(len(tmp)):
+                            if "-" in tmp[s]:
+                                tmp2 = tmp[s].split("-")
+                                if len(tmp2) == 2:
+                                    tmp2[1] = "-"+tmp2[1]
+                                elif len(tmp2) == 3:
+                                    tmp2[1] = "-"+tmp2[1]
+                                    tmp2[2] = "-"+tmp2[2]
+                            else:
+                                tmp2 = tmp[s]
+                            #
+                            tmp3.append(tmp2)
+                        #
+                        tmp = flatten(tmp3)
+                        tmp = [i for i in tmp if i != ""] 
+                    #
+                    #tmp = re.split("[\s-]+", outcar_fh.readline())
+                    #
+                    eigvec.append([ float(tmp[x]) for x in range(3,6) ])
+                    #
+                eigvecs[i] = eigvec
+                norms[i] = sqrt( sum( [abs(x)**2 for sublist in eigvec for x in sublist] ) )
+            #
+            return eigvals, eigvecs, norms
+        #
+    print("[get_modes_from_OUTCAR]: ERROR Couldn't find 'Eigenvectors after division by SQRT(mass)' in OUTCAR. Use 'NWRITE=3' in INCAR. Exiting...")
+    sys.exit(1)
+#
+
+def VASPoptics(vasprun, breakout):
+    version = 6
+    # tested for VASP 6.3.2
+    if version == 6:
+        f = open("grep_optics.sh", 'w')
+        f.write(
+"#!/bin/bash\n"
+"awk 'BEGIN{i=0} /<dielectricfunction comment=\"density-density\">/, /<\/dielectricfunction>/ \\\n"
+"                 {if ($1==\"<r>\") {w[i]=$2 ; xx[i]=$3 ; yy[i]=$4 ; zz[i]=$5 ; xy[i]=$6 ; yz[i]=$7 ; zx[i]=$8 ; i=i+1}} \\\n"
+"     END{for (j=0;j<i;j++) print w[j],xx[j],yy[j],zz[j],xy[j],yz[j],zx[j]}' ${1} > optics.dat")
+        f.close()
+        os.system("bash grep_optics.sh "+vasprun)
+        if os.stat("optics.dat").st_size <= 10:
+            #print("[grep_optics]: no output was found, switching to VASP 5")
+            version = 5
+        #
+    #
+    # tested for VASP 5.4.4
+    if version == 5:
+        f = open("grep_optics.sh", 'w')
+        f.write(
+"#!/bin/bash\n"
+"awk 'BEGIN{i=0} /<dielectricfunction>/, /<\/dielectricfunction>/ \\\n"
+"                 {if ($1==\"<r>\") {w[i]=$2 ; xx[i]=$3 ; yy[i]=$4 ; zz[i]=$5 ; xy[i]=$6 ; yz[i]=$7 ; zx[i]=$8 ; i=i+1}} \\\n"
+"     END{for (j=0;j<i;j++) print w[j],xx[j],yy[j],zz[j],xy[j],yz[j],zx[j]}' ${1} > optics.dat")
+        f.close()
+        os.system("bash grep_optics.sh "+vasprun)
+    #
+    if os.stat("optics.dat").st_size <= 10:
+        print("[grep_optics]: no valid VASP output was found for file "+vasprun)
+        breakout2 = 1
+    #
+    elif breakout == 1:
+        breakout2 = 1
+    else:
+        breakout2 = 0
+    #
+    return breakout2
+#
