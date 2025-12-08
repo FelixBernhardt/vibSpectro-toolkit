@@ -17,11 +17,11 @@ parser.add_argument("-m", "--modeList", type=str, default="",\
                      example: '3-6 8 11-15' will consider modes 3, 4, 5, 6, 8, 11, 12, 13, 14, 15")
 
 parser.add_argument("-d", "--displace", action="store_true",\
-                    help="add the ionic displacements according to the phonon mode..")
+                    help="add the ionic displacements according to the phonon modes provided by the --modeList option.")
 parser.add_argument("-t", "--tensors", action="store_true",\
                     help="Calculate the Raman tensors of the phonon modes provided by the --modeList option")
 parser.add_argument("-s", "--spectrum", action="store_true",\
-                    help="Calculate the Raman spectrum for back- and right angle scattering of all phonon modes provided by the --modeList option.")
+                    help="Calculate the Raman spectrum for all polarization directions of all phonon modes provided by the --modeList option.")
 parser.add_argument("-p", "--plot", action="store_true",\
                     help="plot the Raman spectrum of the configuration specified using the --porto option. Only the phonon modes considered for the calculation of the spectrum are considered.")
 
@@ -30,15 +30,14 @@ parser.add_argument("-w", "--laser", type=float, default=2.0,\
 parser.add_argument("-tp", "--temperature", type=float, default=300.0,\
                     help="The temperature used for calculating the spectrum (K)")
 parser.add_argument("-sm", "--smearing", type=float, default=5.0,\
-                    help="The smearing used for calculating the spectrum")
+                    help="The smearing used for calculating the spectrum (cm^-1)")
+parser.add_argument("-sz", "--stepsize", type=float, default=0.001,\
+                    help="The prefactor for the displacements used for generating the input files (unit?)")
 parser.add_argument("-pt", "--porto", type=str, default="xx",\
                     help="The configuration used when plotting the spectrum using porto's notation\
                          .(xx). , where \"xx\" can be set to backscattering or right angle scattering.\
                          A spatially averaged spectrum can be plotted by setting to \"avg\".")
-
-parser.add_argument("-PI", "--programIN", type=str, default="VASP",\
-                    help="The software package to read phonon modes and structural information from")
-parser.add_argument("-PO", "--programOUT", type=str, default="VASP",\
+parser.add_argument("-P", "--program", type=str, default="VASP",\
                     help="The software package to write the created cells into and read the dielectric function from")
 
 

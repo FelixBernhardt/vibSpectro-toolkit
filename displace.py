@@ -6,31 +6,14 @@
 
 import sys
 import numpy as np
-from parserVASP import parsePOSCAR, parseOUTCAR, writePOSCAR
+#from parserVASP import writePOSCAR
+from parserPhonopy import parsePhonopy
 
-def displace(modeList, disps, stepSize, programIN, programOUT):
+def displace(modeList, stepsize, program):
+    disps = [-1, 1]
     # get phonon modes and unit cell
-    if programIN == "VASP":
-        outcar_fh = open("OUTCAR", "r")
-        eigvals, eigvecs, norms = parseOUTCAR(outcar_fh)
-        outcar_fh.close()
-    #
-    elif programIN == "QE":
-        pw_fh = open("scf.out", "r")
+    eigvals, eigvecs, norms, qpoint, basis, nat, elements, pos = parsePhonopy()
 
-        pw_fh.close()
-        print("[displace]: Format not implemented, exiting")
-    #
-    elif programIN == "phonopy":
-        from parserPhonopy import parsePhonopy
-        phonopy_fh = open("qpoints.yaml", "r")
-        eigvals, eigvecs, norms = parsePhonopy(phonopy_fh)
-        phonopy_fh.close()
-
-    else:
-        print("[displace]: Format not implemented, exiting")
-    #
-    
     # check
     if 3*nat < np.max(modeList):
         print("[displace]: invalid mode specified, check your input files for consistency, exiting...")
@@ -44,9 +27,9 @@ def displace(modeList, disps, stepSize, programIN, programOUT):
         eigvec = eigvecs[mode-1]
         norm = norms[mode-1]
         file="mode"+str(mode)
-        if programOUT == "VASP":
-            writePOSCAR(mode, stepSize, norm, eigvec, pos, file)
-        elif programOUT == "QE":
+        if program == "VASP":
+            writePOSCAR(mode, stepsize, norm, eigvec, basis, nat, elements, pos, file)
+        elif program == "QE":
             print("[displace]: Format not implemented, exiting")
             sys.exit(1)
         else:

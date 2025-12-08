@@ -11,10 +11,43 @@ import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 import matplotlib.patches as mpatches
 from RamanLib import *
+from parserPhonopy import parsePhonopy
 
 def plotSpectrum(w0, porto):
     print("[plotSpectrum]: Plotting Raman spectrum")
     
+    list(reversed(frequencies)), eigvecs_new, norms, qpoint = parsePhonopy("qpoints.yaml")
+
+    if qpoint[0] != 0.0 and qpoint[1] != 0.0 and qpoint[2] != 0.0:
+        ki = "."
+        ko = "."
+
+    if qpoint[0] > 0.0:
+        ki = "x"
+    elif qpoint[0] < 0.0:
+        ki = "-x"
+    if qpoint[1] > 0.0 and qpoint[0] != 0.0:
+        ko = "y"
+    elif qpoint[1] < 0.0 and qpoint[0] != 0.0:
+        ko = "-y"
+    if qpoint[1] > 0.0 and qpoint[2] != 0.0:
+        ki = "y"
+    elif qpoint[1] < 0.0 and qpoint[2] != 0.0:
+        ki = "-y"
+    if qpoint[2] > 0.0 and qpoint[0] != 0.0:
+        ko = "z"
+    elif qpoint[2] < 0.0 and qpoint[0] != 0.0:
+        ko = "-z"
+    if qpoint[2] > 0.0 and qpoint[1] != 0.0:
+        ko = "z"
+    elif qpoint[2] < 0.0 and qpoint[1] != 0.0:
+        ko = "-z"
+    if ( qpoint[1] == 0.0 and qpoint[2] == 0.0 ) \
+       or ( qpoint[0] == 0.0 and qpoint[2] == 0.0 ) \
+       or ( qpoint[0] == 0.0 and qpoint[1] == 0.0):
+        ko = ki
+    
+
     if porto == None:
         porto = "xx"
     elif str(porto) == "yx":
@@ -27,12 +60,13 @@ def plotSpectrum(w0, porto):
         print("[plotSpectrum]: ERROR: invalid polarization direction specified, exiting...")
         sys.exit(1)
         #
-    print("[plotSpectrum]: plotting .("+porto+"). configuration")
+    print("[plotSpectrum]: plotting "+ki+"("+porto+")"+ko+" configuration")
         
     fontsize=12
     dft_raw_data = np.loadtxt("Intensity_"+str(porto)+".dat") # format: wavelength (cm-1) Intensity
+    dict = {"xx": 1, "yy": 2, "zz": 3, "xy": 4, "yz": 5, "xz": 6, "avg": 7}
     x_data = [x[0] for x in dft_raw_data]
-    y_data = [x[1] for x in dft_raw_data]
+    y_data = [x[dict[porto]] for x in dft_raw_data]
     y_max = np.max(y_data)
 
     # print the peak positions
@@ -42,10 +76,17 @@ def plotSpectrum(w0, porto):
     # 
 
     # plot
+    kis = ki
+    kos = ko
+    if ki[0] == "-":
+        kis = "$\\overline{\\rm{"+ki[1]+"}}$"
+    if ko[0] == "-":
+        kos = "$\\overline{\\rm{"+ko[1]+"}}$"
+    #
     ax = plt.subplot()
     ax.plot(x_data, y_data/y_max, color="black", label="DFT")
     ax.legend(fontsize=fontsize)
-    ax.set_title("Raman: a("+str(porto)+")$\\overline{\\rm{a}}$ polarization")
+    ax.set_title("Raman: "+kis+"("+str(porto)+")"+kos+" polarization")
     ax.set_xlim(0,1000)
     ax.set_ylim(0,1.1)
     ax.set_yticks([])
@@ -53,7 +94,7 @@ def plotSpectrum(w0, porto):
     ax.set_xticklabels([0, 200, 400, 600, 800, 1000])
     ax.set_xlabel("Wavenumber (cm$^{-1}$)")
     ax.set_ylabel("Intensity (arb. units)", fontsize=fontsize)
-    plt.savefig("Raman_a"+str(porto)+"a.pdf")
+    plt.savefig("Raman_"+ki+str(porto)+ko+"_"+w0+"eV.pdf")
     print("[plotSpectrum]: Done.")
     sys.exit(1)    
 #

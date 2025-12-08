@@ -38,67 +38,6 @@ def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1, l
         print("\n")
 #
 
-
-# masses in atomic units
-masses = {'H':	1.00797, 'He':	4.00260, 'Li':	6.941,
-         'Be':	9.01218, 'B':	10.81, 'C':	12.011,
-         'N':	14.0067, 'O':	15.9994, 'F': 18.998403,
-         'Ne':	20.179, 'Na':	22.98977, 'Mg':	24.305,
-         'Al':	26.98154, 'Si':	28.0855, 'P':	30.97376,
-         'S':	32.06, 'Cl':	35.453, 'K':	39.0983,
-         'Ar':	39.948, 'Ca':	40.08, 'Sc':	44.9559,
-         'Ti':	47.90, 'V':	50.9415, 'Cr':	51.996,
-         'Mn':	54.9380, 'Fe':	55.847, 'Ni':	58.70,
-         'Co':	58.9332, 'Cu':	63.546, 'Zn':	65.38,
-         'Ga':	69.72, 'Ge':	72.59, 'As':	74.9216,
-         'Se':	78.96, 'Br':	79.904, 'Kr':	83.80,
-         'Rb':	85.4678, 'Sr':	87.62, 'Y':	88.9059,
-         'Zr':	91.22, 'Nb':	92.9064, 'Mo':	95.94,
-         'Tc':	98, 'Ru':	101.07, 'Rh':	102.9055,
-         'Pd':	106.4, 'Ag':	107.868, 'Cd':	112.41,
-         'In':	114.82, 'Sn':	118.69, 'Sb':	121.75,
-         'I':	126.9045, 'Te':	127.60, 'Xe':	131.30,
-         'Cs':	132.9054, 'Ba':	137.33, 'La':	138.9055,
-         'Ce':	140.12, 'Pr':	140.9077, 'Nd':	144.24,
-         'Pm':	145, 'Sm':	150.4, 'Eu':	151.96,
-         'Gd':	157.25, 'Tb':	158.9254, 'Dy':	162.50,
-         'Ho':	164.9304, 'Er':	167.26, 'Tm':	168.9342,
-         'Yb':	173.04, 'Lu':	174.967, 'Hf':	178.49,
-         'Ta':	180.9479, 'W':	183.85, 'Re':	186.207,
-         'Os':	190.2, 'Ir': 192.22, 'Pt':	195.09,
-         'Au':	196.9665, 'Hg':	200.59, 'Tl':	204.37,
-         'Pb':	207.2, 'Bi':	208.9804, 'Po':	209,
-         'At':	210, 'Rn':	222, 'Fr':	223,
-         'Ra':	226.0254, 'Ac':	227.0278, 'Pa':	231.0359,
-         'Th':	232.0381, 'Np':	237.0482, 'U':	238.029}
-
-def flatten(t):
-    a = []
-    for sublist in t:
-        if isinstance(sublist, str):
-            a.append(sublist)
-        else:
-            for item in sublist:
-                a.append(item)
-            #
-        #
-    #
-    return a
-#
-
-def MAT_m_VEC(m, v):
-    p = [ 0.0 for i in range(len(v)) ]
-    for i in range(len(m)):
-        assert len(v) == len(m[i]), 'Length of the matrix row is not equal to the length of the vector'
-        p[i] = sum( [ m[i][j]*v[j] for j in range(len(v)) ] )
-    return p
-#
-
-def T(m):
-    p = [[ m[i][j] for i in range(len( m[j] )) ] for j in range(len( m )) ]
-    return p
-#
-
 # read in dielectric function from grep_optics.sh
 def read_optics(infile):
     with open(infile) as f:
@@ -128,44 +67,6 @@ def read_optics(infile):
     #Re_fit = savgol_filter(Re, 51, 5) # window size 51, polynomial order 3
     #Im_fit = savgol_filter(Im, 51, 5)
     return np.array(w), np.array(Im), np.array(Re)
-#
-
-def align_omega(w1, w2, Im1_tmp, Re1_tmp, Im2_tmp, Re2_tmp):
-    w = np.linspace(0, np.min([w1[-1], w2[-1]]), num=np.min([len(w1), len(w2)]))
-    Im1 = [[],[],[],[],[],[]]
-    Re1 = [[],[],[],[],[],[]]
-    Im2 = [[],[],[],[],[],[]]
-    Re2 = [[],[],[],[],[],[]]
-    for j in range(6):
-        Im1[j] = np.interp(w, w1, Im1_tmp[j])
-        Re1[j] = np.interp(w, w1, Re1_tmp[j])
-        Im2[j] = np.interp(w, w2, Im2_tmp[j])
-        Re2[j] = np.interp(w, w2, Re2_tmp[j])
-    #
-    return w, Im1, Re1, Im2, Re2
-#
-
-def calc_raman(mode, eigval, w, Im1, Re1, Im2, Re2):
-    # get the derivative with respect to phonon-mode
-    I = [[],[],[],[],[],[]]
-    outfile = "alpha_"+str(mode)+".dat"
-    f = open(outfile, "w")
-    f.write("# Raman tensor\n")
-    f.write("# mode: " +str(mode)+"   phonon freq: "+str(eigval)+"\n")
-    f.write("# omega(eV)    xx        yy        zz        xy        yz        xz      avg^2\n")
-    for i in range(1,len(w)-1):
-        for j in range(6):
-            I[j].append(complex(Re1[j][i]-Re2[j][i], Im1[j][i]-Im2[j][i]))
-        #
-        # get placzeck-invariants
-        G0 = np.abs(I[0][i-1] + I[1][i-1] + I[2][i-1])**2/3.0
-        #G1 = ((I[][i-1] - I[0][i-1])**2+(I[][i-1]-I[][i-1])**2+(I[][i-1]-I[][i-1])**2)/2.0 # only if dielectric tensor not symmetric, not implemented!
-        G1 = 0
-        G2 = (np.abs(I[0][i-1] - I[1][i-1])**2 + np.abs(I[0][i-1] - I[2][i-1])**2 + np.abs(I[1][i-1] - I[2][i-1])**2)/3.0 + 2*(np.abs(I[3][i-1])**2 + np.abs(I[4][i-1])**2 + np.abs(I[5][i-1])**2)
-        avg = np.sqrt(10*G0 + 5*G1 + 7*G2) # parallel and perpendicular components added together
-        f.write("{:5.5f} {:.3e} {:.3e} {:.3e} {:.3e} {:.3e} {:.3e} {:.3e}\n".format(w[i], I[0][i-1], I[1][i-1], I[2][i-1], I[3][i-1], I[4][i-1], I[5][i-1], avg))
-    #
-    f.close()
 #
 
 def to_plot(hw,ab,gam=0.001):

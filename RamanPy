@@ -3,7 +3,7 @@
 #
 # generate cells along eigenmodes
 # (run calculations separately for all cells)
-# read in data from different codes
+# read in data from phonopy
 # calculate resonant Raman intensity for various modes
 # i.e. two dielectric functions per mode
 #
@@ -13,9 +13,9 @@ import sys
 import datetime
 
 from displace import displace
-from calcTensors import calcTensors
-from calcSpectrum import calcSpectrum
-from plotSpectrum import plotSpectrum
+#from calcTensors import calcTensors
+#from calcSpectrum import calcSpectrum
+#from plotSpectrum import plotSpectrum
 
 sys.dont_write_bytecode = True
 
@@ -37,19 +37,16 @@ if __name__ == '__main__':
     print("")
     
     #
-    stepSize = 0.01 # Hardcoded, should be fine for almost all systems, also hardcoded in calc_raman
-    disps = [-1, 1]
-
     from parserArgs import args
 
     if args.displace == True:
         print("[__main__]: Displacing modes " + str(args.modeList))
-        displace(args.modeList, disps, stepSize, args.programIN, args.programOUT)
+        displace(args.modeList, args.stepsize, args.program)
         sys.exit(1)
     
     if args.tensors == True:
         print("[__main__]: Calculating Raman tensors of modes " + str(args.modeList))
-        calcTensors(args.modeList, args.programIN, args.programOUT)
+        calcTensors(args.modeList, args.program)
 
     if args.spectrum == True:
         print("[__main__]: Calculating Raman spectrum")
