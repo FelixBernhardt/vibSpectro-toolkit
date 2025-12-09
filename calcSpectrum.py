@@ -10,7 +10,7 @@ import os.path
 import numpy as np
 from RamanLib import file_check, write_raman, cat_broaden, broaden_data
 
-def calcSpectrum(modeList, w0, temp, smear):
+def calcSpectrum(modelist, w0, temp, smear):
     print("[calcSpectrum]: Calculating Raman spectrum")
     print("[calcSpectrum]: Note: check e.g. https://www.cryst.ehu.es/cryst/polarizationselrules.html for selection rules")
     print("[calcSpectrum]: Laser frequency set to "+str(w0)+"eV")
@@ -20,8 +20,8 @@ def calcSpectrum(modeList, w0, temp, smear):
     dict = {0: 'xx', 1: 'yy', 2: 'zz', 3: 'xy', 4: 'yz', 5: 'xz', 6: 'avg'}
     filelist = []
 
-    file_check(modeList, "alpha")
-    for mode in modeList:
+    file_check(modelist, "alpha")
+    for mode in modelist:
         filelist.append("alpha_"+str(mode)+".dat")
     #
     # write Raman tensor for all modes at laser-wavelength w0

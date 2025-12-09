@@ -13,8 +13,8 @@ import sys
 import datetime
 
 from displace import displace
-#from calcTensors import calcTensors
-#from calcSpectrum import calcSpectrum
+from calcTensors import calcTensors
+from calcSpectrum import calcSpectrum
 #from plotSpectrum import plotSpectrum
 
 sys.dont_write_bytecode = True
@@ -38,23 +38,24 @@ if __name__ == '__main__':
     
     #
     from parserArgs import args
+    disps = [-1, 1]
 
     if args.displace == True:
-        print("[__main__]: Displacing modes " + str(args.modeList))
-        displace(args.modeList, args.stepsize, args.program)
+        print("[__main__]: Displacing modes " + str(args.modelist))
+        displace(args.modelist, args.stepsize, args.program, disps)
         sys.exit(1)
     
     if args.tensors == True:
-        print("[__main__]: Calculating Raman tensors of modes " + str(args.modeList))
-        calcTensors(args.modeList, args.program)
+        print("[__main__]: Calculating Raman tensors of modes " + str(args.modelist))
+        calcTensors(args.modelist, args.program, args.stepsize, disps)
 
     if args.spectrum == True:
         print("[__main__]: Calculating Raman spectrum")
-        calcSpectrum(args.modeList, args.w0, args.temp, args.smear) 
+        calcSpectrum(args.modelist, args.laser, args.temperature, args.smearing) 
     
     if args.plot == True:
         print("[__main__]: Plotting Raman spectrum")
-        plotSpectrum(args.w0, args.porto)
+        plotSpectrum(args.laser, args.porto)
         
     sys.exit(1)
 #

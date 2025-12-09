@@ -1,27 +1,28 @@
 #!/usr/bin/env python
 
 #
-# argument parser for Raman.py
+# argument parser for RamanPy
 #
 
 import sys
 import argparse
+import numpy as np
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-m", "--modeList", type=str, default="",\
+parser.add_argument("-m", "--modelist", type=str, default="",\
                     help="The phonon modes to be considered for the calculations\n\
                     The labelling is in ascending order according to the mode's frequencies\
-                    Format of modeList:\
+                    Format of modelist:\
                     . single modes: integers separated by blank \" \"\
                     - range of modes: lower and upper limit separated by hyphen \"-\"\
                      example: '3-6 8 11-15' will consider modes 3, 4, 5, 6, 8, 11, 12, 13, 14, 15")
 
 parser.add_argument("-d", "--displace", action="store_true",\
-                    help="add the ionic displacements according to the phonon modes provided by the --modeList option.")
+                    help="add the ionic displacements according to the phonon modes provided by the --modelist option.")
 parser.add_argument("-t", "--tensors", action="store_true",\
-                    help="Calculate the Raman tensors of the phonon modes provided by the --modeList option")
+                    help="Calculate the Raman tensors of the phonon modes provided by the --modelist option")
 parser.add_argument("-s", "--spectrum", action="store_true",\
-                    help="Calculate the Raman spectrum for all polarization directions of all phonon modes provided by the --modeList option.")
+                    help="Calculate the Raman spectrum for all polarization directions of all phonon modes provided by the --modelist option.")
 parser.add_argument("-p", "--plot", action="store_true",\
                     help="plot the Raman spectrum of the configuration specified using the --porto option. Only the phonon modes considered for the calculation of the spectrum are considered.")
 
@@ -38,23 +39,26 @@ parser.add_argument("-pt", "--porto", type=str, default="xx",\
                          .(xx). , where \"xx\" can be set to backscattering or right angle scattering.\
                          A spatially averaged spectrum can be plotted by setting to \"avg\".")
 parser.add_argument("-P", "--program", type=str, default="VASP",\
-                    help="The software package to write the created cells into and read the dielectric function from")
+                    help="The software package to write the created cells into and read the dielectric function from.\
+                          currently supported: VASP (default), QE")
+parser.add_argument("-shg", "--nonlincorr", type=str, default=None,\
+                    help="Reads in the SHG tensor from file")
 
 
 args = parser.parse_args()
 
 # check the modes
-modeList = []
-for j in args.modeList.split():
+modelist = []
+for j in args.modelist.split():
     if j.isdigit() == True:
-        modeList.append(int(j))
+        modelist.append(int(j))
     elif j.split("-")[0].isdigit() == True and j.split("-")[-1].isdigit() == True:
         if int(j.split("-")[0]) < int(j.split("-")[-1]):
             for k in range(int(j.split("-")[0]),int(j.split("-")[-1])+1):
-                modeList.append(int(k))
+                modelist.append(int(k))
             #
         else:
-            print("[parserArgs]: First limit of modeList range has to be SMALLER than second, exiting...")
+            print("[parserArgs]: First limit of modelist range has to be SMALLER than second, exiting...")
             sys.exit(1)
         #
     else:
@@ -62,17 +66,17 @@ for j in args.modeList.split():
         sys.exit(1)
     #
 #
-modeList.sort()
-args.modeList = list(dict.fromkeys(modeList))
+modelist.sort()
+args.modelist = np.array(list(dict.fromkeys(modelist)))
 
 # check the options
-if args.modeList == [] and args.displace==True:
+if args.modelist == [] and args.displace==True:
     print("[parserArgs]: Please provide modes for which the ions can be displaced, exiting...")
     sys.exit(1)
-if args.modeList == [] and args.tensors==True:
+if args.modelist == [] and args.tensors==True:
     print("[parserArgs]: Please provide modes for which to calculate the Raman tensors, exiting...")
     sys.exit(1)
-if args.modeList == [] and args.spectrum==True:
+if args.modelist == [] and args.spectrum==True:
     print("[parserArgs]: Please provide modes for which to calculate the spectrum, exiting...")
     sys.exit(1)
 #
@@ -100,54 +104,4 @@ if args.modeList == [] and args.spectrum==True:
         print("     the Raman intensities for LO-modes are not implemented yet!)
        
     #
-    if opt == "LO":
-        # prepare FORCE_CONSTANTS with phonopy=2.2x.x, does not work with e.g. 2.7.0 ????
-        # calculae the dynamical matrix with phonopy=2.7.0 !!
-        #os.system("phonopy --fc vasprun_phon.xml -c POSCAR.phon -q")
-        #with open("BORN", "w") as f:
-        #    f.write(os.popen("phonopy-vasp-born vasprun_phon.xml").read())
-        #
-        # get lim q->0 for q-direction
-        qdir = [q*0.0001 for q in qpoint]
-        print("[__main__]: q-point =", qdir)
-        os.system("phonopy --readfc -c POSCAR.phon --writedm --nac --q-direction=\""+str(qpoint[0])+" "+str(qpoint[1])+" "+str(qpoint[2])+"\" --qpoints=\"0 0 0\" --dim=\"1 1 1\" -q")
-        # save the LO frequencies for later
-        os.system("mv qpoints.yaml "+qfile)
-
-        # get lim q->0 for q-direction, without BORN (i.e. without LO-TO splitting)
-        os.system("phonopy --readfc -c POSCAR.phon --writedm --qpoints=\"0 0 0\" --dim=\"1 1 1\" -q")
-        os.system("mv qpoints.yaml "+qfile+"0")
-
-        poscar_fh = open("POSCAR.phon", 'r')
-        nat, vol, b, pos, poscar_header, num_atoms, atom_types = parse_poscar(poscar_fh)
-        poscar_fh.close()
-        eigvals_ph, eigvecs_ph = parse_phonopy(qfile)
-        eigvals, eigvecs_0 = parse_phonopy(qfile+"0")
-        # get LO-TO splitting at q
-        mode_dict = phonopy_assign(eigvecs_0, eigvals, eigvecs_ph, eigvals_ph, nat)
-        # now set the LO-frequencies from phonopy onto the TO-eigenmodes (at Gamma) from VASP
-        for j in range(3*nat):
-            eigvals[j] = eigvals_ph[mode_dict[j]]
-        #
-        print(eigvals)
-        eigvecs = phonopy2disp(eigvecs_ph, atom_types, num_atoms)
-        norms = np.empty(3*nat)
-        for i in range(3*nat):
-            norms[i] = sqrt( sum( [abs(x)**2 for sublist in eigvecs[i] for x in sublist] ) )
-        #
-        LO_dir = str(qpoint[0])+str(qpoint[1])+str(qpoint[2])
-        LO_dir = ""
-        
-        # get additional quantities needed for the modified raman tensor
-        vasprun_fh = open("vasprun_phon.xml", "r")
-        born = get_born_from_vasprunxml(vasprun_fh, nat)
-        vasprun_fh.close()
-        outcar_fh = open("OUTCAR.phon", "r")
-        eps_inf = get_dielectric_tensor_from_OUTCAR(outcar_fh)
-        outcar_fh.close()
-        chi2 = get_chi2()
-
-        LO_flag = True
-        # continue with the LO modes and frequencies
-        opt = opt2
 """

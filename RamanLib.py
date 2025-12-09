@@ -4,14 +4,10 @@
 # library for VASP_Raman.py
 #
 
-import re
 import sys
 import os.path
 from math import sqrt
 import numpy as np
-import matplotlib.pyplot as plt
-# smoothen dielectric function in "read_optics"
-from scipy.signal import savgol_filter
 
 sys.dont_write_bytecode = True
 
@@ -36,37 +32,6 @@ def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1, l
     # Print New Line on Complete
     if iteration == total:
         print("\n")
-#
-
-# read in dielectric function from grep_optics.sh
-def read_optics(infile):
-    with open(infile) as f:
-        w = []
-        Im = [[],[],[],[],[],[]]
-        Re = [[],[],[],[],[],[]]
-
-        for line in f:
-            # first NEDOS values in imaginary part, leftovers in real
-            if float(line.split()[0]) in w:
-                for i in range(6):
-                    if len(Re[i]) == len(Im[i]):
-                        continue
-                    else:
-                        Re[i].append(float(line.split()[i+1]))
-                    #
-                #
-            else:
-                w.append(float(line.split()[0]))
-                for i in range(6):
-                    Im[i].append(float(line.split()[i+1]))
-                #
-            #
-        #
-    #
-    # smoothen the data
-    #Re_fit = savgol_filter(Re, 51, 5) # window size 51, polynomial order 3
-    #Im_fit = savgol_filter(Im, 51, 5)
-    return np.array(w), np.array(Im), np.array(Re)
 #
 
 def to_plot(hw,ab,gam=0.001):
@@ -95,7 +60,7 @@ def broaden_data(datafile, w0, col, temp, smear):
         imag_counter += 1
     #
     if imag_counter > 0:
-        print("[broaden_data]: Ignoring imaginary modes!")
+        print("[broaden_data]: Ignoring modes with imaginary frequency!")
     #
     hw = np.genfromtxt(datafile, skip_footer=imag_counter, dtype=float)
     cm1 = hw[:,0]

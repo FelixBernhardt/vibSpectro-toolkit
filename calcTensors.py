@@ -12,10 +12,12 @@ from parserPhonopy import parsePhonopy
 
 def align_omega(w1, w2, Im1_tmp, Re1_tmp, Im2_tmp, Re2_tmp):
     w = np.linspace(0, np.min([w1[-1], w2[-1]]), num=np.min([len(w1), len(w2)]))
-    Im1 = [[],[],[],[],[],[]]
-    Re1 = [[],[],[],[],[],[]]
-    Im2 = [[],[],[],[],[],[]]
-    Re2 = [[],[],[],[],[],[]]
+
+    Im1 = np.empty((6, len(w)))
+    Re1 = np.empty((6, len(w)))
+    Im2 = np.empty((6, len(w)))
+    Re2 = np.empty((6, len(w)))
+
     for j in range(6):
         Im1[j] = np.interp(w, w1, Im1_tmp[j])
         Re1[j] = np.interp(w, w1, Re1_tmp[j])
@@ -27,15 +29,15 @@ def align_omega(w1, w2, Im1_tmp, Re1_tmp, Im2_tmp, Re2_tmp):
 
 def calc_raman(mode, eigval, w, Im1, Re1, Im2, Re2, stepsize):
     # get the derivative with respect to phonon-mode
-    I = [[],[],[],[],[],[]]
+    I = np.empty((6, len(w)), dtype=complex)
     outfile = "alpha_"+str(mode)+".dat"
     f = open(outfile, "w")
     f.write("# Raman tensor\n")
     f.write("# mode: " +str(mode)+"   phonon freq: "+str(eigval)+"\n")
     f.write("# omega(eV)    xx        yy        zz        xy        yz        xz      avg\n")
-    for i in range(1,len(w)-1):
+    for i in range(len(w)):
         for j in range(6):
-            I[j].append(complex(Re1[j][i]-Re2[j][i], Im1[j][i]-Im2[j][i]))/( 2*stepsize)
+            I[j][i] = (complex(Re1[j][i]-Re2[j][i], Im1[j][i]-Im2[j][i]))/( 2*stepsize )
         #
         # get Placzeck-invariants
         G0 = np.abs(I[0][i-1] + I[1][i-1] + I[2][i-1])**2/3.0
@@ -51,41 +53,33 @@ def calc_raman(mode, eigval, w, Im1, Re1, Im2, Re2, stepsize):
     f.close()
 #
 
-def calcTensors(modeList, program, stepsize):
+def calcTensors(modelist, program, stepsize, disps):
     # get phonon modes and unit cell
     phonopy_fh = open("qpoints.yaml", "r")
-    eigvals, eigvecs, norms = parsePhonopy(phonopy_fh)
+    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos = parsePhonopy(modelist)
     phonopy_fh.close()
 
     print("[calcTensors]: Calculating Raman tensors...")
     
     if program == "VASP":
-        from parserVASP import parseOptics
-        #file_check(modeList, "vasprun", LO_dir)
-        breakout = 0
+        from parserVASP import getOpticsVASP
         iteration = 0
-        total = len(modeList)
-        for mode in modeList:
-            printProgressBar(iteration, total-1)
+        for mode in modelist:
+            #printProgressBar(iteration, len(modelist)-1)
             eigval = eigvals[mode-1]
-            eigvec = eigvecs[mode-1]
             norm = norms[mode-1]
-            breakout = parseOptics("vasprun"+str(mode)+"_1", breakout)
-            w1, Im1, Re1 = read_optics("optics.dat")
-            breakout = parseOptics("vasprun"+str(mode)+"_-1", breakout)
-            w2, Im2, Re2 = read_optics("optics.dat")
-            if breakout == 0:
-                #print("[calcTensors]: Calculating mode "+str(mode))
-                w, Im1, Re1, Im2, Re2 = align_omega(w1, w2, Im1, Re1, Im2, Re2)
-                calc_raman(mode, eigval, w, Im1, Re1, Im2, Re2, stepsize)
-            #
+            w1, Im1, Re1 = getOpticsVASP("mode"+str(mode)+"_"+str(disps[0])+"/vasprun.xml")
+            w2, Im2, Re2 = getOpticsVASP("mode"+str(mode)+"_"+str(disps[1])+"/vasprun.xml")
+
+            #print("[calcTensors]: Calculating mode "+str(mode))
+            w, Im1, Re1, Im2, Re2 = align_omega(w1, w2, Im1, Re1, Im2, Re2)
+            calc_raman(mode, eigval, w, Im1, Re1, Im2, Re2, stepsize)
             iteration += 1
         #
-        os.system("rm grep_optics.sh")
-        os.system("rm optics.dat")
-        if breakout == 1:
-            sys.exit(1)
-        #
-        print("[__main__]: Done.")
+        print("[calcTensors]: Done.")
+        sys.exit(1)
+    else:
+        print("[calcTensors]: Format not implemented, exiting...")
         sys.exit(1)
     #
+#
