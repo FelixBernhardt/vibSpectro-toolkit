@@ -31,6 +31,11 @@ QLM       | au (bohr)  AMU           Ry/au         Ry/au^2
 """
 
 # conversions from WolframAlpha https://www.wolframalpha.com
+
+eV2J = 1.602e-19
+angstrom2m = 1.e-10
+amu2kg = 1.66053907e-27
+
 eV2rcm = 8066
 au2angstrom = 0.529177211
 Ry2eV = 13.605693123
@@ -92,7 +97,7 @@ def parsePhonopy(modelist):
         dynmat.append(vals[:, 0] + vals[:, 1] * 1j)
     dynmat = np.array(dynmat)
     eigvals, eigvecs_tmp, = np.linalg.eigh(dynmat)
-    frequencies = (np.sqrt(np.abs(eigvals.real)) * np.sign(eigvals.real))
+    frequencies = (np.sqrt(np.abs(eigvals.real)) * np.sign(eigvals.real)) /np.sqrt(amu2kg) / angstrom2m / (2*np.pi) /1e12 * THz2cm
     eigvecs =  np.zeros((3*nat,nat,3))
     for j in range(3*nat):
         eigvecs[j] = np.reshape(eigvecs_tmp[:,nat-j-1].real, (nat,3))
@@ -120,18 +125,17 @@ def parsePhonopy(modelist):
     # force constants in eV/angstrom^2
     # frequencies in cm^-1
     if force_constants == "Ry/au^2":
-        eigvals = eV2rcm*Ry2eV*eigvals
-
-    #elif force_constants == "mRy/au^2":
-
-    #elif force_constants == "eV/Angstrom.au":
-
-    #elif force_constants == "hartree/au^2":
-
-    #elif force_constants == "hartree/Angstrom.au":
-
+        frequencies = frequencies*np.sqrt(Ry2eV*eV2J)*au2angstrom
+    elif force_constants == "mRy/au^2":
+        frequencies = frequencies*np.sqrt(mRy2eV*eV2J)*au2angstrom
+    elif force_constants == "eV/Angstrom.au":
+        frequencies = frequencies*np.sqrt(eV2J)*np.sqrt(angstrom2m/au2angstrom)
+    elif force_constants == "hartree/au^2":
+        frequencies = frequencies*np.sqrt(hartree2eV*eV2J)*au2angstrom
+    elif force_constants == "hartree/Angstrom.au":
+        frequencies = frequencies*np.sqrt(hartree2eV*eV2J)*np.sqrt(angstrom2m/au2angstrom)
     elif force_constants == "eV/angstrom^2":
-        eigvals = eigvals
+        frequencies = frequencies*np.sqrt(eV2J)
     else:
         print("[parsePhonopy]: The unit "+force_constants+" is currently not supported for force constants, exiting...")
         sys.exit(1)
@@ -146,6 +150,8 @@ def parsePhonopy(modelist):
     #print(eigvals)
     #print(eigvecs_norm[0])
     #print(norms)
+
+    print(eigvecsNorm)
 
     return list(reversed(frequencies)), eigvecsNorm, norms, qpoint, basis, nat, elements, cPos
 #

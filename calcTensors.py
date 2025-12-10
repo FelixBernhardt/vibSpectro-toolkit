@@ -5,10 +5,31 @@
 #
 
 import sys
-# smoothen dielectric function in "read_optics"
-#from scipy.signal import savgol_filter
-from RamanLib import *
+import numpy as np
 from parserPhonopy import parsePhonopy
+
+# Print iterations progress
+def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
+    """
+    Call in a loop to create terminal progress bar
+    @params:
+        iteration   - Required  : current iteration (Int)
+        total       - Required  : total iterations (Int)
+        prefix      - Optional  : prefix string (Str)
+        suffix      - Optional  : suffix string (Str)
+        decimals    - Optional  : positive number of decimals in percent complete (Int)
+        length      - Optional  : character length of bar (Int)
+        fill        - Optional  : bar fill character (Str)
+        printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
+    """
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + '-' * (length - filledLength)
+    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
+    # Print New Line on Complete
+    if iteration == total:
+        print("\n")
+#
 
 def align_omega(w1, w2, Im1_tmp, Re1_tmp, Im2_tmp, Re2_tmp):
     w = np.linspace(0, np.min([w1[-1], w2[-1]]), num=np.min([len(w1), len(w2)]))
@@ -65,7 +86,7 @@ def calcTensors(modelist, program, stepsize, disps):
         from parserVASP import getOpticsVASP
         iteration = 0
         for mode in modelist:
-            #printProgressBar(iteration, len(modelist)-1)
+            printProgressBar(iteration, len(modelist)-1)
             eigval = eigvals[mode-1]
             norm = norms[mode-1]
             w1, Im1, Re1 = getOpticsVASP("mode"+str(mode)+"_"+str(disps[0])+"/vasprun.xml")

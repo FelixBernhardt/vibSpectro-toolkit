@@ -70,13 +70,13 @@ modelist.sort()
 args.modelist = np.array(list(dict.fromkeys(modelist)))
 
 # check the options
-if args.modelist == [] and args.displace==True:
+if args.modelist.size == 0 and args.displace==True:
     print("[parserArgs]: Please provide modes for which the ions can be displaced, exiting...")
     sys.exit(1)
-if args.modelist == [] and args.tensors==True:
+if args.modelist.size == 0 and args.tensors==True:
     print("[parserArgs]: Please provide modes for which to calculate the Raman tensors, exiting...")
     sys.exit(1)
-if args.modelist == [] and args.spectrum==True:
+if args.modelist.size == 0 and args.spectrum==True:
     print("[parserArgs]: Please provide modes for which to calculate the spectrum, exiting...")
     sys.exit(1)
 #

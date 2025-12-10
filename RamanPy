@@ -15,7 +15,7 @@ import datetime
 from displace import displace
 from calcTensors import calcTensors
 from calcSpectrum import calcSpectrum
-#from plotSpectrum import plotSpectrum
+from plotSpectrum import plotSpectrum
 
 sys.dont_write_bytecode = True
 

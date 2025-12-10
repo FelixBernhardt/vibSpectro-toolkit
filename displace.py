@@ -33,6 +33,6 @@ def displace(modelist, stepsize, program, disps):
                 sys.exit(1)
             #
         #
-        print("[displace]: Done.")
     #
+    print("[displace]: Done.")
 #

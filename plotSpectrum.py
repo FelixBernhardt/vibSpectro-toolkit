@@ -5,23 +5,20 @@
 #
 
 import sys
-from math import sqrt
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import find_peaks
-import matplotlib.patches as mpatches
 from RamanLib import *
 from parserPhonopy import parsePhonopy
 
 def plotSpectrum(w0, porto):
     print("[plotSpectrum]: Plotting Raman spectrum")
+    # use a dummy for modes to be considered
+    freqs, eigvecs_new, norms, qpoint, basis, nat, elements, cPos = parsePhonopy([1])
+
+    if (qpoint[0] != 0.0 and qpoint[1] != 0.0 and qpoint[2] != 0.0) or (qpoint[0] == 0.0 and qpoint[1] == 0.0 and qpoint[2] == 0.0):
+        ki = "K"
+        ko = "K"
     
-    list(reversed(frequencies)), eigvecs_new, norms, qpoint = parsePhonopy("qpoints.yaml")
-
-    if qpoint[0] != 0.0 and qpoint[1] != 0.0 and qpoint[2] != 0.0:
-        ki = "."
-        ko = "."
-
     if qpoint[0] > 0.0:
         ki = "x"
     elif qpoint[0] < 0.0:
@@ -42,10 +39,7 @@ def plotSpectrum(w0, porto):
         ko = "z"
     elif qpoint[2] < 0.0 and qpoint[1] != 0.0:
         ko = "-z"
-    if ( qpoint[1] == 0.0 and qpoint[2] == 0.0 ) \
-       or ( qpoint[0] == 0.0 and qpoint[2] == 0.0 ) \
-       or ( qpoint[0] == 0.0 and qpoint[1] == 0.0):
-        ko = ki
+   
     
 
     if porto == None:
@@ -69,11 +63,15 @@ def plotSpectrum(w0, porto):
     y_data = [x[dict[porto]] for x in dft_raw_data]
     y_max = np.max(y_data)
 
+    """
     # print the peak positions
+    print("[plotSpectrum]: Found peaks at:")
+    print("cm^-1    Intensity:")
     indices = find_peaks(y_data/y_max, height=0.0001, width=1)
     for i in indices[0]:
         print(int(np.rint(x_data[i])), y_data[i]/y_max)
     # 
+    """
 
     # plot
     kis = ki
@@ -84,17 +82,17 @@ def plotSpectrum(w0, porto):
         kos = "$\\overline{\\rm{"+ko[1]+"}}$"
     #
     ax = plt.subplot()
-    ax.plot(x_data, y_data/y_max, color="black", label="DFT")
-    ax.legend(fontsize=fontsize)
+    ax.plot(x_data, y_data/y_max, color="black", label="")
+    #ax.legend(fontsize=fontsize)
     ax.set_title("Raman: "+kis+"("+str(porto)+")"+kos+" polarization")
-    ax.set_xlim(0,1000)
-    ax.set_ylim(0,1.1)
+    #ax.set_xlim(0,1000)
+    #ax.set_ylim(0,1.1)
     ax.set_yticks([])
     plt.xticks([0, 200, 400, 600, 800, 1000], labels=None, fontsize=fontsize)
     ax.set_xticklabels([0, 200, 400, 600, 800, 1000])
     ax.set_xlabel("Wavenumber (cm$^{-1}$)")
     ax.set_ylabel("Intensity (arb. units)", fontsize=fontsize)
-    plt.savefig("Raman_"+ki+str(porto)+ko+"_"+w0+"eV.pdf")
+    plt.savefig("Raman_"+str(ki)+str(porto)+str(ko)+"_"+str(w0)+"eV.pdf")
     print("[plotSpectrum]: Done.")
     sys.exit(1)    
 #
