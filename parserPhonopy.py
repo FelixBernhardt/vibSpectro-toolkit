@@ -153,5 +153,5 @@ def parsePhonopy(modelist):
 
     print(eigvecsNorm)
 
-    return list(reversed(frequencies)), eigvecsNorm, norms, qpoint, basis, nat, elements, cPos
+    return list(reversed(frequencies)), eigvecsNorm, norms, qpoint, basis, nat, elements, cPos, masses
 #

@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     if args.displace == True:
         print("[__main__]: Displacing modes " + str(args.modelist))
-        displace(args.modelist, args.stepsize, args.program, disps)
+        displace(args.modelist, args.stepsize, args.program, disps, args.QEinputfile)
         sys.exit(1)
     
     if args.tensors == True:

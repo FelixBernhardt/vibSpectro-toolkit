@@ -13,7 +13,7 @@ from parserPhonopy import parsePhonopy
 def plotSpectrum(w0, porto):
     print("[plotSpectrum]: Plotting Raman spectrum")
     # use a dummy for modes to be considered
-    freqs, eigvecs_new, norms, qpoint, basis, nat, elements, cPos = parsePhonopy([1])
+    freqs, eigvecs_new, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy([1])
 
     if (qpoint[0] != 0.0 and qpoint[1] != 0.0 and qpoint[2] != 0.0) or (qpoint[0] == 0.0 and qpoint[1] == 0.0 and qpoint[2] == 0.0):
         ki = "K"

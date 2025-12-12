@@ -5,13 +5,13 @@
 #
 
 import sys, os
-import numpy as np
 from parserVASP import writePOSCAR
+from parserQE import writeSCF
 from parserPhonopy import parsePhonopy
 
-def displace(modelist, stepsize, program, disps):
+def displace(modelist, stepsize, program, disps, scffile):
     # get phonon modes and unit cell
-    eigvals, eigvecs, norms, qpoint, basis, nat, elements, positions = parsePhonopy(modelist)
+    eigvals, eigvecs, norms, qpoint, basis, nat, elements, positions, masses = parsePhonopy(modelist)
     
     # write unit cells with displacements
     print("[displace]: Generating displacements...")
@@ -26,8 +26,7 @@ def displace(modelist, stepsize, program, disps):
             if program == "VASP":
                 writePOSCAR(nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm)
             elif program == "QE":
-                print("[displace]: Format not implemented, exiting")
-                sys.exit(1)
+                writeSCF(nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm, scffile)
             else:
                 print("[displace]: Format not implemented, exiting")
                 sys.exit(1)

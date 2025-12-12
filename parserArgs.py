@@ -41,6 +41,8 @@ parser.add_argument("-pt", "--porto", type=str, default="xx",\
 parser.add_argument("-P", "--program", type=str, default="VASP",\
                     help="The software package to write the created cells into and read the dielectric function from.\
                           currently supported: VASP (default), QE")
+parser.add_argument("-scf", "--QEinputfile", type=str, default="scf.in",\
+                    help="The pw.x input file to be duplicated for the Raman calculations")
 parser.add_argument("-shg", "--nonlincorr", type=str, default=None,\
                     help="Reads in the SHG tensor from file")
 
