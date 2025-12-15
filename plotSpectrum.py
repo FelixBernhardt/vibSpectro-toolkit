@@ -57,7 +57,7 @@ def plotSpectrum(w0, porto):
     print("[plotSpectrum]: plotting "+ki+"("+porto+")"+ko+" configuration")
         
     fontsize=12
-    dft_raw_data = np.loadtxt("Intensity_"+str(porto)+".dat") # format: wavelength (cm-1) Intensity
+    dft_raw_data = np.loadtxt("Intensity_"+str(w0)+"eV.dat") # format: wavelength (cm-1) Intensity
     dict = {"xx": 1, "yy": 2, "zz": 3, "xy": 4, "yz": 5, "xz": 6, "avg": 7}
     x_data = [x[0] for x in dft_raw_data]
     y_data = [x[dict[porto]] for x in dft_raw_data]

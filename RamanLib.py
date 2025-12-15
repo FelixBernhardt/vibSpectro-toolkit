@@ -47,56 +47,6 @@ def rotate_alpha(file, matrix):
 """
 
 """
-#the stuff for the chi2 correction of LO modes, does not work!!
-def get_born_from_vasprunxml(xml_fh, nat):
-    xml_fh.seek(0)
-    while True:
-        line = xml_fh.readline()
-        if not line:
-            break
-        #
-        if "<array name=\"born_charges\" >" in line:
-            born = np.zeros((nat,3,3))
-            xml_fh.readline()# <dimension dim="1">ion</dimension>
-            #
-            for i in range(nat):
-                xml_fh.readline() # <set>
-                for j in range(3):
-                    line = xml_fh.readline().split()
-                    born[i,j] = [float(line[1]), float(line[2]), float(line[3])]
-                #
-                xml_fh.readline() # <\set>
-            #
-            print("[get_born_from_vasprunxml]: Read BORN from IR/vasprun.xml")
-            #format: born[ION][LINE][COLUMN]
-            return born
-        #
-    print("[get_born_from_vasprunxml]: WARNING Couldn't find 'born_charges' in vasprun.xml. Continuing...")
-#
-
-def get_dielectric_tensor_from_OUTCAR(outcar_fh):
-# collect dielectric tensor from OUTCAR
-    outcar_fh.seek(0)
-    while True:
-        line = outcar_fh.readline()
-        if not line:
-            break
-        #
-        if "MACROSCOPIC STATIC DIELECTRIC TENSOR (including local field effects in DFT)" in line:
-            dielectric = np.zeros((3,3))
-            outcar_fh.readline() # ----------------------------------------------------
-            #
-            for j in range(3):
-                line = outcar_fh.readline().split()
-                dielectric[j] = [float(line[0]), float(line[1]), float(line[2])]
-            #
-            print("[get_dielectric_tensor_from_OUTCAR]: Read dielectric tensor from OUTCAR")
-            #format: dielectric[LINE][COLUMN]
-            return dielectric
-        #
-    print("[get_dielectric_tensor_from_OUTCAR]: WARNING Couldn't find 'MACROSCOPIC STATIC DIELECTRIC TENSOR (including local field effects in DFT)' in OUTCAR. Continuing...")
-#
-
 def get_chi2():
     xx = np.genfromtxt("oxx", dtype=float)
     xy = np.genfromtxt("oxy", dtype=float)
