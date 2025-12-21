@@ -86,11 +86,32 @@ def calcTensors(modelist, program, stepsize, disps):
         from parserVASP import getOpticsVASP
         iteration = 0
         for mode in modelist:
-            printProgressBar(iteration, len(modelist)-1)
+            if len(modelist) > 10:
+                printProgressBar(iteration, len(modelist)-1)
+            #
             eigval = eigvals[mode-1]
             norm = norms[mode-1]
             w1, Im1, Re1 = getOpticsVASP("mode"+str(mode)+"_"+str(disps[0])+"/vasprun.xml")
             w2, Im2, Re2 = getOpticsVASP("mode"+str(mode)+"_"+str(disps[1])+"/vasprun.xml")
+
+            #print("[calcTensors]: Calculating mode "+str(mode))
+            w, Im1, Re1, Im2, Re2 = align_omega(w1, w2, Im1, Re1, Im2, Re2)
+            calc_raman(mode, eigval, w, Im1, Re1, Im2, Re2, stepsize)
+            iteration += 1
+        #
+        print("[calcTensors]: Done.")
+        sys.exit(1)
+    if program == "QE":
+        from parserQE import getOpticsQE
+        iteration = 0
+        for mode in modelist:
+            if len(modelist) > 10:
+                printProgressBar(iteration, len(modelist)-1)
+            #
+            eigval = eigvals[mode-1]
+            norm = norms[mode-1]
+            w1, Im1, Re1 = getOpticsQE("mode"+str(mode)+"_"+str(disps[0]))
+            w2, Im2, Re2 = getOpticsQE("mode"+str(mode)+"_"+str(disps[1]))
 
             #print("[calcTensors]: Calculating mode "+str(mode))
             w, Im1, Re1, Im2, Re2 = align_omega(w1, w2, Im1, Re1, Im2, Re2)

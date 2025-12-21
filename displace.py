@@ -6,7 +6,7 @@
 
 import sys, os
 from parserVASP import writePOSCAR, linkVASP
-from parserQE import writeSCF
+from parserQE import writeSCF, linkQE
 from parserPhonopy import parsePhonopy
 
 def displace(modelist, stepsize, program, disps, scffile):
@@ -24,13 +24,11 @@ def displace(modelist, stepsize, program, disps, scffile):
                 os.system("mkdir "+file)
             #
             if program == "VASP":
-                print(eigvals[mode-1])
-                print(eigvec)
-                print(norm)
                 writePOSCAR(nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm)
                 linkVASP(file)
             elif program == "QE":
                 writeSCF(nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm, scffile)
+                linkQE(file)
             else:
                 print("[displace]: Format not implemented, exiting")
                 sys.exit(1)
