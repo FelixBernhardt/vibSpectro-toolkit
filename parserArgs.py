@@ -9,6 +9,10 @@ import argparse
 import numpy as np
 
 parser = argparse.ArgumentParser()
+parser.add_argument("-v", "--version", action="store_true",\
+                    help="prints the version number.")
+parser.add_argument("-a", "--analysis", action="store_true",\
+                    help="analyzes the symmetries of the structure and prints information.")
 parser.add_argument("-m", "--modelist", type=str, default="",\
                     help="The phonon modes to be considered for the calculations\n\
                     The labelling is in ascending order according to the mode's frequencies\
@@ -25,6 +29,8 @@ parser.add_argument("-s", "--spectrum", action="store_true",\
                     help="Calculate the Raman spectrum for all polarization directions of all phonon modes provided by the --modelist option.")
 parser.add_argument("-p", "--plot", action="store_true",\
                     help="plot the Raman spectrum of the configuration specified using the --porto option. Only the phonon modes considered for the calculation of the spectrum are considered.")
+parser.add_argument("-IR", "--infrared", action="store_true",\
+                    help="calculate the IR spectrum of the phonon modes provided by the --modelist option.")
 
 parser.add_argument("-w", "--laser", type=float, default=2.0,\
                     help="The excitation energy used for calculating the spectrum (eV)")
@@ -49,38 +55,28 @@ parser.add_argument("-shg", "--nonlincorr", type=str, default=None,\
 
 args = parser.parse_args()
 
-# check the modes
-modelist = []
-for j in args.modelist.split():
-    if j.isdigit() == True:
-        modelist.append(int(j))
-    elif j.split("-")[0].isdigit() == True and j.split("-")[-1].isdigit() == True:
-        if int(j.split("-")[0]) < int(j.split("-")[-1]):
-            for k in range(int(j.split("-")[0]),int(j.split("-")[-1])+1):
-                modelist.append(int(k))
+if args.modelist != None:
+    # check the modes
+    modelist = []
+    for j in args.modelist.split():
+        if j.isdigit() == True:
+            modelist.append(int(j))
+        elif j.split("-")[0].isdigit() == True and j.split("-")[-1].isdigit() == True:
+            if int(j.split("-")[0]) < int(j.split("-")[-1]):
+                for k in range(int(j.split("-")[0]),int(j.split("-")[-1])+1):
+                    modelist.append(int(k))
+                #
+            else:
+                print("[parserArgs]: First limit of modelist range has to be SMALLER than second, exiting...")
+                sys.exit(1)
             #
         else:
-            print("[parserArgs]: First limit of modelist range has to be SMALLER than second, exiting...")
+            print("[parserArgs]: I don't understand which phonon modes you want to have put out, exiting...")
             sys.exit(1)
         #
-    else:
-        print("[parserArgs]: I don't understand which phonon modes you want to have put out, exiting...")
-        sys.exit(1)
     #
-#
-modelist.sort()
-args.modelist = np.array(list(dict.fromkeys(modelist)))
-
-# check the options
-if args.modelist.size == 0 and args.displace==True:
-    print("[parserArgs]: Please provide modes for which the ions can be displaced, exiting...")
-    sys.exit(1)
-if args.modelist.size == 0 and args.tensors==True:
-    print("[parserArgs]: Please provide modes for which to calculate the Raman tensors, exiting...")
-    sys.exit(1)
-if args.modelist.size == 0 and args.spectrum==True:
-    print("[parserArgs]: Please provide modes for which to calculate the spectrum, exiting...")
-    sys.exit(1)
+    modelist.sort()
+    args.modelist = np.array(list(dict.fromkeys(modelist)))
 #
 
 """

@@ -4,6 +4,7 @@
 # VASP parsers
 #
 
+import sys
 import numpy as np
 import xml.etree.ElementTree as ET
 from typing import List, Dict
@@ -87,6 +88,53 @@ def getOpticsVASP(file):
 
     return w, Im, Re
 #
+
+def getBornVASP(file, nat):
+    try: 
+        outcar_fh = open(file, "r")
+    except IOError:
+        print("[getBornVASP]: ERROR Couldn't open OUTCAR, exiting...\n")
+        sys.exit(1)
+    #
+
+    outcar_fh.seek(0)
+    while True:
+        line = outcar_fh.readline()
+        if not line:
+            break
+        #
+        if "BORN EFFECTIVE CHARGES (in e, cummulative output)" in line or \
+           "BORN EFFECTIVE CHARGES (including local field effects) (in |e|, cummulative output)" in line:
+            born = np.zeros((nat,3,3))
+            outcar_fh.readline() # ----------------------------------------------------
+            #
+            for i in range(nat):
+                outcar_fh.readline() # ion X
+                for j in range(3):
+                    line = outcar_fh.readline().split()
+                    born[i,j] = [float(line[1]), float(line[2]), float(line[3])]
+                #
+            #
+            #format: born[ION][COLUMN][LINE]
+            # check for charge neutrality (just in case...)
+            tot = np.zeros((3))
+            for alpha in range(3):
+                for i in range(nat):
+                    for beta in range(3):
+                        tot[alpha] += born[i][alpha][beta]
+                    #
+                #
+                if tot[alpha] > 1.e-3:
+                    print("[getBornVASP]: WARNING The charge neutrality condition for direction " + str(alpha) + " is not fullfilled")
+                #
+            #
+            return born
+        #
+    #
+    print("[getBornVASP]: ERROR Couldn't find 'BORN EFFECTIVE CHARGES' in OUTCAR. Exiting...")
+    sys.exit(1)
+#
+
 
 def writePOSCAR(nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm):
     poscar_fh = open(file+"/POSCAR", "w")

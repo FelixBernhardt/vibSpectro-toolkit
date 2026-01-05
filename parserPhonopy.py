@@ -46,9 +46,14 @@ V2THz = 15.633302
 THz2cm = 33.36
 
 
-def parsePhonopy(modelist):
-    with open("qpoints.yaml", "r") as stream:
-        dataDM = yaml.safe_load(stream)
+def parsePhonopy(modelist, porto):
+    if porto == None:
+        with open("qpoints.yaml", "r") as stream:
+            dataDM = yaml.safe_load(stream)
+    else:
+        with open("qpoints_"+porto+".yaml", "r") as stream:
+            dataDM = yaml.safe_load(stream)
+    #
     with open("phonopy.yaml", "r") as stream:
         dataC = yaml.safe_load(stream)
     #
@@ -61,7 +66,7 @@ def parsePhonopy(modelist):
     force_constants = dataC["physical_unit"]["force_constants"]
 
     # get the symmetries just to check
-    print("[parsePhonopy]: space group "+dataC["space_group"]["type"])
+    #print("[parsePhonopy]: space group "+dataC["space_group"]["type"])
 
     # cell data
     basis = np.array(dataC["primitive_cell"]["lattice"])
@@ -76,9 +81,11 @@ def parsePhonopy(modelist):
     #
 
     # checks
-    if 3*nat < np.max(modelist):
-        print("[parsePhonopy]]: invalid mode specified, check your input files for consistency, exiting...")
-        sys.exit(1)
+    if modelist is not None:
+        if 3*nat < np.max(modelist):
+            print("[parsePhonopy]: invalid mode specified, check your input files for consistency, exiting...")
+            sys.exit(1)
+        #
     #
     nat2 = dataDM["natom"]
     if nat != nat2:

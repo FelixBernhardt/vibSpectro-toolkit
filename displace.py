@@ -9,9 +9,9 @@ from parserVASP import writePOSCAR, linkVASP
 from parserQE import writeSCF, linkQE
 from parserPhonopy import parsePhonopy
 
-def displace(modelist, stepsize, program, disps, scffile):
+def displace(modelist, stepsize, program, disps, scffile, porto):
     # get phonon modes and unit cell
-    eigvals, eigvecs, norms, qpoint, basis, nat, elements, positions, masses = parsePhonopy(modelist)
+    eigvals, eigvecs, norms, qpoint, basis, nat, elements, positions, masses = parsePhonopy(modelist, porto)
     
     # write unit cells with displacements
     print("[displace]: Generating displacements...")

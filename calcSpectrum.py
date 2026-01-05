@@ -43,7 +43,7 @@ def to_plot(hw,ab,gam=0.001):
     erange = np.arange(fmin-40*gam,fmax+40*gam,gam/10)
     spectrum = 0.0*erange
     for i in range(len(hw)):
-        spectrum += ab[i]*1/np.pi*gam/((hw[i]-erange)**2+gam**2)
+        spectrum += ab[i]/np.pi*gam/((hw[i]-erange)**2+gam**2)
     #
     return erange, spectrum
 #

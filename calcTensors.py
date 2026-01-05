@@ -74,11 +74,8 @@ def calc_raman(mode, eigval, w, Im1, Re1, Im2, Re2, stepsize):
     f.close()
 #
 
-def calcTensors(modelist, program, stepsize, disps):
-    # get phonon modes and unit cell
-    phonopy_fh = open("qpoints.yaml", "r")
-    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist)
-    phonopy_fh.close()
+def calcTensors(modelist, program, stepsize, disps, porto):
+    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist, porto)
 
     print("[calcTensors]: Calculating Raman tensors...")
     

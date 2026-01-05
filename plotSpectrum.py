@@ -10,10 +10,10 @@ import matplotlib.pyplot as plt
 from RamanLib import *
 from parserPhonopy import parsePhonopy
 
-def plotSpectrum(w0, porto):
+def plotSpectrum(modelist, w0, porto):
     print("[plotSpectrum]: Plotting Raman spectrum")
     # use a dummy for modes to be considered
-    freqs, eigvecs_new, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy([1])
+    freqs, eigvecs_new, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist, porto)
 
     if (qpoint[0] != 0.0 and qpoint[1] != 0.0 and qpoint[2] != 0.0) or (qpoint[0] == 0.0 and qpoint[1] == 0.0 and qpoint[2] == 0.0):
         ki = "K"

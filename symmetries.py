@@ -1,0 +1,119 @@
+#!/usr/bin/env python
+
+#
+# interface to spglib to extract symmetry information
+#
+
+import sys, os
+import numpy as np
+from spglib import get_symmetry_dataset
+import yaml
+from parserPhonopy import parsePhonopy
+from RamanLib import RamanTensorComponents, RamanSelectionRules, periodTable, backDirs, rightDirs
+
+def formatString(Component):
+    newstring = ""
+    for char in Component:
+        if char != "0" and char != "-":
+            if newstring == "":
+                newstring += char+"^2"
+            else:
+                newstring += " + "+char+"^2"
+        #
+    #
+    return newstring
+#
+
+def analyzeRamanTensors(pointgroup):
+    RamanTensors = RamanTensorComponents(pointgroup)
+
+    # print to console
+    print("Raman Tensors of point group "+pointgroup)
+    for i in range(int(len(RamanTensors)/2)):
+        print(RamanTensors[2*i])
+        for j in range(3):
+            print(RamanTensors[2*i+1][j])
+        #
+    #
+    return RamanTensors
+#
+
+def selectionRules(pointgroup, RamanTensors):
+    backscattering, backComponents, rightscattering, rightComponents = RamanSelectionRules(pointgroup, RamanTensors)
+
+    # format the components
+    for j in range(9):
+        backComponents[j] = formatString(backComponents[j])
+    #
+    for j in range(8):
+        rightComponents[j] = formatString(rightComponents[j])
+    #               
+
+    # print to console
+    maxlen = np.max(np.concatenate(([len(x) for x in backscattering], [len(x) for x in rightscattering])))
+    print("Selection Rules for pointgroup "+pointgroup)
+    placeholder1 = " " * int(np.ceil(np.abs(maxlen - len("observable modes"))/2))
+    placeholder2 = " " * int(np.floor(np.abs(maxlen - len("observable modes"))/2))
+    header = "        | "+placeholder1+"observable modes"+placeholder2+" | tensor components"
+    print(header)
+    for j in range(len(backDirs)):
+        placeholder1 = " " * int(np.ceil(np.abs(maxlen - len(backscattering[j]))/2))
+        placeholder2 = " " * int(np.floor(np.abs(maxlen - len(backscattering[j]))/2))
+        print(" " + backDirs[j] + " | " + placeholder1 + backscattering[j] + placeholder2 + " | " + backComponents[j] )
+    #
+    print("-"*len(header))
+    for j in range(len(rightDirs)):
+        placeholder1 = " " * int(np.ceil(np.abs(maxlen - len(rightscattering[j]))/2))
+        placeholder2 = " " * int(np.floor(np.abs(maxlen - len(rightscattering[j]))/2))
+        print(" " + rightDirs[j] + " | " + placeholder1 + rightscattering[j] + placeholder2 + " | " + rightComponents[j] )
+    #
+
+
+#
+
+"""
+def loadDM(file):
+    with open(file, "r") as stream:
+        dataDM = yaml.safe_load(stream)
+    dynmat_data = dataDM["phonon"][0]["dynamical_matrix"]
+    return dynmat_data
+#
+"""
+    
+def analysis(modelist):
+
+    phonopy_fh = open("qpoints.yaml", "r")
+    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist, None)
+    phonopy_fh.close()
+
+    coord = np.empty((nat, 3))
+    for atom in range(nat):
+        coord[atom, :] = np.dot(np.linalg.inv(basis.T), cPos[atom, :])
+    #
+    dataset = get_symmetry_dataset((basis, coord, [periodTable[element] for element in elements]), symprec=1.e-5)
+    print("[analysis]: Space Group "+str(dataset["number"]))
+    print("[analysis]: Point Group "+dataset["pointgroup"]) 
+    print(dataset["wyckoffs"])
+
+    # get the corresponding Raman tensors and selection rules
+    #RamanTensors = analyzeRamanTensors(dataset["pointgroup"])
+    RamanTensors = analyzeRamanTensors("m-3m")
+    selectionRules(dataset["pointgroup"], RamanTensors)
+    decomposition()
+
+    """
+    # set up a phonopy structure and get irreps
+    import phonopy
+    from phonopy.structure.atoms import PhonopyAtoms
+    from phonopy.phonon.irreps import IrReps
+    #from phonopy.file_IO import read_force_constants
+
+    cell = PhonopyAtoms( symbols=elements, cell=basis, scaled_positions=coord )
+    phonopy_instance = phonopy.load(unitcell=cell, supercell_matrix=np.eye(3), primitive_matrix="auto", force_constants_filename="FORCE_CONSTANTS")
+    irreps = IrReps(phonopy_instance, qpoint)
+    
+    # continue...?
+    """
+
+
+    sys.exit(1)
