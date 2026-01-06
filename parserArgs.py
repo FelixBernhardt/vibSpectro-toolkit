@@ -14,10 +14,10 @@ parser.add_argument("-v", "--version", action="store_true",\
 parser.add_argument("-a", "--analysis", action="store_true",\
                     help="analyzes the symmetries of the structure and prints information.")
 parser.add_argument("-m", "--modelist", type=str, default="",\
-                    help="The phonon modes to be considered for the calculations\n\
-                    The labelling is in ascending order according to the mode's frequencies\
+                    help="The phonon modes to be considered for the calculations. \n\
+                    The labelling is in ascending order according to the mode's frequencies. \
                     Format of modelist:\
-                    . single modes: integers separated by blank \" \"\
+                    - single modes: integers separated by blank \" \"\
                     - range of modes: lower and upper limit separated by hyphen \"-\"\
                      example: '3-6 8 11-15' will consider modes 3, 4, 5, 6, 8, 11, 12, 13, 14, 15")
 

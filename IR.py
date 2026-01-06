@@ -28,7 +28,7 @@ def plotIRspectrum(porto):
     ax.set_title("IR: "+str(porto)+" polarization")
     #ax.set_xlim(0,1000)
     #ax.set_ylim(0,1.1)
-    ax.set_yticks([])
+    #ax.set_yticks([])
     plt.xticks([0, 200, 400, 600, 800, 1000], labels=None, fontsize=fontsize)
     ax.set_xticklabels([0, 200, 400, 600, 800, 1000])
     ax.set_xlabel("Wavenumber (cm$^{-1}$)")
@@ -106,6 +106,7 @@ def calcIR(modelist, program, smearing, porto):
     eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist, None)
     phonopy_fh.close()
 
+    """
     # get the LO modes corresponding to the direction to be analyzed
     phonopy_fh = open("qpoints_"+porto+".yaml", "r")
     eigvals_pt, eigvecs_pt, norms_pt, qpoint_pt, basis, nat, elements, cPos, masses = parsePhonopy(modelist, porto)
@@ -114,9 +115,9 @@ def calcIR(modelist, program, smearing, porto):
     # match the TO to the LO modes
     LOTO = phonopy_assign(eigvecs, eigvecs, nat)
     print(LOTO)
+    """
 
-
-    # get BORN charges
+    # get BORN charges, in |e|
     if program == "VASP":
         from parserVASP import getBornVASP
         born = getBornVASP("OUTCAR", nat)
@@ -150,6 +151,8 @@ def calcIR(modelist, program, smearing, porto):
     S_xy = np.zeros((numModes))
     S_yz = np.zeros((numModes))
     S_xz = np.zeros((numModes))
+    V0 = np.linalg.det(basis) # angst^3
+    prefactor = 4*np.pi**2 / ( 2 * V0 ) *1.5E8
     counter = 0
     for mode in modelist:
         for alpha in range(3):
@@ -160,12 +163,12 @@ def calcIR(modelist, program, smearing, porto):
             #
         #
         # Oscillator strength according to https://abinit14.sciencesconf.org/data/program/Lecture_May13_Rignanese_DFPT_Basics.pdf
-        S_xx[counter] = np.abs(sum[counter][0])**2
-        S_yy[counter] = np.abs(sum[counter][1])**2
-        S_zz[counter] = np.abs(sum[counter][2])**2
-        S_xy[counter] = np.abs(sum[counter][0]*sum[counter][1])
-        S_yz[counter] = np.abs(sum[counter][1]*sum[counter][2])
-        S_xz[counter] = np.abs(sum[counter][0]*sum[counter][2])
+        S_xx[counter] = np.abs(sum[counter][0])**2 * prefactor / eigvals[mode-1]
+        S_yy[counter] = np.abs(sum[counter][1])**2 * prefactor / eigvals[mode-1]
+        S_zz[counter] = np.abs(sum[counter][2])**2 * prefactor / eigvals[mode-1]
+        S_xy[counter] = np.abs(sum[counter][0]*sum[counter][1]) * prefactor / eigvals[mode-1]
+        S_yz[counter] = np.abs(sum[counter][1]*sum[counter][2]) * prefactor / eigvals[mode-1]
+        S_xz[counter] = np.abs(sum[counter][0]*sum[counter][2]) * prefactor / eigvals[mode-1]
         counter += 1
     #
 
@@ -178,7 +181,6 @@ def calcIR(modelist, program, smearing, porto):
     dummy, I_xz = to_plot([eigvals[mode-1] for mode in modelist], S_xz, smearing)
 
     # calculate real part using Kramers-Kronig
-    V0 = np.linalg.det(basis)
 
     R_xx = np.zeros(len(w))
     R_yy = np.zeros(len(w))
@@ -190,12 +192,12 @@ def calcIR(modelist, program, smearing, porto):
     for freq in range(len(w)):
         counter = 0
         for mode in modelist:
-            R_xx[freq] += S_xx[counter] / ((eigvals[mode-1]**2-w[freq]**2)**2+w[freq]**2*smearing**2) * (eigvals[mode-1]**2-w[freq]**2)
-            R_yy[freq] += S_yy[counter] / (eigvals[mode-1]**2-w[freq]**2-smearing)
-            R_zz[freq] += S_zz[counter] / (eigvals[mode-1]**2-w[freq]**2-smearing)
-            R_xy[freq] += S_xy[counter] / (eigvals[mode-1]**2-w[freq]**2-smearing)
-            R_yz[freq] += S_yz[counter] / (eigvals[mode-1]**2-w[freq]**2-smearing)
-            R_xz[freq] += S_xz[counter] / (eigvals[mode-1]**2-w[freq]**2-smearing)
+            R_xx[freq] += S_xx[counter] * (eigvals[mode-1]**2-w[freq]**2) / ((eigvals[mode-1]**2-w[freq]**2)**2+smearing**2*freq**2)
+            R_yy[freq] += S_yy[counter] * (eigvals[mode-1]**2-w[freq]**2) / ((eigvals[mode-1]**2-w[freq]**2)**2+smearing**2*freq**2)
+            R_zz[freq] += S_zz[counter] * (eigvals[mode-1]**2-w[freq]**2) / ((eigvals[mode-1]**2-w[freq]**2)**2+smearing**2*freq**2)
+            R_xy[freq] += S_xy[counter] * (eigvals[mode-1]**2-w[freq]**2) / ((eigvals[mode-1]**2-w[freq]**2)**2+smearing**2*freq**2)
+            R_yz[freq] += S_yz[counter] * (eigvals[mode-1]**2-w[freq]**2) / ((eigvals[mode-1]**2-w[freq]**2)**2+smearing**2*freq**2)
+            R_xz[freq] += S_xz[counter] * (eigvals[mode-1]**2-w[freq]**2) / ((eigvals[mode-1]**2-w[freq]**2)**2+smearing**2*freq**2)
             counter += 1
         #
     #

@@ -9,20 +9,7 @@ import numpy as np
 from spglib import get_symmetry_dataset
 import yaml
 from parserPhonopy import parsePhonopy
-from RamanLib import RamanTensorComponents, RamanSelectionRules, periodTable, backDirs, rightDirs
-
-def formatString(Component):
-    newstring = ""
-    for char in Component:
-        if char != "0" and char != "-":
-            if newstring == "":
-                newstring += char+"^2"
-            else:
-                newstring += " + "+char+"^2"
-        #
-    #
-    return newstring
-#
+from RamanLib import RamanTensorComponents, dielectricFunctionComponents, RamanSelectionRules, IRSelectionRules, formatString, periodTable, backDirs, rightDirs, IRDirs
 
 def analyzeRamanTensors(pointgroup):
     RamanTensors = RamanTensorComponents(pointgroup)
@@ -35,10 +22,25 @@ def analyzeRamanTensors(pointgroup):
             print(RamanTensors[2*i+1][j])
         #
     #
+    print("")
+
     return RamanTensors
 #
 
-def selectionRules(pointgroup, RamanTensors):
+def analyzeDielectricTensor(pointgroup):
+    dielectricTensor = dielectricFunctionComponents(pointgroup)
+
+    # print to console
+    print("Dielectric Tensor of point group "+pointgroup)
+    for j in range(3):
+        print(dielectricTensor[j])
+    #
+    print("")
+
+    return dielectricTensor
+#
+
+def RamanSelection(pointgroup, RamanTensors):
     backscattering, backComponents, rightscattering, rightComponents = RamanSelectionRules(pointgroup, RamanTensors)
 
     # format the components
@@ -50,8 +52,8 @@ def selectionRules(pointgroup, RamanTensors):
     #               
 
     # print to console
-    maxlen = np.max(np.concatenate(([len(x) for x in backscattering], [len(x) for x in rightscattering])))
-    print("Selection Rules for pointgroup "+pointgroup)
+    maxlen = np.max(np.concatenate(([len(x) for x in backscattering], [len(x) for x in rightscattering], [len("observable modes")])))
+    print("Raman selection Rules for pointgroup "+pointgroup)
     placeholder1 = " " * int(np.ceil(np.abs(maxlen - len("observable modes"))/2))
     placeholder2 = " " * int(np.floor(np.abs(maxlen - len("observable modes"))/2))
     header = "        | "+placeholder1+"observable modes"+placeholder2+" | tensor components"
@@ -67,8 +69,24 @@ def selectionRules(pointgroup, RamanTensors):
         placeholder2 = " " * int(np.floor(np.abs(maxlen - len(rightscattering[j]))/2))
         print(" " + rightDirs[j] + " | " + placeholder1 + rightscattering[j] + placeholder2 + " | " + rightComponents[j] )
     #
+    print("")
+#
 
+def IRSelection(pointgroup):
+    scattering = IRSelectionRules(pointgroup)
 
+    maxlen = np.max(np.concatenate(([len(x) for x in scattering], [len("observable modes")])))
+    print("IR selection Rules for pointgroup "+pointgroup)
+    placeholder1 = " " * int(np.ceil(np.abs(maxlen - len("observable modes"))/2))
+    placeholder2 = " " * int(np.floor(np.abs(maxlen - len("observable modes"))/2))
+    header = "        | "+placeholder1+"observable modes"+placeholder2
+    print(header)
+    for j in range(len(IRDirs)):
+        placeholder1 = " " * int(np.ceil(np.abs(maxlen - len(scattering[j]))/2))
+        placeholder2 = " " * int(np.floor(np.abs(maxlen - len(scattering[j]))/2))
+        print(" " + IRDirs[j] + " | " + placeholder1 + scattering[j] + placeholder2 )
+    #
+    print("")
 #
 
 """
@@ -96,9 +114,15 @@ def analysis(modelist):
     print(dataset["wyckoffs"])
 
     # get the corresponding Raman tensors and selection rules
-    #RamanTensors = analyzeRamanTensors(dataset["pointgroup"])
-    RamanTensors = analyzeRamanTensors("m-3m")
-    selectionRules(dataset["pointgroup"], RamanTensors)
+    pointgroup = dataset["pointgroup"]
+    RamanTensors = analyzeRamanTensors(pointgroup)
+    RamanSelection(pointgroup, RamanTensors)
+    dielectricTensor = analyzeDielectricTensor(pointgroup)
+    IRSelection(pointgroup)
+    #RamanTensors = analyzeRamanTensors("m-3m")
+    #RamanSelection("m-3m", RamanTensors)
+    #dielectricTensor = analyzeDielectricTensor("m-3m")
+    #IRSelection("m-3m")
     decomposition()
 
     """

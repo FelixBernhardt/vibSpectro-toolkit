@@ -40,7 +40,7 @@ def file_check(modelist, type):
 def to_plot(hw,ab,gam=0.001):
     fmin = min(hw)
     fmax = max(hw)
-    erange = np.arange(fmin-40*gam,fmax+40*gam,gam/10)
+    erange = np.arange(0,fmax+40*gam,gam/10)
     spectrum = 0.0*erange
     for i in range(len(hw)):
         spectrum += ab[i]/np.pi*gam/((hw[i]-erange)**2+gam**2)

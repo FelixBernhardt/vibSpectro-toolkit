@@ -1,5 +1,5 @@
 
-# VASP Raman-spectroscopy
+# Raman-spectroscopy
 
 ## Theory
 The Raman tensor can be approximated as:<br><br>
@@ -11,31 +11,31 @@ With $n$ being the Bose-Einstein occupation number, $\omega_p$ the phonon freque
 
 
 ## Phonon modes and frequencies at Γ-point
-- start with optimized structure (EDIFFG = -0.005 or lower)
+In order to start the script you need the phononic eigenmodes at Γ. As of now, only the $phonopy$ format is supported. The following files are needed:
+- FORCE_CONSTANTS ?
+- phonopy.yaml
+- qpoints.yaml
 
-- set the following tags in INCAR:
+Phonopy writes the $phonopy.yaml$ file per default. FORCE_CONSTANTS can be calculated from FORCE_SETS or different DFT calculators by
 ```bash
-LREAL  = .FALSE. # always needed for accurate forces
-IBRION = 5 or    # phonons at Γ with finite differences
-IBRION = 7       # or DFPT (needs also NSW=1)
-ISYM   = 0       # always symmetry off for phonons!
-NWRITE = 3       # to print the "Eigenvectors after division by SQRT(mass)"
-EDIFF  = 1.e-8   # low value for accurate forces
+phonopy --writefc --dim="x y z"
 ```
-After the calculation you can visualize the modes with `Avogadro` by running `VASP2g98.py` (needs POSCAR and OUTCAR):
+where $x,y,z$ are the dimensions of the supercell used, if finite-displacement method is chosen. The dynamical matrix at Γ can be obtained by
 ```bash
-python VASP2g98.py
+phonopy --readfc --writedm --qpoints=\"0 0 0\"
 ```
+
+Further information is written in the documentation at https://phonopy.github.io/phonopy/.
 <br><br>
 
 ## Resonant Raman spectroscopy
-prepare your structures by displacing the ions along the phonon eigenvector in plus and minus direction
-- rename the previous OUTCAR to OUTCAR.phon, and the POSCAR to POSCAR.phon
-- run
+- Prepare your structures by displacing the ions along the phonon eigenvector in plus and minus direction
 ```bash
-python VASP_Raman.py -g <modelist>
+python Ramanpy -g <modelist>
 ```
-- run VASP for all the created POSCARs using the following tags in INCAR:
+This creates folders for all considered modes and displacements (only plus and minus direction to save numerical cost).
+
+- Afterwards, the electronic contribution to the dielectric function needs to be calculated for all created structurs. For VASP, a possible INCAR looks like this:
 ```bash
 LOPTICS = .TRUE. # calculate the dielectric function as a sum over bands
 NBANDS  = ...    # number of bands, check for convergence
@@ -44,17 +44,17 @@ ISMEAR  = 0      # Do not use -5 !
 SIGMA   = 0.02   # depends on system, 0.02 should be fine
 ```
 As for all optical calculations, check for k-point convergence!
-- collect the results and calculate the Raman tensors
+- Collect the results and calculate the Raman tensors via
 ```bash
-python VASP_Raman.py -c <modelist>
+python Ramanpy -c <modelist>
 ```
-- calculate the Raman intensity
+- calculate the Raman intensity and apply the smearing
 ```bash
-python VASP_Raman.py -s <modelist>
+python Ramanpy -s <modelist>
 ```
-check the information provided by the script
+- plot the spectra
 ```bash
-python VASP_Raman.py -h
+python Ramanpy -p
 ```
 <br><br><br>
 
