@@ -57,6 +57,3 @@ python Ramanpy -s <modelist>
 python Ramanpy -p
 ```
 <br><br><br>
-
-## Contributors
-Felix Bernhardt (JLU Gießen)

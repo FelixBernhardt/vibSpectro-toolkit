@@ -7,115 +7,72 @@
 import sys
 import numpy as np
 from parserPhonopy import parsePhonopy
-from calcSpectrum import to_plot
+from calcSpectrum import Lorentz
+from RamanLib import removeModes
+from LoTo import getLOFreqs
+from scipy.optimize import least_squares
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 
-def plotIRspectrum(porto):
-    fontsize=12
-    dft_raw_data = np.loadtxt("dielectric.dat") # format: wavelength (cm-1) Intensity (Imag, Real)
-    dict = {"xx": 1, "yy": 3, "zz": 5, "xy": 7, "yz": 9, "xz": 11}
-    x_data = [x[0] for x in dft_raw_data]
-    yi_data = [x[dict[porto]] for x in dft_raw_data]
-    yi_max = np.max(yi_data)
+def plotIRspectrum(file):
+    # data
+    epsi_data = []
+    epsr_data = []
+    dft_raw_data = np.loadtxt(file) # format: wavelength (cm-1) Intensity (Imag, Real)
+    dict = {0: "x", 1: "y", 2: "z"}
+    w_data = [x[0] for x in dft_raw_data]
+    epsi_data.append( [x[1] for x in dft_raw_data] )
+    epsr_data.append( [x[2] for x in dft_raw_data] )
+    epsi_data.append( [x[3] for x in dft_raw_data] )
+    epsr_data.append( [x[4] for x in dft_raw_data] )
+    epsi_data.append( [x[5] for x in dft_raw_data] )
+    epsr_data.append( [x[6] for x in dft_raw_data] )
 
-    yr_data = [x[dict[porto]+1] for x in dft_raw_data]
-    yr_max = np.max(yr_data)
+    # Fonts
+    plt.rcParams.update({
+        "text.usetex": True,
+        "pgf.rcfonts": False,
+        "pgf.texsystem": "lualatex",
+    })
+    mpl.use('pgf')
+    
+    size = 12
+    mpl.rcParams['font.size'] = size
+    mpl.rcParams['axes.titlesize'] = size
+    mpl.rcParams['axes.labelsize'] = size
+    mpl.rcParams['xtick.labelsize'] = size
+    mpl.rcParams['ytick.labelsize'] = size
+    mpl.rcParams['legend.fontsize'] = size
+    mpl.rcParams['figure.titlesize'] = size
 
-    ax = plt.subplot()
-    ax.plot(x_data, yi_data/yi_max, color="black", label="Imag")
-    ax.plot(x_data, yr_data/yr_max, color="red", label="Real")
-    #ax.legend(fontsize=fontsize)
-    ax.set_title("IR: "+str(porto)+" polarization")
-    #ax.set_xlim(0,1000)
-    #ax.set_ylim(0,1.1)
-    #ax.set_yticks([])
-    plt.xticks([0, 200, 400, 600, 800, 1000], labels=None, fontsize=fontsize)
-    ax.set_xticklabels([0, 200, 400, 600, 800, 1000])
-    ax.set_xlabel("Wavenumber (cm$^{-1}$)")
-    ax.set_ylabel("Intensity (arb. units)", fontsize=fontsize)
-    plt.savefig("IR_"+str(porto)+".pdf")
+    for j in range(3):
+        # plotting    
+        fig_width = 5.511 # inch
+        mpl.rcParams['figure.figsize'] = [fig_width, fig_width/2]
+        fig, ((ax1, ax2)) = plt.subplots(1,2, layout="constrained")
+        fig.suptitle("IR: E||"+dict[j]+" polarization")
+
+        ax1.set_xlim([w_data[0], w_data[-1]])
+        ax1.plot(w_data, epsr_data[j], color="black", label="Real")
+        ax1.axhline(ls="dashed")
+        ax1.set_xlabel("Wavenumber (cm$^{-1}$)")
+        ax1.set_ylabel("Re($\\varepsilon$)")
+
+        ax2.set_xlim([w_data[0], w_data[-1]])
+        ax2.set_ylim([0, np.max(epsi_data[j])*1.1])
+        ax2.plot(w_data, epsi_data[j], color="black", label="Imag")
+        ax2.set_xlabel("Wavenumber (cm$^{-1}$)")
+        ax2.set_ylabel("Im($\\varepsilon$)")
+    
+        plt.savefig("IR_"+dict[j]+".pdf")
+    #
     print("[plotIRSpectrum]: Done.")
     sys.exit(1)    
 #
 
-def flatten(t):
-    a = []
-    for sublist in t:
-        if isinstance(sublist, str):
-            a.append(sublist)
-        else:
-            for item in sublist:
-                a.append(item)
-            #
-        #
-    #
-    return a
-#
-
-
-def phonopy_assign(eigvecs1, eigvecs2, nat):
-    # assign phonopy LO-TO splitting
-    keys = []
-    values = []
-    assigned = []
-    certain = []
-    for i in range(3*nat):
-        prod = []
-        for j in range(3*nat):
-            if j not in assigned:
-                prod.append(np.abs(np.dot(flatten(eigvecs1[i]), flatten(eigvecs2[j]))))
-            else:
-                prod.append(0.0)
-            #
-        index = max(range(len(prod)), key=prod.__getitem__)
-        #if prod[index] < 0.9:
-        #    print(prod[index])
-        #    print(prod)
-        #    print(str(eigvals1[i]) + " -> " + str(eigvals2[index]))
-        certain.append(prod[index])
-        assigned.append(index)
-        keys.append(i)
-        values.append(index)
-        sum = 0
-        for j in range(len(prod)):
-            sum += np.abs(prod[j])**2
-        #print(sum, np.abs(np.dot(flatten(eigvecs1[i]), flatten(eigvecs1[i])))**2 )
-    #
-    print(certain)
-    #print(np.mean(certain))
-    #print(np.min(certain))
-    # only one assignment is to be allowed with a certainty < 0.5
-    counter = 0
-    for j in certain:
-        if j < 0.1:
-            counter += 1
-        #
-    #
-    #if counter > 2:
-    #    print("ERROR: THERE IS A PROBLEM ASSIGNING THE MODES")
-    #    sys.exit(1)
-    #
-    mode_dict = dict(zip(keys, values))
-    return mode_dict
-#
-
-
-def calcIR(modelist, program, smearing, porto):
-    # get TO phonon modes and unit cell
-    phonopy_fh = open("qpoints.yaml", "r")
-    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist, None)
-    phonopy_fh.close()
-
-    """
-    # get the LO modes corresponding to the direction to be analyzed
-    phonopy_fh = open("qpoints_"+porto+".yaml", "r")
-    eigvals_pt, eigvecs_pt, norms_pt, qpoint_pt, basis, nat, elements, cPos, masses = parsePhonopy(modelist, porto)
-    phonopy_fh.close()
-
-    # match the TO to the LO modes
-    LOTO = phonopy_assign(eigvecs, eigvecs, nat)
-    print(LOTO)
-    """
+def calcIR(modelist_orig, program, smearing):
+    # get TO phonon modes at Gamma and the unit cell
+    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist_orig, None)
 
     # get BORN charges, in |e|
     if program == "VASP":
@@ -129,89 +86,84 @@ def calcIR(modelist, program, smearing, porto):
         sys.exit(1)
     #
 
-    # ignore imaginary and acoustic modes
-    modelist_tmp = []
-    for mode in modelist:
-        if eigvals[mode-1] > 10:
-            modelist_tmp.append(mode)
-        else:
-            print("[calcIR]: Ignoring modes with imaginary frequency!")
-        #
-    modelist = modelist_tmp
-
     # calculate imaginary part of the dielectric function
     # formula from https://aip.scitation.org/doi/pdf/10.1063/1.466753
     # and https://application.wiley-vch.de/books/sample/3527405062_c01.pdf
     # VibrationalSpectroscopyinLifeScience.FriedrichSiebertandPeterHildebrandt Copyright82008WILEY-VCHVerlagGmbH&Co.KGaA,Weinheim ISBN:978-3-527-40506-0
+    modelist = removeModes(eigvecs, eigvals, masses, modelist_orig)
     numModes = len(modelist)
-    sum = np.zeros((numModes,3))
-    S_xx = np.zeros((numModes))
-    S_yy = np.zeros((numModes))
-    S_zz = np.zeros((numModes))
-    S_xy = np.zeros((numModes))
-    S_yz = np.zeros((numModes))
-    S_xz = np.zeros((numModes))
+    Sm = np.zeros((3,numModes))
+    IR_Im = []
     V0 = np.linalg.det(basis) # angst^3
-    prefactor = 4*np.pi**2 / ( 2 * V0 ) *1.5E8
+
+    e_charge = 1.602176634e-19 # C
+    amu = 1.66053906660e-27 # kg
+    eps0 = 8.8541878128e-12 # F/m
+    c_cm = 2.99792458e10 # cm/s
+
     counter = 0
     for mode in modelist:
         for alpha in range(3):
+            sum = 0
             for atom in range(nat):
                 for beta in range(3):
-                    sum[counter][alpha] += born[atom][beta][alpha] * eigvecs[mode-1][atom][beta]
+                    sum += born[atom][beta][alpha] * e_charge * np.real(eigvecs[mode-1][atom][beta]) / np.sqrt(masses[atom]*amu)
                 #
             #
+            Sm[alpha][counter] = sum**2 / (eps0 * V0*10**(-30))
         #
-        # Oscillator strength according to https://abinit14.sciencesconf.org/data/program/Lecture_May13_Rignanese_DFPT_Basics.pdf
-        S_xx[counter] = np.abs(sum[counter][0])**2 * prefactor / eigvals[mode-1]
-        S_yy[counter] = np.abs(sum[counter][1])**2 * prefactor / eigvals[mode-1]
-        S_zz[counter] = np.abs(sum[counter][2])**2 * prefactor / eigvals[mode-1]
-        S_xy[counter] = np.abs(sum[counter][0]*sum[counter][1]) * prefactor / eigvals[mode-1]
-        S_yz[counter] = np.abs(sum[counter][1]*sum[counter][2]) * prefactor / eigvals[mode-1]
-        S_xz[counter] = np.abs(sum[counter][0]*sum[counter][2]) * prefactor / eigvals[mode-1]
         counter += 1
     #
 
     # apply the smearing
-    w, I_xx = to_plot([eigvals[mode-1] for mode in modelist], S_xx, smearing)
-    dummy, I_yy = to_plot([eigvals[mode-1] for mode in modelist], S_yy, smearing)
-    dummy, I_zz = to_plot([eigvals[mode-1] for mode in modelist], S_zz, smearing)
-    dummy, I_xy = to_plot([eigvals[mode-1] for mode in modelist], S_xy, smearing)
-    dummy, I_yz = to_plot([eigvals[mode-1] for mode in modelist], S_yz, smearing)
-    dummy, I_xz = to_plot([eigvals[mode-1] for mode in modelist], S_xz, smearing)
+    for alpha in range(3):
+        w, tmp = Lorentz([eigvals[mode-1] for mode in modelist], Sm[alpha], smearing)
+        IR_Im.append(tmp)
+    #
+    IR_Im = np.array(IR_Im)/( 2 * np.pi * c_cm )
 
     # calculate real part using Kramers-Kronig
-
-    R_xx = np.zeros(len(w))
-    R_yy = np.zeros(len(w))
-    R_zz = np.zeros(len(w))
-    R_xy = np.zeros(len(w))
-    R_yz = np.zeros(len(w))
-    R_xz = np.zeros(len(w))
-
-    for freq in range(len(w)):
-        counter = 0
-        for mode in modelist:
-            R_xx[freq] += S_xx[counter] * (eigvals[mode-1]**2-w[freq]**2) / ((eigvals[mode-1]**2-w[freq]**2)**2+smearing**2*freq**2)
-            R_yy[freq] += S_yy[counter] * (eigvals[mode-1]**2-w[freq]**2) / ((eigvals[mode-1]**2-w[freq]**2)**2+smearing**2*freq**2)
-            R_zz[freq] += S_zz[counter] * (eigvals[mode-1]**2-w[freq]**2) / ((eigvals[mode-1]**2-w[freq]**2)**2+smearing**2*freq**2)
-            R_xy[freq] += S_xy[counter] * (eigvals[mode-1]**2-w[freq]**2) / ((eigvals[mode-1]**2-w[freq]**2)**2+smearing**2*freq**2)
-            R_yz[freq] += S_yz[counter] * (eigvals[mode-1]**2-w[freq]**2) / ((eigvals[mode-1]**2-w[freq]**2)**2+smearing**2*freq**2)
-            R_xz[freq] += S_xz[counter] * (eigvals[mode-1]**2-w[freq]**2) / ((eigvals[mode-1]**2-w[freq]**2)**2+smearing**2*freq**2)
-            counter += 1
+    IR_Re = np.zeros((3,len(w)))
+    for dir in range(3):
+        for freq in range(len(w)):
+            counter = 0
+            for mode in modelist:
+                IR_Re[dir][freq] += Sm[dir][counter] * ( eigvals[mode-1]**2 - w[freq]**2 ) / ( (eigvals[mode-1]**2 - w[freq]**2)**2 + smearing**2 * w[freq]**2 )
+                counter += 1
+            #
         #
     #
+    IR_Re = IR_Re/( 2 * np.pi * c_cm )**2
 
     # write dielectric function to file
-    output_fh = open('dielectric.dat', 'w')
-    output_fh.write("# freq(cm-1)  xx             yy               zz                xy               yz                  xz\n")
-    output_fh.write("#        Im     Re        Im     Re        Im     Re         Im     Re        Im     Re           Im     Re\n")
+    output_fh = open("IR.dat", "w")
+    output_fh.write("# freq(cm-1)   E||x             E||y            E||z\n")
+    output_fh.write("#            Im    Re         Im    Re        Im    Re\n")
     for i in range(len(w)):
-        output_fh.write('{:4.3f}  {:+4.3f}  {:+4.3f}    {:+4.3f}  {:+4.3f}    {:+4.3f}  {:+4.3f}    {:+4.3f}  {:+4.3f}    {:+4.3f}  {:+4.3f}    {:+4.3f}  {:+4.3f}\n'.format(\
-            w[i], I_xx[i], R_xx[i], I_yy[i], R_yy[i], I_zz[i], R_zz[i], I_xy[i], R_xy[i], I_yz[i], R_yz[i], I_xz[i], R_xz[i]))
+        output_fh.write("{:4.3f}     {:+4.3f}  {:+4.3f}    {:+4.3f}  {:+4.3f}    {:+4.3f}  {:+4.3f}\n".format(\
+            w[i], IR_Im[0][i], IR_Re[0][i], IR_Im[1][i], IR_Re[1][i], IR_Im[2][i], IR_Re[2][i]))
     #
     output_fh.close()
 
-    plotIRspectrum(porto)
+    plotIRspectrum("IR.dat")
+
+    """
+    # fitting procedure to get LO-zero crossings, needed ?
+    porto = "zz"
+    eigvalsLO_all = getLOFreqs(modelist_orig, eigvecs, eigvals, porto)
+    gamma0 = 5
+
+
+    eigvalsTO = np.empty(numModes)
+    eigvalsLO = np.empty(numModes)
+    counter = 0
+    for mode in modelist:
+        eigvalsTO[counter] = eigvals[mode-1]
+        eigvalsLO[counter] = eigvalsLO_all[mode-1]
+        counter += 1
+    #
+    """
+
     print("[calcIR]: DONE")
+    sys.exit(1)
 #

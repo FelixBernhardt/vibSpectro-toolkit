@@ -7,6 +7,7 @@
 import sys
 import numpy as np
 import yaml
+import heapq
 
 """
 unit conventions exported from phonopy documentation at https://phonopy.github.io/phonopy/interfaces.html
@@ -96,7 +97,7 @@ def parsePhonopy(modelist, porto):
     # parse the dynamical matrix
     # if multiple qpoints are present, only use the first one
     qpoint = dataDM["phonon"][0]["q-position"]
-    print("[parsePhonopy]: q-point "+str(qpoint))
+    #print("[parsePhonopy]: q-point "+str(qpoint))
     dynmat = []
     dynmat_data = dataDM["phonon"][0]["dynamical_matrix"]
     for row in dynmat_data:
@@ -104,20 +105,19 @@ def parsePhonopy(modelist, porto):
         dynmat.append(vals[:, 0] + vals[:, 1] * 1j)
     dynmat = np.array(dynmat)
     eigvals, eigvecs_tmp, = np.linalg.eigh(dynmat)
+
+    # convert frequencies
     frequencies = (np.sqrt(np.abs(eigvals.real)) * np.sign(eigvals.real)) /np.sqrt(amu2kg) / angstrom2m / (2*np.pi) /1e12 * THz2cm
-    eigvecs =  np.zeros((3*nat,nat,3))
-    for j in range(3*nat):
-        eigvecs[j] = np.reshape(eigvecs_tmp[:,nat-j-1].real, (nat,3))
-    #
-    eigvecsNorm = np.empty_like(eigvecs)
+
+    eigvecs = []
     norms = np.empty(3*nat)
-    for j in range(len(eigvecs)):
-        for atom in range(nat):
-            eigvecsNorm[j][atom] = eigvecs[j][atom]/np.sqrt(masses[atom])
-            #
-        #
-        norms[j] = np.linalg.norm(eigvecsNorm[j])
+    for j in range(3*nat):
+        v = eigvecs_tmp[:, j] # COLUMN j 
+        v = v.reshape((nat, 3)) # (atom, direction) 
+        eigvecs.append(v) 
+        norms[j] = np.linalg.norm(eigvecs[j])
     #
+    eigvecs = np.array(eigvecs)
 
     # convert all to VASP default units, phonon frequncies to cm^-1
     # length in angstrom
@@ -154,11 +154,5 @@ def parsePhonopy(modelist, porto):
         cPos[j] = pos[j][0]*basis[0] + pos[j][1]*basis[1] + pos[j][2]*basis[2]
     #
 
-    #print(eigvals)
-    #print(eigvecs_norm[0])
-    #print(norms)
-
-    #print(eigvecsNorm)
-
-    return list(reversed(frequencies)), eigvecsNorm, norms, qpoint, basis, nat, elements, cPos, masses
+    return frequencies, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses
 #

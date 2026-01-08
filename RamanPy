@@ -61,17 +61,17 @@ if __name__ == '__main__':
         sys.exit(1)
 
     if args.displace == True:
-        print("[__main__]: Displacing modes " + str(args.modelist))
-        displace(args.modelist, args.stepsize, args.program, disps, args.QEinputfile, args.porto)
+        print("[__main__]: Displacing modes")
+        displace(args.modelist, args.stepsize, args.program, disps, args.QEinputfile)
         sys.exit(1)
     
     if args.tensors == True:
-        print("[__main__]: Calculating Raman tensors of modes " + str(args.modelist), args.porto)
+        print("[__main__]: Calculating Raman tensors")
         calcTensors(args.modelist, args.program, args.stepsize, disps)
 
     if args.spectrum == True:
         print("[__main__]: Calculating Raman spectrum")
-        calcSpectrum(args.modelist, args.laser, args.temperature, args.smearing) 
+        calcSpectrum(args.modelist, args.laser, args.temperature, args.smearing, args.porto) 
     
     if args.plot == True:
         print("[__main__]: Plotting Raman spectrum", args.porto)
@@ -79,7 +79,7 @@ if __name__ == '__main__':
 
     if args.infrared == True:
         print("[__main__]: Calculating IR spectrum")
-        calcIR(args.modelist, args.program, args.smearing, args.porto)
+        calcIR(args.modelist, args.program, args.smearing)
         
     sys.exit(1)
 #

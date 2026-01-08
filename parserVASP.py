@@ -184,8 +184,8 @@ def writePOSCAR(nat, basis, positions, elements, file, mode, disp, stepsize, eig
 def linkVASP(file):
     import os
     os.chdir(file)
-    os.system("ln -s ../KPOINTS KPOINTS")
-    os.system("ln -s ../POTCAR POTCAR")
-    os.system("ln -s ../INCAR INCAR")
-    os.chdir("..")
+    os.system("ln -s ../../KPOINTS KPOINTS")
+    os.system("ln -s ../../POTCAR POTCAR")
+    os.system("ln -s ../../INCAR INCAR")
+    os.chdir("../..")
 #

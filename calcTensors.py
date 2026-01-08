@@ -4,9 +4,10 @@
 # This lib calculates the Raman tensors
 #
 
-import sys
+import sys, os
 import numpy as np
 from parserPhonopy import parsePhonopy
+from RamanLib import removeModes
 
 # Print iterations progress
 def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
@@ -26,9 +27,6 @@ def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1, l
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
     print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
-    # Print New Line on Complete
-    if iteration == total:
-        print("\n")
 #
 
 def align_omega(w1, w2, Im1_tmp, Re1_tmp, Im2_tmp, Re2_tmp):
@@ -48,17 +46,21 @@ def align_omega(w1, w2, Im1_tmp, Re1_tmp, Im2_tmp, Re2_tmp):
     return w, Im1, Re1, Im2, Re2
 #
 
-def calc_raman(mode, eigval, w, Im1, Re1, Im2, Re2, stepsize):
+def calc_raman(mode, eigval, w, Im1, Re1, Im2, Re2, stepsize, basis):
     # get the derivative with respect to phonon-mode
+
+    eps0 = 8.8541878128e-12 # F/m
+    V0 = np.linalg.det(basis) # angst^3
+
     I = np.empty((6, len(w)), dtype=complex)
-    outfile = "alpha_"+str(mode)+".dat"
+    outfile = "Ramantensors/alpha_"+str(mode)+".dat"
     f = open(outfile, "w")
-    f.write("# Raman tensor\n")
+    f.write("# Raman tensor in 10^(-30) Cm^2/V\n")
     f.write("# mode: " +str(mode)+"   phonon freq: "+str(eigval)+"\n")
     f.write("# omega(eV)    xx        yy        zz        xy        yz        xz      avg\n")
     for i in range(len(w)):
         for j in range(6):
-            I[j][i] = (complex(Re1[j][i]-Re2[j][i], Im1[j][i]-Im2[j][i]))/( 2*stepsize )
+            I[j][i] = (complex(Re1[j][i]-Re2[j][i], Im1[j][i]-Im2[j][i]))/( 2*stepsize*10**(-10) ) * eps0 * V0
         #
         # get Placzeck-invariants
         G0 = np.abs(I[0][i-1] + I[1][i-1] + I[2][i-1])**2/3.0
@@ -74,11 +76,14 @@ def calc_raman(mode, eigval, w, Im1, Re1, Im2, Re2, stepsize):
     f.close()
 #
 
-def calcTensors(modelist, program, stepsize, disps, porto):
-    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist, porto)
+def calcTensors(modelist_orig, program, stepsize, disps):
+    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist_orig, None)
+    modelist = removeModes(eigvecs, eigvals, masses, modelist_orig)
 
-    print("[calcTensors]: Calculating Raman tensors...")
-    
+    print("[calcTensors]: Calculating Raman tensors of modes " + str(modelist))
+    if os.path.isdir("Ramantensors") == False:
+        os.system("mkdir Ramantensors")
+    #
     if program == "VASP":
         from parserVASP import getOpticsVASP
         iteration = 0
@@ -88,12 +93,12 @@ def calcTensors(modelist, program, stepsize, disps, porto):
             #
             eigval = eigvals[mode-1]
             norm = norms[mode-1]
-            w1, Im1, Re1 = getOpticsVASP("mode"+str(mode)+"_"+str(disps[0])+"/vasprun.xml")
-            w2, Im2, Re2 = getOpticsVASP("mode"+str(mode)+"_"+str(disps[1])+"/vasprun.xml")
+            w1, Im1, Re1 = getOpticsVASP("displacements/mode"+str(mode)+"_"+str(disps[0])+"/vasprun.xml")
+            w2, Im2, Re2 = getOpticsVASP("displacements/mode"+str(mode)+"_"+str(disps[1])+"/vasprun.xml")
 
             #print("[calcTensors]: Calculating mode "+str(mode))
             w, Im1, Re1, Im2, Re2 = align_omega(w1, w2, Im1, Re1, Im2, Re2)
-            calc_raman(mode, eigval, w, Im1, Re1, Im2, Re2, stepsize)
+            calc_raman(mode, eigval, w, Im1, Re1, Im2, Re2, stepsize, basis)
             iteration += 1
         #
         print("[calcTensors]: Done.")
@@ -107,8 +112,8 @@ def calcTensors(modelist, program, stepsize, disps, porto):
             #
             eigval = eigvals[mode-1]
             norm = norms[mode-1]
-            w1, Im1, Re1 = getOpticsQE("mode"+str(mode)+"_"+str(disps[0]))
-            w2, Im2, Re2 = getOpticsQE("mode"+str(mode)+"_"+str(disps[1]))
+            w1, Im1, Re1 = getOpticsQE("displacements/mode"+str(mode)+"_"+str(disps[0]))
+            w2, Im2, Re2 = getOpticsQE("displacements/mode"+str(mode)+"_"+str(disps[1]))
 
             #print("[calcTensors]: Calculating mode "+str(mode))
             w, Im1, Re1, Im2, Re2 = align_omega(w1, w2, Im1, Re1, Im2, Re2)

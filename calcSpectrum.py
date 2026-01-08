@@ -7,76 +7,40 @@
 import sys
 import os.path
 import numpy as np
+from parserPhonopy import parsePhonopy
+from RamanLib import removeModes
 
-def file_check(modelist, type):
-    check = True
-    for mode in modelist:
-        if type == "vasprun":
-            for j in ["_-1", "_1"]:
-                if os.path.isfile("vasprun_"+str(mode)+j):
-                    continue
-                else:
-                    print("[file_check]: missing file vasprun_"+str(mode)+j+", exiting...")
-                    check = False
-                #
-            #
-        elif type == "alpha":
-            if os.path.isfile("alpha_"+str(mode)+".dat"):
-                continue
-            else:
-                print("[file_check]: missing file alpha_"+str(mode)+".dat, exiting...")
-                check = False
-            #
-        else:
-            print("[file_check]: something went terribly wrong, exiting...")
-            check = False
-        #
-    #
-    if check == False:
-        sys.exit(1)
-    #
-#
-
-def to_plot(hw,ab,gam=0.001):
-    fmin = min(hw)
+def Lorentz(hw, ab, gam=0.001):
     fmax = max(hw)
-    erange = np.arange(0,fmax+40*gam,gam/10)
-    spectrum = 0.0*erange
+    erange = np.arange(0, 1.1*fmax, gam/10)
+    spectrum = 0.0 * erange
     for i in range(len(hw)):
-        spectrum += ab[i]/np.pi*gam/((hw[i]-erange)**2+gam**2)
+        spectrum += 1 / np.pi * ( ab[i] * gam ) / ( (hw[i]-erange)**2 + gam**2 )
     #
     return erange, spectrum
 #
 
 def broaden_data(datafile, w0, col, temp, smear):
     # apply smearing to Raman-tensors from "write_raman"
-    c = 299792458            # m/s
+    c_cm = 2.99792458e10     # cm/s
     h = 6.62606957*10**(-34) # Js
     kb = 1.3806488*10**(-23) # J/K
+    eps0 = 8.8541878128e-12  # F/m
     dict = {0: 'xx', 1: 'yy', 2: 'zz', 3: 'xy', 4: 'yz', 5: 'xz', 6: 'avg'}
-    # check for imaginary modes and dont read them
-    tmp = np.genfromtxt(datafile, dtype=float)
-    imag_counter = 0
-    for j in reversed(tmp[:,0]):
-        if j > 0:
-            break
-        imag_counter += 1
-    #
-    if imag_counter > 0:
-        print("[broaden_data]: Ignoring modes with imaginary frequency!")
-    #
-    hw = np.genfromtxt(datafile, skip_footer=imag_counter, dtype=float)
+    
+    hw = np.genfromtxt(datafile, dtype=float)
     cm1 = hw[:,0]
     # calculate the Raman intensity for each mode and component
-    n  = (-np.exp(-h * cm1 * c * 100/(kb * temp))+1)**(-1)
-    int1 = np.abs(hw[:,col+1])**2 * (8065.5401*w0 - cm1)**4 * n/cm1
-    int1 /= np.max(np.abs(int1), axis=0)
-    Es1, Spectrum1 = to_plot(cm1, int1, smear)
+    n  = (-np.exp(-h * cm1 * c_cm/(kb * temp))+1)**(-1)
+    prefactor = h / (32 * np.pi**3 * (c_cm/100)**4 * eps0**2) * ( 2 * np.pi * c_cm )**3 * 10**(-30)
+
+    intensity = np.abs(hw[:,col+1])**2 * (8065.5401*w0 - cm1)**4 * n/cm1
+    w, Spectrum = Lorentz(cm1, intensity, smear)
     filename = 'Intensity_'+str(dict[col])+".dat"
     f = open(filename,'w')
-    f.write('# freq/cm-1  Intensity \n')
-    for i in range(len(Es1)):
-        f.write('%.5e   %.5e\n' % (Es1[i],Spectrum1[i]))
+    f.write('# freq [cm-1]  Intensity [m^2/sr]\n')
+    for i in range(len(w)):
+        f.write('%.5e   %.5e\n' % (w[i], prefactor*Spectrum[i]))
     f.close()
 #
 
@@ -118,7 +82,7 @@ def write_raman(filelist, w0):
     raman = np.insert(tmp, 0, eigvals, axis=1)
  
     f = open("Raman_"+str(w0)+"eV.dat",'w')
-    f.write("# Raman tensors (absolute values) at "+str(w0)+"eV laser-wavelength\n")
+    f.write("# Raman tensors (10^(-30) Cm^2/V) at "+str(w0)+"eV laser-wavelength\n")
     f.write("# freq/cm-1        xx         yy          zz        xy        yz        xz        avg\n")
     np.savetxt(f, raman, fmt='%4.8f')
     f.close()
@@ -151,28 +115,29 @@ def cat_broaden(w0):
 #
 
 
-def calcSpectrum(modelist, w0, temp, smear):
-    print("[calcSpectrum]: Calculating Raman spectrum")
-    print("[calcSpectrum]: Note: check e.g. https://www.cryst.ehu.es/cryst/polarizationselrules.html for selection rules")
+def calcSpectrum(modelist_orig, w0, temp, smear, porto):
+    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist_orig, None)
+    modelist = removeModes(eigvecs, eigvals, masses, modelist_orig)
+
+    print("[calcSpectrum]: Calculating Raman spectrum of modes "+str(modelist))
+    #print("[calcSpectrum]: Note: check e.g. https://www.cryst.ehu.es/cryst/polarizationselrules.html for selection rules")
     print("[calcSpectrum]: Laser frequency set to "+str(w0)+"eV")
     print("[calcSpectrum]: Temperature set to "+str(temp)+"K")
     print("[calcSpectrum]: Smearing width set to "+str(smear)+"cm^-1")
 
     filelist = []
-
-    file_check(modelist, "alpha")
     for mode in modelist:
-        filelist.append("alpha_"+str(mode)+".dat")
+        filelist.append("Ramantensors/alpha_"+str(mode)+".dat")
     #
     # write Raman tensor for all modes at laser-wavelength w0
-    print("[__main__]: Writing Raman_"+str(w0)+"eV.dat")
+    print("[calcSpectrum]: Writing Raman_"+str(w0)+"eV.dat")
     write_raman(filelist, w0)
     #
-    print("[__main__]: Broadening spectrum")
+    print("[calcSpectrum]: Broadening spectrum")
     for col in range(7):
         broaden_data("Raman_"+str(w0)+"eV.dat", w0, col, temp, smear)
     #
     cat_broaden(w0)
-    print("[__main__]: Done.")
+    print("[calcSpectrum]: Done.")
     sys.exit(1)
 #
