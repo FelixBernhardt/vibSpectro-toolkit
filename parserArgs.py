@@ -20,7 +20,6 @@ parser.add_argument("-m", "--modelist", type=str, default="",\
                     - single modes: integers separated by blank \" \"\
                     - range of modes: lower and upper limit separated by hyphen \"-\"\
                      example: '3-6 8 11-15' will consider modes 3, 4, 5, 6, 8, 11, 12, 13, 14, 15")
-
 parser.add_argument("-d", "--displace", action="store_true",\
                     help="add the ionic displacements according to the phonon modes provided by the --modelist option.")
 parser.add_argument("-t", "--tensors", action="store_true",\
@@ -31,7 +30,8 @@ parser.add_argument("-p", "--plot", action="store_true",\
                     help="plot the Raman spectrum of the configuration specified using the --porto option. Only the phonon modes considered for the calculation of the spectrum are considered.")
 parser.add_argument("-IR", "--infrared", action="store_true",\
                     help="calculate the IR spectrum of the phonon modes provided by the --modelist option.")
-
+parser.add_argument("-LO", "--LOcorr", action="store_true",\
+                    help="incorporate an LO correction term when calculating the Raman spectrum.")
 parser.add_argument("-w", "--laser", type=float, default=2.0,\
                     help="The excitation energy used for calculating the spectrum (eV)")
 parser.add_argument("-tp", "--temperature", type=float, default=300.0,\
@@ -41,9 +41,13 @@ parser.add_argument("-sm", "--smearing", type=float, default=5.0,\
 parser.add_argument("-sz", "--stepsize", type=float, default=0.001,\
                     help="The prefactor for the displacements used for generating the input files (unit?)")
 parser.add_argument("-pt", "--porto", type=str, default="xx",\
-                    help="The configuration used when plotting the spectrum using porto's notation\
-                         .(xx). , where \"xx\" can be set to backscattering or right angle scattering.\
+                    help="The polarization used when plotting the spectrum using porto's notation\
+                         .(xx). , where \"xx\" can be set to all combinations of cartesian directions.\
                          A spatially averaged spectrum can be plotted by setting to \"avg\".")
+parser.add_argument("-q", "--qdir", type=str, default="zz",\
+                    help="The propagation direction used when plotting the spectrum using porto's notation\
+                         q(..)q , where \"qq\" can be set to backscattering or right angle scattering (without the sign).\
+                         Only used in combination with the LO flag.")
 parser.add_argument("-P", "--program", type=str, default="VASP",\
                     help="The software package to write the created cells into and read the dielectric function from.\
                           currently supported: VASP (default), QE")

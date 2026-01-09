@@ -39,8 +39,7 @@ def plotSpectrum(modelist, w0, porto):
         ko = "z"
     elif qpoint[2] < 0.0 and qpoint[1] != 0.0:
         ko = "-z"
-   
-    
+    # 
 
     if porto == None:
         porto = "xx"

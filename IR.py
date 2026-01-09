@@ -7,10 +7,9 @@
 import sys
 import numpy as np
 from parserPhonopy import parsePhonopy
-from calcSpectrum import Lorentz
-from RamanLib import removeModes
-from LoTo import getLOFreqs
-from scipy.optimize import least_squares
+from RamanLib import Lorentz, removeModes, getBorn, eps0, c_cm, e_charge, amu
+#from LoTo import getLOFreqs
+#from scipy.optimize import least_squares
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
@@ -66,25 +65,14 @@ def plotIRspectrum(file):
     
         plt.savefig("IR_"+dict[j]+".pdf")
     #
-    print("[plotIRSpectrum]: Done.")
-    sys.exit(1)    
+    print("[plotIRSpectrum]: Done.") 
 #
 
 def calcIR(modelist_orig, program, smearing):
     # get TO phonon modes at Gamma and the unit cell
     eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist_orig, None)
 
-    # get BORN charges, in |e|
-    if program == "VASP":
-        from parserVASP import getBornVASP
-        born = getBornVASP("OUTCAR", nat)
-    elif program == "QE":
-        from parserQE import getBornQE
-        born = getBornQE("ph.out", nat)
-    else:
-        print("[calcIR]: Format not implemented, exiting..")
-        sys.exit(1)
-    #
+    born = getBorn(program, nat)
 
     # calculate imaginary part of the dielectric function
     # formula from https://aip.scitation.org/doi/pdf/10.1063/1.466753
@@ -95,11 +83,6 @@ def calcIR(modelist_orig, program, smearing):
     Sm = np.zeros((3,numModes))
     IR_Im = []
     V0 = np.linalg.det(basis) # angst^3
-
-    e_charge = 1.602176634e-19 # C
-    amu = 1.66053906660e-27 # kg
-    eps0 = 8.8541878128e-12 # F/m
-    c_cm = 2.99792458e10 # cm/s
 
     counter = 0
     for mode in modelist:

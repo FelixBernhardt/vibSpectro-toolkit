@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
     if args.spectrum == True:
         print("[__main__]: Calculating Raman spectrum")
-        calcSpectrum(args.modelist, args.laser, args.temperature, args.smearing, args.porto) 
+        calcSpectrum(args.modelist, args.program, args.laser, args.temperature, args.smearing, args.porto, args.qdir, args.LOcorr) 
     
     if args.plot == True:
         print("[__main__]: Plotting Raman spectrum", args.porto)

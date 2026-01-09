@@ -7,7 +7,7 @@
 import sys, os
 import numpy as np
 from parserPhonopy import parsePhonopy
-from RamanLib import removeModes
+from RamanLib import removeModes, eps0
 
 # Print iterations progress
 def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
@@ -49,7 +49,6 @@ def align_omega(w1, w2, Im1_tmp, Re1_tmp, Im2_tmp, Re2_tmp):
 def calc_raman(mode, eigval, w, Im1, Re1, Im2, Re2, stepsize, basis):
     # get the derivative with respect to phonon-mode
 
-    eps0 = 8.8541878128e-12 # F/m
     V0 = np.linalg.det(basis) # angst^3
 
     I = np.empty((6, len(w)), dtype=complex)

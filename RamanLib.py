@@ -6,6 +6,7 @@
 
 import sys
 import numpy as np
+from parserVASP import getBornVASP
 
 periodTable = {'H': 1, 'He': 2, 'Li': 3, 'Be': 4, 'B': 5, 'C': 6, 'N': 7, 'O': 8, 'F': 9, 'Ne': 10,
    'Na': 11, 'Mg': 12, 'Al': 13, 'Si': 14, 'P': 15, 'S': 16, 'Cl': 17, 'Ar': 18,
@@ -24,6 +25,14 @@ bdDir = {0: (1,1), 1: (1,2), 2: (2,2), 3: (0,0), 4: (0,2), 5: (2,2), 6: (0,0), 7
 rightDirs = ["x(yx)y", "x(yz)y", "x(zx)y", "x(zz)y", "y(xx)z", "y(xy)z", "y(zx)z", "y(zy)z"]
 rDir = {0: (0,1), 1: (1,2), 2: (0,2), 3: (2,2), 4: (0,0), 5:(0,1), 6: (0,2), 7: (1,2)}
 IRDirs = ["E || x", "E || y", "E || z"]
+
+e_charge = 1.602176634e-19   # C
+amu      = 1.66053906660e-27 # kg
+eps0     = 8.8541878128e-12  # F/m
+c_cm     = 2.99792458e10     # cm/s
+h        = 6.62606957e-34    # Js
+kb       = 1.3806488e-23     # J/K
+
 
 def dielectricFunctionComponents(pointgroup):
     if pointgroup == "1" or pointgroup == "-1":
@@ -574,6 +583,16 @@ def formatString(Component):
     return printstring
 #
 
+def Lorentz(hw, ab, gam=0.001):
+    fmax = max(hw)
+    erange = np.arange(0, 1.1*fmax, gam/10)
+    spectrum = 0.0 * erange
+    for i in range(len(hw)):
+        spectrum += 1 / np.pi * ( ab[i] * gam ) / ( (hw[i]-erange)**2 + gam**2 )
+    #
+    return erange, spectrum
+#
+
 def getAcoustics(eigvecs, eigvals, masses): 
     # get the candidates for possible acoustic modes
     acoustic = []
@@ -613,4 +632,41 @@ def removeModes(eigvecs, eigvals, masses, modelist):
     #
 
     return modelist_tmp
+#
+
+def getBorn(program, nat):
+    # get BORN charges, in |e|
+    if program == "VASP":
+        from parserVASP import getBornVASP
+        born = getBornVASP("OUTCAR", nat)
+    elif program == "QE":
+        from parserQE import getBornQE
+        born = getBornQE("ph.out", nat)
+    else:
+        print("[getBorn]: Format not implemented, exiting..")
+        sys.exit(1)
+    #
+#
+
+def getEpsInf(program):
+    # get ion-clamped static dielectric function
+    try:
+        phonopy_fh = open("BORN", "r")
+    except IOError:
+        print("[getEpsInf]: ERROR Couldn't open BORN, trying DFT output...\n")
+        if program == "VASP":
+            from parserVASP import getEpsInfVASP
+            born = getEpsInfVASP("OUTCAR")
+        elif program == "QE":
+            from parserQE import getEpsInfQE
+            born = getEpsInfQE("ph.out")
+        else:
+            print("[getEpsInf]: Format not implemented, exiting...\n")
+            sys.exit(1)
+        #
+    #
+    lines = [l.strip() for l in phonopy_fh.readlines()] # Read the whole file removing tailoring spaces
+    phonopy_fh.close()
+
+    return lines[1]
 #
