@@ -36,7 +36,6 @@ if __name__ == '__main__':
     print("                                          |___/ ")
     print("")
     print("")
-    #print("    Contributors: Felix Bernhardt  (JLU)")
     print("    Started at: "+datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
     print("")
     
@@ -75,7 +74,7 @@ if __name__ == '__main__':
     
     if args.plot == True:
         print("[__main__]: Plotting Raman spectrum", args.porto)
-        plotSpectrum(args.modelist, args.laser, args.porto)
+        plotSpectrum(args.modelist, args.laser, args.porto, args.LOcorr)
 
     if args.infrared == True:
         print("[__main__]: Calculating IR spectrum")

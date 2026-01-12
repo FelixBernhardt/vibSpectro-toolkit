@@ -8,21 +8,7 @@ import sys
 import os.path
 import numpy as np
 from parserPhonopy import parsePhonopy
-from RamanLib import e_charge
-
-def flatten(t):
-    a = []
-    for sublist in t:
-        if isinstance(sublist, str):
-            a.append(sublist)
-        else:
-            for item in sublist:
-                a.append(item)
-            #
-        #
-    #
-    return a
-#
+from RamanLib import e_charge, flatten
 
 
 def LOTOassign(eigvecs1, eigvecs2):

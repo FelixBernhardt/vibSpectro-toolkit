@@ -79,12 +79,12 @@ def IRSelection(pointgroup):
     print("IR selection Rules for pointgroup "+pointgroup)
     placeholder1 = " " * int(np.ceil(np.abs(maxlen - len("observable modes"))/2))
     placeholder2 = " " * int(np.floor(np.abs(maxlen - len("observable modes"))/2))
-    header = "        | "+placeholder1+"observable modes"+placeholder2
+    header = "         | "+placeholder1+"observable modes"+placeholder2
     print(header)
     for j in range(len(IRDirs)):
         placeholder1 = " " * int(np.ceil(np.abs(maxlen - len(scattering[j]))/2))
         placeholder2 = " " * int(np.floor(np.abs(maxlen - len(scattering[j]))/2))
-        print(" " + IRDirs[j] + " | " + placeholder1 + scattering[j] + placeholder2 )
+        print(" " + IRDirs[j] + "  | " + placeholder1 + scattering[j] + placeholder2 )
     #
     print("")
 #
@@ -123,7 +123,6 @@ def analysis(modelist):
     #RamanSelection("m-3m", RamanTensors)
     #dielectricTensor = analyzeDielectricTensor("m-3m")
     #IRSelection("m-3m")
-    decomposition()
 
     """
     # set up a phonopy structure and get irreps

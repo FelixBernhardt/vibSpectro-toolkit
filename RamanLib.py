@@ -18,7 +18,7 @@ periodTable = {'H': 1, 'He': 2, 'Li': 3, 'Be': 4, 'B': 5, 'C': 6, 'N': 7, 'O': 8
    'Tb': 65, 'Dy': 66, 'Ho': 67, 'Er': 68, 'Tm': 69, 'Yb': 70, 'Lu': 71, 'Hf': 72, 'Ta': 73, 'W': 74,'Re': 75,
    'Os': 76, 'Ir': 77, 'Pt': 78, 'Au': 79, 'Hg': 80, 'Tl': 81, 'Pb': 82, 'Bi': 83, 'Po': 84,'At': 85, 'Rn': 86,
    'Fr': 87, 'Ra': 88, 'Ac': 89, 'Th': 90, 'Pa': 91, 'U': 92, 'Np': 93, 'Pu': 94, 'Am': 95, 'Cm': 96, 'Bk': 97,
-   'Cf': 98,'Es': 99, 'Fm': 100, 'Md': 101, 'No':102, 'Lr': 103}
+   'Cf': 98,'Es': 99, 'Fm': 100, 'Md': 101, 'No': 102, 'Lr': 103}
 
 backDirs = ["x(yy)x\u0305", "x(yz)x\u0305", "x(zz)x\u0305", "y(xx)y\u0305", "y(xz)y\u0305", "y(zz)y\u0305", "z(xx)z\u0305", "z(xy)z\u0305", "z(yy)z\u0305"]
 bdDir = {0: (1,1), 1: (1,2), 2: (2,2), 3: (0,0), 4: (0,2), 5: (2,2), 6: (0,0), 7: (0,1), 8: (1,1)}
@@ -32,7 +32,6 @@ eps0     = 8.8541878128e-12  # F/m
 c_cm     = 2.99792458e10     # cm/s
 h        = 6.62606957e-34    # Js
 kb       = 1.3806488e-23     # J/K
-
 
 def dielectricFunctionComponents(pointgroup):
     if pointgroup == "1" or pointgroup == "-1":
@@ -521,6 +520,20 @@ def IRSelectionRules(pointgroup):
     return scattering
 #
 
+def flatten(t):
+    a = []
+    for sublist in t:
+        if isinstance(sublist, str):
+            a.append(sublist)
+        else:
+            for item in sublist:
+                a.append(item)
+            #
+        #
+    #
+    return a
+#
+
 def formatString(Component):
     newstring = ""
     stop = False
@@ -583,12 +596,19 @@ def formatString(Component):
     return printstring
 #
 
+#def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
+#    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+#    filledLength = int(length * iteration // total)
+#    bar = fill * filledLength + '-' * (length - filledLength)
+#    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
+#
+
 def Lorentz(hw, ab, gam=0.001):
     fmax = max(hw)
     erange = np.arange(0, 1.1*fmax, gam/10)
     spectrum = 0.0 * erange
     for i in range(len(hw)):
-        spectrum += 1 / np.pi * ( ab[i] * gam ) / ( (hw[i]-erange)**2 + gam**2 )
+        spectrum +=  ab[i] * gam  / ( (hw[i]-erange)**2 + gam**2 )
     #
     return erange, spectrum
 #
@@ -613,7 +633,7 @@ def getAcoustics(eigvecs, eigvals, masses):
     if np.array_equal( np.sort(indicators.argsort()[-3:]), np.sort(acoustic) ):
         return [x+1 for x in acoustic]
     else:
-        print("[removeAcoustics]: Could not determine acoustic modes, continuing...")
+        print("[getAcoustics]: Could not determine acoustic modes, continuing...")
         return None
     #
 #

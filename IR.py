@@ -8,8 +8,6 @@ import sys
 import numpy as np
 from parserPhonopy import parsePhonopy
 from RamanLib import Lorentz, removeModes, getBorn, eps0, c_cm, e_charge, amu
-#from LoTo import getLOFreqs
-#from scipy.optimize import least_squares
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
@@ -129,23 +127,6 @@ def calcIR(modelist_orig, program, smearing):
     output_fh.close()
 
     plotIRspectrum("IR.dat")
-
-    """
-    # fitting procedure to get LO-zero crossings, needed ?
-    porto = "zz"
-    eigvalsLO_all = getLOFreqs(modelist_orig, eigvecs, eigvals, porto)
-    gamma0 = 5
-
-
-    eigvalsTO = np.empty(numModes)
-    eigvalsLO = np.empty(numModes)
-    counter = 0
-    for mode in modelist:
-        eigvalsTO[counter] = eigvals[mode-1]
-        eigvalsLO[counter] = eigvalsLO_all[mode-1]
-        counter += 1
-    #
-    """
 
     print("[calcIR]: DONE")
     sys.exit(1)

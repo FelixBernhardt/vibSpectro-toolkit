@@ -7,7 +7,6 @@
 import sys
 import numpy as np
 import yaml
-import heapq
 
 """
 unit conventions exported from phonopy documentation at https://phonopy.github.io/phonopy/interfaces.html
