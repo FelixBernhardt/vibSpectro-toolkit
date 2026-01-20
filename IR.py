@@ -128,6 +128,7 @@ def calcIR(modelist_orig, program, smearing):
 
     plotIRspectrum("IR.dat")
 
+
     print("[calcIR]: DONE")
     sys.exit(1)
 #

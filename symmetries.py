@@ -9,7 +9,7 @@ import numpy as np
 from spglib import get_symmetry_dataset
 import yaml
 from parserPhonopy import parsePhonopy
-from RamanLib import RamanTensorComponents, dielectricFunctionComponents, RamanSelectionRules, IRSelectionRules, formatString, periodTable, backDirs, rightDirs, IRDirs
+from RamanLib import RamanTensorComponents, dielectricFunctionComponents, RamanSelectionRules, IRSelectionRules, formatString, getIrrepsSymbols, periodTable, backDirs, rightDirs, IRDirs
 
 def analyzeRamanTensors(pointgroup):
     RamanTensors = RamanTensorComponents(pointgroup)
@@ -79,29 +79,20 @@ def IRSelection(pointgroup):
     print("IR selection Rules for pointgroup "+pointgroup)
     placeholder1 = " " * int(np.ceil(np.abs(maxlen - len("observable modes"))/2))
     placeholder2 = " " * int(np.floor(np.abs(maxlen - len("observable modes"))/2))
-    header = "         | "+placeholder1+"observable modes"+placeholder2
+    header = "        | "+placeholder1+"observable modes"+placeholder2
     print(header)
     for j in range(len(IRDirs)):
         placeholder1 = " " * int(np.ceil(np.abs(maxlen - len(scattering[j]))/2))
         placeholder2 = " " * int(np.floor(np.abs(maxlen - len(scattering[j]))/2))
-        print(" " + IRDirs[j] + "  | " + placeholder1 + scattering[j] + placeholder2 )
+        print(" " + IRDirs[j] + " | " + placeholder1 + scattering[j] + placeholder2 )
     #
     print("")
 #
 
-"""
-def loadDM(file):
-    with open(file, "r") as stream:
-        dataDM = yaml.safe_load(stream)
-    dynmat_data = dataDM["phonon"][0]["dynamical_matrix"]
-    return dynmat_data
-#
-"""
-    
-def analysis(modelist):
+def analysis():
 
     phonopy_fh = open("qpoints.yaml", "r")
-    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist, None)
+    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(None, None)
     phonopy_fh.close()
 
     coord = np.empty((nat, 3))
@@ -109,9 +100,8 @@ def analysis(modelist):
         coord[atom, :] = np.dot(np.linalg.inv(basis.T), cPos[atom, :])
     #
     dataset = get_symmetry_dataset((basis, coord, [periodTable[element] for element in elements]), symprec=1.e-5)
-    print("[analysis]: Space Group "+str(dataset["number"]))
-    print("[analysis]: Point Group "+dataset["pointgroup"]) 
-    print(dataset["wyckoffs"])
+    print("Space Group "+str(dataset["number"]))
+    print("Point Group "+dataset["pointgroup"]) 
 
     # get the corresponding Raman tensors and selection rules
     pointgroup = dataset["pointgroup"]
@@ -119,24 +109,12 @@ def analysis(modelist):
     RamanSelection(pointgroup, RamanTensors)
     dielectricTensor = analyzeDielectricTensor(pointgroup)
     IRSelection(pointgroup)
-    #RamanTensors = analyzeRamanTensors("m-3m")
-    #RamanSelection("m-3m", RamanTensors)
-    #dielectricTensor = analyzeDielectricTensor("m-3m")
-    #IRSelection("m-3m")
-
-    """
-    # set up a phonopy structure and get irreps
-    import phonopy
-    from phonopy.structure.atoms import PhonopyAtoms
-    from phonopy.phonon.irreps import IrReps
-    #from phonopy.file_IO import read_force_constants
-
-    cell = PhonopyAtoms( symbols=elements, cell=basis, scaled_positions=coord )
-    phonopy_instance = phonopy.load(unitcell=cell, supercell_matrix=np.eye(3), primitive_matrix="auto", force_constants_filename="FORCE_CONSTANTS")
-    irreps = IrReps(phonopy_instance, qpoint)
     
-    # continue...?
-    """
-
+    # get the Irreps for all modes
+    labels = getIrrepsSymbols(basis, coord, elements, pointgroup)
+    print("mode freq (cm-1) label")
+    for i, (f, lbl) in enumerate(zip(eigvals, labels)): 
+        print(f"{i+1:2d}   {f:8.4f}     {lbl}")
 
     sys.exit(1)
+#

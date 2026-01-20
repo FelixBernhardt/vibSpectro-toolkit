@@ -8,8 +8,7 @@ import sys
 import os.path
 import numpy as np
 from parserPhonopy import parsePhonopy
-from RamanLib import e_charge, flatten
-
+from RamanLib import flatten, e_charge
 
 def LOTOassign(eigvecs1, eigvecs2):
     nat = int(len(eigvecs1)/3)

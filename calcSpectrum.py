@@ -4,10 +4,11 @@
 # library for VASP_Raman.py
 #
 
-import sys, os
+import sys
+import os.path
 import numpy as np
-from parserPhonopy import parsePhonopy, eV2rcm
-from RamanLib import Lorentz, removeModes, getBorn, getEpsInf, eps0, c_cm, h, kb
+from parserPhonopy import parsePhonopy
+from RamanLib import Lorentz, getBorn, getEpsInf, eps0, c_cm, h, kb, ev2rcm
 from LoTo import getLOFreqs, getLOCorrection, getChi2
 
 def broaden_data(datafile, w0, col, temp, smear):
@@ -20,7 +21,7 @@ def broaden_data(datafile, w0, col, temp, smear):
     n  = (-np.exp(-h * cm1 * c_cm/(kb * temp))+1)**(-1)
     prefactor = h / (32 * np.pi**3 * (c_cm/100)**4 * eps0**2) * ( 2 * np.pi * c_cm )**3 * 10**(-30)
 
-    intensity = np.abs(hw[:,col+1])**2 * (eV2rcm*w0 - cm1)**4 * n/cm1
+    intensity = np.abs(hw[:,col+1])**2 * (ev2rcm*w0 - cm1)**4 * n/cm1
     w, Spectrum = Lorentz(cm1, intensity, smear)
     filename = 'Intensity_'+str(dict[col])+".dat"
     f = open(filename,'w')
@@ -108,9 +109,8 @@ def cat_broaden(w0):
 #
 
 
-def calcSpectrum(modelist_orig, program, w0, temp, smear, porto, qdir, LOcorr):
-    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist_orig, None)
-    modelist = removeModes(eigvecs, eigvals, masses, modelist_orig)
+def calcSpectrum(modelist, program, w0, temp, smear, porto, qdir, LOcorr):
+    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist, None)
 
     print("[calcSpectrum]: Calculating Raman spectrum of modes "+str(modelist))
     #print("[calcSpectrum]: Note: check e.g. https://www.cryst.ehu.es/cryst/polarizationselrules.html for selection rules")

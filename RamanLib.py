@@ -6,6 +6,9 @@
 
 import sys
 import numpy as np
+import phonopy
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.phonon.irreps import IrReps
 from parserVASP import getBornVASP
 
 periodTable = {'H': 1, 'He': 2, 'Li': 3, 'Be': 4, 'B': 5, 'C': 6, 'N': 7, 'O': 8, 'F': 9, 'Ne': 10,
@@ -18,7 +21,7 @@ periodTable = {'H': 1, 'He': 2, 'Li': 3, 'Be': 4, 'B': 5, 'C': 6, 'N': 7, 'O': 8
    'Tb': 65, 'Dy': 66, 'Ho': 67, 'Er': 68, 'Tm': 69, 'Yb': 70, 'Lu': 71, 'Hf': 72, 'Ta': 73, 'W': 74,'Re': 75,
    'Os': 76, 'Ir': 77, 'Pt': 78, 'Au': 79, 'Hg': 80, 'Tl': 81, 'Pb': 82, 'Bi': 83, 'Po': 84,'At': 85, 'Rn': 86,
    'Fr': 87, 'Ra': 88, 'Ac': 89, 'Th': 90, 'Pa': 91, 'U': 92, 'Np': 93, 'Pu': 94, 'Am': 95, 'Cm': 96, 'Bk': 97,
-   'Cf': 98,'Es': 99, 'Fm': 100, 'Md': 101, 'No': 102, 'Lr': 103}
+   'Cf': 98,'Es': 99, 'Fm': 100, 'Md': 101, 'No':102, 'Lr': 103}
 
 backDirs = ["x(yy)x\u0305", "x(yz)x\u0305", "x(zz)x\u0305", "y(xx)y\u0305", "y(xz)y\u0305", "y(zz)y\u0305", "z(xx)z\u0305", "z(xy)z\u0305", "z(yy)z\u0305"]
 bdDir = {0: (1,1), 1: (1,2), 2: (2,2), 3: (0,0), 4: (0,2), 5: (2,2), 6: (0,0), 7: (0,1), 8: (1,1)}
@@ -32,6 +35,218 @@ eps0     = 8.8541878128e-12  # F/m
 c_cm     = 2.99792458e10     # cm/s
 h        = 6.62606957e-34    # Js
 kb       = 1.3806488e-23     # J/K
+ev2rcm   = 8065.5401
+
+HM_TO_SCHOENFLIES = {
+    "1":      "C1",
+    "-1":     "Ci",
+    "2":      "C2",
+    "m":      "Cs",
+    "2/m":    "C2h",
+    "222":    "D2",
+    "mm2":    "C2v",
+    "mmm":    "D2h",
+    "4":      "C4",
+    "-4":     "S4",
+    "4/m":    "C4h",
+    "422":    "D4",
+    "4mm":    "C4v",
+    "-42m":   "D2d",
+    "4/mmm":  "D4h",
+    "3":      "C3",
+    "-3":     "C3i",
+    "32":     "D3",
+    "3m":     "C3v",
+    "-3m":    "D3d",
+    "6":      "C6",
+    "-6":     "C3h",
+    "6/m":    "C6h",
+    "622":    "D6",
+    "6mm":    "C6v",
+    "-6m2":   "D3h",
+    "6/mmm":  "D6h",
+    "23":     "T",
+    "m-3":    "Th",
+    "432":    "O",
+    "-43m":   "Td",
+    "m-3m":   "Oh"
+}
+
+POINTGROUP_TO_INT = {
+    "C1":   1,
+    "Ci":   2,   # = S2
+    "C2":   3,
+    "Cs":   4,   # = C1h
+    "C2h":  5,
+    "D2":   6,
+    "C2v":  7,
+    "D2h":  8,
+    "C4":   9,
+    "S4":   10,
+    "C4h":  11,
+    "D4":   12,
+    "C4v":  13,
+    "D2d":  14,
+    "D4h":  15,
+    "C3":   16,
+    "C3i":  17,  # = S6
+    "D3":   18,
+    "C3v":  19,
+    "D3d":  20,
+    "C6":   21,
+    "C3h":  22,
+    "C6h":  23,
+    "D6":   24,
+    "C6v":  25,
+    "D3h":  26,
+    "D6h":  27,
+    "T":    28,
+    "Th":   29,
+    "O":    30,
+    "Td":   31,
+    "Oh":   32
+}
+
+CHAR_TABLES = {
+    "C1": {
+        "A": [1],
+    },
+
+    "Ci": {
+        "Ag": [1, 1],
+        "Au": [1, -1],
+    },
+
+    "C2": {
+        "A": [1, 1],
+        "B": [1, -1],
+    },
+
+    "Cs": {
+        "A'":  [1, 1],
+        "A''": [1, -1],
+    },
+
+    "C2h": {
+        "Ag": [1, 1, 1, 1],
+        "Bg": [1, -1, 1, -1],
+        "Au": [1, 1, -1, -1],
+        "Bu": [1, -1, -1, 1],
+    },
+
+    "D2": {
+        "A":  [1, 1, 1, 1],
+        "B1": [1, 1, -1, -1],
+        "B2": [1, -1, 1, -1],
+        "B3": [1, -1, -1, 1],
+    },
+
+    "C2v": {
+        "A1": [1, 1, 1, 1],
+        "A2": [1, 1, -1, -1],
+        "B1": [1, -1, 1, -1],
+        "B2": [1, -1, -1, 1],
+    },
+
+    "D2h": {
+        "Ag":  [1, 1, 1, 1, 1, 1, 1, 1],
+        "B1g": [1, 1, -1, -1, 1, 1, -1, -1],
+        "B2g": [1, -1, 1, -1, 1, -1, 1, -1],
+        "B3g": [1, -1, -1, 1, 1, -1, -1, 1],
+        "Au":  [1, 1, 1, 1, -1, -1, -1, -1],
+        "B1u": [1, 1, -1, -1, -1, -1, 1, 1],
+        "B2u": [1, -1, 1, -1, -1, 1, -1, 1],
+        "B3u": [1, -1, -1, 1, -1, 1, 1, -1],
+    },
+
+    "C4": {
+        "A": [1, 1, 1, 1],
+        "B": [1, -1, 1, -1],
+        "E": [2, 0, -2, 0],
+    },
+
+    "S4": {
+        "A": [1, 1, 1, 1],
+        "B": [1, -1, 1, -1],
+        "E": [2, 0, -2, 0],
+    },
+
+    "C4h": {
+        "Ag": [1, 1, 1, 1, 1, 1, 1, 1],
+        "Bg": [1, -1, 1, -1, 1, -1, 1, -1],
+        "Eg": [2, 0, -2, 0, 2, 0, -2, 0],
+        "Au": [1, 1, 1, 1, -1, -1, -1, -1],
+        "Bu": [1, -1, 1, -1, -1, 1, -1, 1],
+        "Eu": [2, 0, -2, 0, -2, 0, 2, 0],
+    },
+
+    "D4": {
+        "A1": [1, 1, 1, 1, 1],
+        "A2": [1, 1, 1, -1, -1],
+        "B1": [1, -1, 1, 1, -1],
+        "B2": [1, -1, 1, -1, 1],
+        "E":  [2, 0, -2, 0, 0],
+    },
+
+    "C4v": {
+        "A1": [1, 1, 1, 1, 1],
+        "A2": [1, 1, 1, -1, -1],
+        "B1": [1, -1, 1, 1, -1],
+        "B2": [1, -1, 1, -1, 1],
+        "E":  [2, 0, -2, 0, 0],
+    },
+
+    "D2d": {
+        "A1": [1, 1, 1, 1, 1],
+        "A2": [1, 1, 1, -1, -1],
+        "B1": [1, -1, 1, 1, -1],
+        "B2": [1, -1, 1, -1, 1],
+        "E":  [2, 0, -2, 0, 0],
+    },
+
+    "D4h": {
+        "A1g": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        "A2g": [1, 1, 1, -1, -1, 1, 1, -1, -1, 1],
+        "B1g": [1, -1, 1, 1, -1, 1, -1, 1, -1, 1],
+        "B2g": [1, -1, 1, -1, 1, 1, -1, -1, 1, 1],
+        "Eg":  [2, 0, -2, 0, 0, 2, 0, -2, 0, 0],
+        "A1u": [1, 1, 1, 1, 1, -1, -1, -1, -1, -1],
+        "A2u": [1, 1, 1, -1, -1, -1, -1, 1, 1, -1],
+        "B1u": [1, -1, 1, 1, -1, -1, 1, -1, 1, -1],
+        "B2u": [1, -1, 1, -1, 1, -1, 1, 1, -1, -1],
+        "Eu":  [2, 0, -2, 0, 0, -2, 0, 2, 0, 0],
+    },
+
+    "C3": {
+        "A": [1, 1, 1],
+        "E": [2, -1, -1],
+    },
+
+    "C3i": {
+        "Ag": [1, 1, 1, 1, 1, 1],
+        "Eg": [2, -1, -1, 2, -1, -1],
+        "Au": [1, 1, 1, -1, -1, -1],
+        "Eu": [2, -1, -1, -2, 1, 1],
+    },
+
+    "D3": {
+        "A1": [1, 1, 1, 1],
+        "A2": [1, 1, 1, -1],
+        "E":  [2, -1, 2, 0],
+    },
+
+    "C3v": {
+        "A1": [1, 1, 1],
+        "A2": [1, 1, -1],
+        "E":  [2, -1, 0],
+    },
+
+    "D3d": {
+        "A1g": [1, 1, 1, 1, 1, 1],
+        "A2g": [1, 1, 1, -1, -1, 1],
+        "Eg":  [2, -1, 2, 0, 0, 2],
+    }
+}
 
 def dielectricFunctionComponents(pointgroup):
     if pointgroup == "1" or pointgroup == "-1":
@@ -520,20 +735,6 @@ def IRSelectionRules(pointgroup):
     return scattering
 #
 
-def flatten(t):
-    a = []
-    for sublist in t:
-        if isinstance(sublist, str):
-            a.append(sublist)
-        else:
-            for item in sublist:
-                a.append(item)
-            #
-        #
-    #
-    return a
-#
-
 def formatString(Component):
     newstring = ""
     stop = False
@@ -596,11 +797,18 @@ def formatString(Component):
     return printstring
 #
 
-#def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
-#    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-#    filledLength = int(length * iteration // total)
-#    bar = fill * filledLength + '-' * (length - filledLength)
-#    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
+def flatten(t):
+    a = []
+    for sublist in t:
+        if isinstance(sublist, str):
+            a.append(sublist)
+        else:
+            for item in sublist:
+                a.append(item)
+            #
+        #
+    #
+    return a
 #
 
 def Lorentz(hw, ab, gam=0.001):
@@ -611,6 +819,55 @@ def Lorentz(hw, ab, gam=0.001):
         spectrum +=  ab[i] * gam  / ( (hw[i]-erange)**2 + gam**2 )
     #
     return erange, spectrum
+#
+
+def classifyRotations(rotations):
+    classes = {}
+    for i, R in enumerate(rotations):
+        det = round(np.linalg.det(R))
+        trace = np.trace(R)
+        key = (det, trace)
+        classes.setdefault(key, []).append(i)
+    return list(classes.values())
+#
+
+def matchLabels(class_characters, char_table):
+    labels = []
+    table_labels = list(char_table.keys())
+    table_rows = np.array(list(char_table.values()), dtype=float)
+
+    for chi in class_characters:
+        dists = np.sum((table_rows - chi)**2, axis=1)
+        best = np.argmin(dists)
+        labels.append(table_labels[best])
+    return labels
+#
+
+def getIrrepsSymbols(basis, coord, elements, pointgroup):
+    # set up a phonopy structure and get irreps
+    # works for phonopy 2.32
+
+    cell = PhonopyAtoms( symbols=elements, cell=basis, scaled_positions=coord )
+    phonopy_instance = phonopy.load(unitcell=cell, supercell_matrix=np.eye(3), primitive_matrix="auto", force_constants_filename="FORCE_CONSTANTS")
+
+    ir = IrReps(phonopy_instance.dynamical_matrix, q=[0, 0, 0])
+    ir.run()
+
+    characters = ir.get_characters() # shape: (n_irreps, n_sym_ops)
+    rotations = ir.get_rotations() # shape: (n_sym_ops, 3, 3)
+    classes = classifyRotations(rotations)
+
+    # class_characters[i_irrep][i_class]
+    class_characters = []
+    for chi in characters:
+        class_row = [np.mean(chi[idxs]) for idxs in classes]
+        class_characters.append(class_row)
+    #
+    class_characters = np.array(class_characters)
+    
+    labels = matchLabels(class_characters, CHAR_TABLES[HM_TO_SCHOENFLIES[pointgroup]])
+
+    return labels
 #
 
 def getAcoustics(eigvecs, eigvals, masses): 
@@ -633,22 +890,51 @@ def getAcoustics(eigvecs, eigvals, masses):
     if np.array_equal( np.sort(indicators.argsort()[-3:]), np.sort(acoustic) ):
         return [x+1 for x in acoustic]
     else:
-        print("[getAcoustics]: Could not determine acoustic modes, continuing...")
+        print("[removeAcoustics]: Could not determine acoustic modes, continuing...")
         return None
     #
 #
 
-def removeModes(eigvecs, eigvals, masses, modelist):
+def getDegenerates(eigvals, basis, coord, elements, pointgroup, prec=1e0):
+    labels = getIrrepsSymbols(basis, coord, elements, pointgroup)
+    degenerates = []
+    for j in range(len(eigvals)):
+        if j not in degenerates:
+            for k in range(j+1, len(eigvals)):
+                if np.abs(eigvals[j] - eigvals[k]) < prec and labels[j] == labels[k]:
+                    degenerates.append(k)
+                #
+            #
+        #
+    #
+    return degenerates
+#
+
+def removeModes(eigvecs, eigvals, masses, modelist, basis, coord, elements, pointgroup, prec=1e0):
     modelist_tmp = []
     acoustics = getAcoustics(eigvecs, eigvals, masses)
+    degenerates = getDegenerates(eigvals, basis, coord, elements, pointgroup, prec)
+    check_acoustic = False
+    check_imag = False
+    check_degenerates = False
     for mode in modelist:
         if mode in acoustics:
-            continue
+            check_acoustic = True
         elif eigvals[mode-1] < 0:
-            print("[removeModes]: Ignoring modes with imaginary frequency!")
+            check_imag = True
+        elif mode in degenerates:
+            check_degenerates = True
         else:
             modelist_tmp.append(mode)
         #
+    #
+
+    if check_acoustic == True:
+        print("[removeModes]: Ignoring acoustic modes")
+    if check_imag == True:
+        print("[removeModes]: Ignoring modes with imaginary frequency")
+    if check_degenerates == True:
+        print("[removeModes]: Ignoring degenerate modes")
     #
 
     return modelist_tmp

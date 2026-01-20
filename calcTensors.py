@@ -7,7 +7,27 @@
 import sys, os
 import numpy as np
 from parserPhonopy import parsePhonopy
-from RamanLib import removeModes, eps0#, printProgressBar
+from RamanLib import eps0
+
+# Print iterations progress
+def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
+    """
+    Call in a loop to create terminal progress bar
+    @params:
+        iteration   - Required  : current iteration (Int)
+        total       - Required  : total iterations (Int)
+        prefix      - Optional  : prefix string (Str)
+        suffix      - Optional  : suffix string (Str)
+        decimals    - Optional  : positive number of decimals in percent complete (Int)
+        length      - Optional  : character length of bar (Int)
+        fill        - Optional  : bar fill character (Str)
+        printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
+    """
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + '-' * (length - filledLength)
+    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
+#
 
 def align_omega(w1, w2, Im1_tmp, Re1_tmp, Im2_tmp, Re2_tmp):
     w = np.linspace(0, np.min([w1[-1], w2[-1]]), num=np.min([len(w1), len(w2)]))
@@ -55,9 +75,8 @@ def calc_raman(mode, eigval, w, Im1, Re1, Im2, Re2, stepsize, basis):
     f.close()
 #
 
-def calcTensors(modelist_orig, program, stepsize, disps):
-    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist_orig, None)
-    modelist = removeModes(eigvecs, eigvals, masses, modelist_orig)
+def calcTensors(modelist, program, stepsize, disps):
+    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist, None)
 
     print("[calcTensors]: Calculating Raman tensors of modes " + str(modelist))
     if os.path.isdir("Ramantensors") == False:
@@ -67,8 +86,8 @@ def calcTensors(modelist_orig, program, stepsize, disps):
         from parserVASP import getOpticsVASP
         iteration = 0
         for mode in modelist:
-            #if len(modelist) > 10:
-            #    printProgressBar(iteration, len(modelist)-1)
+            if len(modelist) > 10:
+                printProgressBar(iteration, len(modelist)-1)
             #
             eigval = eigvals[mode-1]
             norm = norms[mode-1]
@@ -86,8 +105,8 @@ def calcTensors(modelist_orig, program, stepsize, disps):
         from parserQE import getOpticsQE
         iteration = 0
         for mode in modelist:
-            #if len(modelist) > 10:
-            #    printProgressBar(iteration, len(modelist)-1)
+            if len(modelist) > 10:
+                printProgressBar(iteration, len(modelist)-1)
             #
             eigval = eigvals[mode-1]
             norm = norms[mode-1]
@@ -96,7 +115,7 @@ def calcTensors(modelist_orig, program, stepsize, disps):
 
             #print("[calcTensors]: Calculating mode "+str(mode))
             w, Im1, Re1, Im2, Re2 = align_omega(w1, w2, Im1, Re1, Im2, Re2)
-            calc_raman(mode, eigval, w, Im1, Re1, Im2, Re2, stepsize, basis)
+            calc_raman(mode, eigval, w, Im1, Re1, Im2, Re2, stepsize)
             iteration += 1
         #
         print("[calcTensors]: Done.")

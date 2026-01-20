@@ -10,13 +10,10 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from parserPhonopy import parsePhonopy
 
-def plotSpectrum(modelist, w0, porto, LO):
+def plotSpectrum(modelist, w0, porto):
     print("[plotSpectrum]: Plotting Raman spectrum")
-    
-    if LO == False:
-        freqs, eigvecs_new, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist, None)
-    else:
-        freqs, eigvecs_new, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist, porto)
+    # use a dummy for modes to be considered
+    freqs, eigvecs_new, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist, porto)
 
     if (qpoint[0] != 0.0 and qpoint[1] != 0.0 and qpoint[2] != 0.0) or (qpoint[0] == 0.0 and qpoint[1] == 0.0 and qpoint[2] == 0.0):
         ki = "K"
@@ -82,7 +79,6 @@ def plotSpectrum(modelist, w0, porto, LO):
     x_data = [x[0] for x in dft_raw_data]
     y_data = [x[dict[porto]] for x in dft_raw_data]
     ymax = np.max(y_data)
-    
     """
     # print the peak positions
     print("[plotSpectrum]: Found peaks at:")

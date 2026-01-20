@@ -13,7 +13,7 @@ parser.add_argument("-v", "--version", action="store_true",\
                     help="prints the version number.")
 parser.add_argument("-a", "--analysis", action="store_true",\
                     help="analyzes the symmetries of the structure and prints information.")
-parser.add_argument("-m", "--modelist", type=str, default="",\
+parser.add_argument("-m", "--modelist", type=str, default=None,\
                     help="The phonon modes to be considered for the calculations. \n\
                     The labelling is in ascending order according to the mode's frequencies. \
                     Format of modelist:\
@@ -55,33 +55,11 @@ parser.add_argument("-scf", "--QEinputfile", type=str, default="scf.in",\
                     help="The pw.x input file to be duplicated for the Raman calculations")
 parser.add_argument("-shg", "--nonlincorr", type=str, default=None,\
                     help="Reads in the SHG tensor from file")
+parser.add_argument("-nosym", "--no_symmetry", action="store_true",\
+                    help="ignores symmetries and explicitly calculates all given modes")
 
 
 args = parser.parse_args()
-
-if args.modelist != None:
-    # check the modes
-    modelist = []
-    for j in args.modelist.split():
-        if j.isdigit() == True:
-            modelist.append(int(j))
-        elif j.split("-")[0].isdigit() == True and j.split("-")[-1].isdigit() == True:
-            if int(j.split("-")[0]) < int(j.split("-")[-1]):
-                for k in range(int(j.split("-")[0]),int(j.split("-")[-1])+1):
-                    modelist.append(int(k))
-                #
-            else:
-                print("[parserArgs]: First limit of modelist range has to be SMALLER than second, exiting...")
-                sys.exit(1)
-            #
-        else:
-            print("[parserArgs]: I don't understand which phonon modes you want to have put out, exiting...")
-            sys.exit(1)
-        #
-    #
-    modelist.sort()
-    args.modelist = np.array(list(dict.fromkeys(modelist)))
-#
 
 """
     if opt == "h":
