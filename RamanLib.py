@@ -517,7 +517,42 @@ def RamanTensorComponents(pointgroup):
 #
 
 def RamanSelectionRules(pointgroup, RTs):
-    if pointgroup == "3m":
+    if pointgroup == "1":
+        backscattering = ["A",
+                          "A",
+                          "A",
+                          "A",
+                          "A",
+                          "A",
+                          "A",
+                          "A"]
+        backComponents = [RTs[1][bdDir[0]],\
+                          RTs[1][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]],\
+                          RTs[1][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]],\
+                          RTs[1][bdDir[7]],\
+                          RTs[1][bdDir[8]]]
+        rightscattering = ["A",
+                           "A",
+                           "A",
+                           "A",
+                           "A",
+                           "A",
+                           "A",
+                           "A"]
+        rightComponents = [RTs[1][rDir[0]],\
+                           RTs[1][rDir[1]],\
+                           RTs[1][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[1][rDir[4]],\
+                           RTs[1][rDir[5]],\
+                           RTs[1][rDir[6]],\
+                           RTs[1][rDir[7]]]
+    
+    elif pointgroup == "3m":
         backscattering = ["A1(TO) + E(TO)",
                           "E(TO)",
                           "A1(TO)",
