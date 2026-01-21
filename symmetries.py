@@ -105,16 +105,11 @@ def analysis():
 
     # get the corresponding Raman tensors and selection rules
     #pointgroup = dataset["pointgroup"]
-    #RamanTensors = analyzeRamanTensors(pointgroup)
-    #RamanSelection(pointgroup, RamanTensors)
-    #dielectricTensor = analyzeDielectricTensor(pointgroup)
-    #IRSelection(pointgroup)
-
-    # debug section
-    RamanTensors = analyzeRamanTensors("1")
-    RamanSelection("1", RamanTensors)
-    dielectricTensor = analyzeDielectricTensor("1")
-    IRSelection("1")
+    pointgroup = "1"
+    RamanTensors = analyzeRamanTensors(pointgroup)
+    RamanSelection(pointgroup, RamanTensors)
+    dielectricTensor = analyzeDielectricTensor(pointgroup)
+    IRSelection(pointgroup)
     
     # get the Irreps for all modes
     labels = getIrrepsSymbols(basis, coord, elements, pointgroup)
