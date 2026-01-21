@@ -44,10 +44,10 @@ def RamanSelection(pointgroup, RamanTensors):
     backscattering, backComponents, rightscattering, rightComponents = RamanSelectionRules(pointgroup, RamanTensors)
 
     # format the components
-    for j in range(9):
+    for j in range(len(backComponents)):
         backComponents[j] = formatString(backComponents[j])
     #
-    for j in range(8):
+    for j in range(len(rightComponents)):
         rightComponents[j] = formatString(rightComponents[j])
     #               
 
@@ -105,7 +105,7 @@ def analysis():
 
     # get the corresponding Raman tensors and selection rules
     #pointgroup = dataset["pointgroup"]
-    pointgroup = "1"
+    pointgroup = "mmm"
     RamanTensors = analyzeRamanTensors(pointgroup)
     RamanSelection(pointgroup, RamanTensors)
     dielectricTensor = analyzeDielectricTensor(pointgroup)

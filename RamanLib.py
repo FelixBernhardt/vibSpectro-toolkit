@@ -25,8 +25,8 @@ periodTable = {'H': 1, 'He': 2, 'Li': 3, 'Be': 4, 'B': 5, 'C': 6, 'N': 7, 'O': 8
 
 backDirs = ["x(yy)x\u0305", "x(yz)x\u0305", "x(zz)x\u0305", "y(xx)y\u0305", "y(xz)y\u0305", "y(zz)y\u0305", "z(xx)z\u0305", "z(xy)z\u0305", "z(yy)z\u0305"]
 bdDir = {0: (1,1), 1: (1,2), 2: (2,2), 3: (0,0), 4: (0,2), 5: (2,2), 6: (0,0), 7: (0,1), 8: (1,1)}
-rightDirs = ["x(yx)y", "x(yz)y", "x(zx)y", "x(zz)y", "y(xx)z", "y(xy)z", "y(zx)z", "y(zy)z"]
-rDir = {0: (0,1), 1: (1,2), 2: (0,2), 3: (2,2), 4: (0,0), 5:(0,1), 6: (0,2), 7: (1,2)}
+rightDirs = ["x(yx)y", "x(yz)y", "x(zx)y", "x(zz)y", "x(yx)z", "x(yy)z", "x(zx)z", "x(zy)z", "y(xx)z", "y(xy)z", "y(zx)z", "y(zy)z"]
+rDir = {0: (0,1), 1: (1,2), 2: (0,2), 3: (2,2), 4: (0,1), 5: (1,1), 6: (0,2), 7: (1,2), 8: (0,0), 9:(0,1), 10: (0,2), 11: (1,2)}
 IRDirs = ["E || x", "E || y", "E || z"]
 
 e_charge = 1.602176634e-19   # C
@@ -108,6 +108,7 @@ POINTGROUP_TO_INT = {
 }
 
 CHAR_TABLES = {
+    # 1. Triclinic
     "C1": {
         "A": [1],
     },
@@ -117,13 +118,14 @@ CHAR_TABLES = {
         "Au": [1, -1],
     },
 
+    # 2. Monoclinic
     "C2": {
         "A": [1, 1],
         "B": [1, -1],
     },
 
     "Cs": {
-        "A'":  [1, 1],
+        "A'": [1, 1],
         "A''": [1, -1],
     },
 
@@ -134,8 +136,9 @@ CHAR_TABLES = {
         "Bu": [1, -1, -1, 1],
     },
 
+    # 3. Orthorhombic
     "D2": {
-        "A":  [1, 1, 1, 1],
+        "A": [1, 1, 1, 1],
         "B1": [1, 1, -1, -1],
         "B2": [1, -1, 1, -1],
         "B3": [1, -1, -1, 1],
@@ -149,16 +152,17 @@ CHAR_TABLES = {
     },
 
     "D2h": {
-        "Ag":  [1, 1, 1, 1, 1, 1, 1, 1],
+        "Ag": [1, 1, 1, 1, 1, 1, 1, 1],
         "B1g": [1, 1, -1, -1, 1, 1, -1, -1],
         "B2g": [1, -1, 1, -1, 1, -1, 1, -1],
         "B3g": [1, -1, -1, 1, 1, -1, -1, 1],
-        "Au":  [1, 1, 1, 1, -1, -1, -1, -1],
+        "Au": [1, 1, 1, 1, -1, -1, -1, -1],
         "B1u": [1, 1, -1, -1, -1, -1, 1, 1],
         "B2u": [1, -1, 1, -1, -1, 1, -1, 1],
         "B3u": [1, -1, -1, 1, -1, 1, 1, -1],
     },
 
+    # 4. Tetragonal
     "C4": {
         "A": [1, 1, 1, 1],
         "B": [1, -1, 1, -1],
@@ -180,20 +184,20 @@ CHAR_TABLES = {
         "Eu": [2, 0, -2, 0, -2, 0, 2, 0],
     },
 
-    "D4": {
-        "A1": [1, 1, 1, 1, 1],
-        "A2": [1, 1, 1, -1, -1],
-        "B1": [1, -1, 1, 1, -1],
-        "B2": [1, -1, 1, -1, 1],
-        "E":  [2, 0, -2, 0, 0],
-    },
-
     "C4v": {
         "A1": [1, 1, 1, 1, 1],
         "A2": [1, 1, 1, -1, -1],
         "B1": [1, -1, 1, 1, -1],
         "B2": [1, -1, 1, -1, 1],
-        "E":  [2, 0, -2, 0, 0],
+        "E": [2, 0, -2, 0, 0],
+    },
+
+    "D4": {
+        "A1": [1, 1, 1, 1, 1],
+        "A2": [1, 1, 1, -1, -1],
+        "B1": [1, -1, 1, 1, -1],
+        "B2": [1, -1, 1, -1, 1],
+        "E": [2, 0, -2, 0, 0],
     },
 
     "D2d": {
@@ -201,52 +205,170 @@ CHAR_TABLES = {
         "A2": [1, 1, 1, -1, -1],
         "B1": [1, -1, 1, 1, -1],
         "B2": [1, -1, 1, -1, 1],
-        "E":  [2, 0, -2, 0, 0],
+        "E": [2, 0, -2, 0, 0],
     },
 
     "D4h": {
         "A1g": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        "A2g": [1, 1, 1, -1, -1, 1, 1, -1, -1, 1],
-        "B1g": [1, -1, 1, 1, -1, 1, -1, 1, -1, 1],
-        "B2g": [1, -1, 1, -1, 1, 1, -1, -1, 1, 1],
-        "Eg":  [2, 0, -2, 0, 0, 2, 0, -2, 0, 0],
+        "A2g": [1, 1, 1, -1, -1, 1, 1, 1, -1, -1],
+        "B1g": [1, -1, 1, 1, -1, 1, -1, 1, 1, -1],
+        "B2g": [1, -1, 1, -1, 1, 1, -1, 1, -1, 1],
+        "Eg": [2, 0, -2, 0, 0, 2, 0, -2, 0, 0],
         "A1u": [1, 1, 1, 1, 1, -1, -1, -1, -1, -1],
-        "A2u": [1, 1, 1, -1, -1, -1, -1, 1, 1, -1],
-        "B1u": [1, -1, 1, 1, -1, -1, 1, -1, 1, -1],
-        "B2u": [1, -1, 1, -1, 1, -1, 1, 1, -1, -1],
-        "Eu":  [2, 0, -2, 0, 0, -2, 0, 2, 0, 0],
+        "A2u": [1, 1, 1, -1, -1, -1, -1, -1, 1, 1],
+        "B1u": [1, -1, 1, 1, -1, -1, 1, -1, -1, 1],
+        "B2u": [1, -1, 1, -1, 1, -1, 1, -1, 1, -1],
+        "Eu": [2, 0, -2, 0, 0, -2, 0, 2, 0, 0],
     },
 
+    # 5. Trigonal
     "C3": {
         "A": [1, 1, 1],
         "E": [2, -1, -1],
     },
 
-    "C3i": {
+    "S6": {
         "Ag": [1, 1, 1, 1, 1, 1],
-        "Eg": [2, -1, -1, 2, -1, -1],
         "Au": [1, 1, 1, -1, -1, -1],
+        "Eg": [2, -1, -1, 2, -1, -1],
         "Eu": [2, -1, -1, -2, 1, 1],
-    },
-
-    "D3": {
-        "A1": [1, 1, 1, 1],
-        "A2": [1, 1, 1, -1],
-        "E":  [2, -1, 2, 0],
     },
 
     "C3v": {
         "A1": [1, 1, 1],
         "A2": [1, 1, -1],
-        "E":  [2, -1, 0],
+        "E": [2, -1, 0],
+    },
+
+    "D3": {
+        "A1": [1, 1, 1],
+        "A2": [1, 1, -1],
+        "E": [2, -1, 0],
     },
 
     "D3d": {
         "A1g": [1, 1, 1, 1, 1, 1],
-        "A2g": [1, 1, 1, -1, -1, 1],
-        "Eg":  [2, -1, 2, 0, 0, 2],
-    }
+        "A2g": [1, 1, -1, 1, 1, -1],
+        "Eg": [2, -1, 0, 2, -1, 0],
+        "A1u": [1, 1, 1, -1, -1, -1],
+        "A2u": [1, 1, -1, -1, -1, 1],
+        "Eu": [2, -1, 0, -2, 1, 0],
+    },
+
+    # 6. Hexagonal
+    "C6": {
+        "A": [1, 1, 1, 1, 1, 1],
+        "B": [1, -1, 1, -1, 1, -1],
+        "E1": [2, 1, -1, -2, -1, 1],
+        "E2": [2, -1, -1, 2, -1, -1],
+    },
+
+    "C3h": {
+        "A'": [1, 1, 1, 1, 1, 1],
+        "A''": [1, 1, 1, -1, -1, -1],
+        "E'": [2, -1, -1, 2, -1, -1],
+        "E''": [2, -1, -1, -2, 1, 1],
+    },
+
+    "C6h": {
+        "Ag": [1]*12,
+        "Bg": [1, -1]*6,
+        "E1g": [2, 1, -1, -2, -1, 1]*2,
+        "E2g": [2, -1, -1, 2, -1, -1]*2,
+        "Au": [1]*6 + [-1]*6,
+        "Bu": [1, -1]*3 + [-1, 1]*3,
+        "E1u": [2, 1, -1, -2, -1, 1] + [-2, -1, 1, 2, 1, -1],
+        "E2u": [2, -1, -1, 2, -1, -1] + [-2, 1, 1, -2, 1, 1],
+    },
+
+    "C6v": {
+        "A1": [1, 1, 1, 1, 1, 1],
+        "A2": [1, 1, 1, -1, -1, -1],
+        "B1": [1, -1, 1, 1, -1, 1],
+        "B2": [1, -1, 1, -1, 1, -1],
+        "E1": [2, 1, -1, 0, -1, 1],
+        "E2": [2, -1, -1, 0, -1, -1],
+    },
+
+    "D6": {
+        "A1": [1, 1, 1, 1, 1, 1],
+        "A2": [1, 1, 1, -1, -1, -1],
+        "B1": [1, -1, 1, 1, -1, 1],
+        "B2": [1, -1, 1, -1, 1, -1],
+        "E1": [2, 1, -1, 0, -1, 1],
+        "E2": [2, -1, -1, 0, -1, -1],
+    },
+
+    "D3h": {
+        "A1'": [1, 1, 1, 1, 1, 1],
+        "A2'": [1, 1, -1, 1, 1, -1],
+        "E'": [2, -1, 0, 2, -1, 0],
+        "A1''": [1, 1, 1, -1, -1, -1],
+        "A2''": [1, 1, -1, -1, -1, 1],
+        "E''": [2, -1, 0, -2, 1, 0],
+    },
+
+    "D6h": {
+        "A1g": [1]*12,
+        "A2g": [1, 1, -1, 1, 1, -1]*2,
+        "B1g": [1, -1, 1, 1, -1, 1]*2,
+        "B2g": [1, -1, 1, -1, 1, -1]*2,
+        "E1g": [2, 1, -1, 0, -1, 1]*2,
+        "E2g": [2, -1, -1, 0, -1, -1]*2,
+        "A1u": [1]*6 + [-1]*6,
+        "A2u": [1, 1, -1, -1, -1, 1]*2,
+        "B1u": [1, -1, 1, -1, 1, -1]*2,
+        "B2u": [1, -1, 1, 1, -1, 1]*2,
+        "E1u": [2, 1, -1, 0, -1, 1] + [-2, -1, 1, 0, 1, -1],
+        "E2u": [2, -1, -1, 0, -1, -1] + [-2, 1, 1, 0, 1, 1],
+    },
+
+    # 7. Cubic
+    "T": {
+        "A": [1, 1, 1],
+        "E": [2, -1, 2],
+        "T": [3, 0, -1],
+    },
+
+    "Th": {
+        "Ag": [1, 1, 1, 1, 1, 1],
+        "Eg": [2, -1, 2, 2, -1, 2],
+        "Tg": [3, 0, -1, 3, 0, -1],
+        "Au": [1, 1, 1, -1, -1, -1],
+        "Eu": [2, -1, 2, -2, 1, -2],
+        "Tu": [3, 0, -1, -3, 0, 1],
+    },
+
+    "O": {
+        "A1": [1, 1, 1, 1, 1],
+        "A2": [1, 1, 1, -1, -1],
+        "E": [2, -1, 2, 0, 0],
+        "T1": [3, 0, -1, 1, -1],
+        "T2": [3, 0, -1, -1, 1],
+    },
+
+    "Td": {
+        "A1": [1, 1, 1, 1, 1],
+        "A2": [1, 1, 1, -1, -1],
+        "E": [2, -1, 2, 0, 0],
+        "T1": [3, 0, -1, 1, -1],
+        "T2": [3, 0, -1, -1, 1],
+    },
+
+    "Oh": {
+        "A1g": [1]*10,
+        "A2g": [1, 1, 1, -1, -1]*2,
+        "Eg": [2, -1, 2, 0, 0]*2,
+        "T1g": [3, 0, -1, 1, -1]*2,
+        "T2g": [3, 0, -1, -1, 1]*2,
+        "A1u": [1]*5 + [-1]*5,
+        "A2u": [1, 1, 1, -1, -1] + [-1, -1, -1, 1, 1],
+        "Eu": [2, -1, 2, 0, 0] + [-2, 1, -2, 0, 0],
+        "T1u": [3, 0, -1, 1, -1] + [-3, 0, 1, -1, 1],
+        "T2u": [3, 0, -1, -1, 1] + [-3, 0, 1, 1, -1],
+    },
 }
+
 
 def dielectricFunctionComponents(pointgroup):
     if pointgroup == "1" or pointgroup == "-1":
@@ -290,12 +412,12 @@ def RamanTensorComponents(pointgroup):
     elif pointgroup == "2":
         A = np.array([["a", "d", 0], ["d", "b", 0], [0, 0, "c"]], dtype = "str")
         Bxy = np.array([[0, 0, "e"], [0, 0, "f"], ["e", "f", 0]], dtype = "str")
-        RamanTensors = ["A", A, "B(x,y)", Bxy]
+        RamanTensors = ["A", A, "B", Bxy]
 
     elif pointgroup == "m":
         Axy = np.array([["a", "d", 0], ["d", "b", 0], [0, 0, "c"]], dtype = "str")
         Az = np.array([[0, 0, "e"], [0, 0, "f"], ["e", "f", 0]], dtype = "str")
-        RamanTensors = ["A'(x,y)", Axy, "A''(z)", Az]
+        RamanTensors = ["A'", Axy, "A''", Az]
 
     elif pointgroup == "2/m":
         Ag = np.array([["a", "d", 0], ["d", "b", 0], [0, 0, "c"]], dtype = "str")
@@ -304,21 +426,21 @@ def RamanTensorComponents(pointgroup):
 
     elif pointgroup == "222":
         A = np.array([["a", 0, 0], [0, "b", 0], [0, 0, "c"]], dtype = "str")
-        B1z = np.array([[0, "d", 0], [0, "d", 0], [0, 0, 0]], dtype = "str")
+        B1z = np.array([[0, "d", 0], ["d", 0, 0], [0, 0, 0]], dtype = "str")
         B2y = np.array([[0, 0, "e"], [0, 0, 0], ["e", 0, 0]], dtype = "str")
         B3x = np.array([[0, 0, 0], [0, 0, "f"], [0, "f", 0]], dtype = "str")
-        RamanTensors = ["A", A, "B1(z)", B1z, "B2(y)", B2y, "B3(x)", B3x]
+        RamanTensors = ["A", A, "B1", B1z, "B2", B2y, "B3", B3x]
 
     elif pointgroup == "mm2":
         A1z = np.array([["a", 0, 0], [0, "b", 0], [0, 0, "c"]], dtype = "str")
-        A2 = np.array([[0, "d", 0], [0, "d", 0], [0, 0, 0]], dtype = "str")
+        A2 = np.array([[0, "d", 0], ["d", 0, 0], [0, 0, 0]], dtype = "str")
         B1x = np.array([[0, 0, "e"], [0, 0, 0], ["e", 0, 0]], dtype = "str")
         B2y = np.array([[0, 0, 0], [0, 0, "f"], [0, "f", 0]], dtype = "str")
-        RamanTensors = ["A1(z)", A1z, "A2", A2, "B1(x)", B1x, "B2(y)", B2y]
+        RamanTensors = ["A1", A1z, "A2", A2, "B1", B1x, "B2", B2y]
 
     elif pointgroup == "mmm":
         Ag = np.array([["a", 0, 0], [0, "b", 0], [0, 0, "c"]], dtype = "str")
-        B1g = np.array([[0, "d", 0], [0, "d", 0], [0, 0, 0]], dtype = "str")
+        B1g = np.array([[0, "d", 0], ["d", 0, 0], [0, 0, 0]], dtype = "str")
         B2g = np.array([[0, 0, "e"], [0, 0, 0], ["e", 0, 0]], dtype = "str")
         B3g = np.array([[0, 0, 0], [0, 0, "f"], [0, "f", 0]], dtype = "str")
         RamanTensors = ["Ag", Ag, "B1g", B1g, "B2g", B2g, "B3g", B3g]
@@ -328,14 +450,14 @@ def RamanTensorComponents(pointgroup):
         B = np.array([["c", "d", 0], ["d", "-c", 0], [0, 0, 0]], dtype = "str")
         E1x = np.array([[0, 0, "e"], [0, 0, "f"], ["e", "f", 0]], dtype = "str")
         E2y = np.array([[0, 0, "-f"], [0, 0, "e"], ["-f", "e", 0]], dtype = "str")
-        RamanTensors = ["A(z)", Az, "B", B, "1E(x)", E1x, "2Ey", E2y]
+        RamanTensors = ["A", Az, "B", B, "1E", E1x, "2E", E2y]
 
     elif pointgroup == "-4":
         Az = np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype = "str")
         B = np.array([["c", "d", 0], ["d", "-c", 0], [0, 0, 0]], dtype = "str")
         E1x = np.array([[0, 0, "e"], [0, 0, "f"], ["e", "f", 0]], dtype = "str")
         E2y = np.array([[0, 0, "f"], [0, 0, "-e"], ["f", "-e", 0]], dtype = "str")
-        RamanTensors = ["A(z)", Az, "B(z)", B, "1E(x)", E1x, "2Ey", E2y]
+        RamanTensors = ["A", Az, "B", B, "1E", E1x, "2E", E2y]
 
     elif pointgroup == "4/m":
         Ag = np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype = "str")
@@ -350,7 +472,7 @@ def RamanTensorComponents(pointgroup):
         B2 = np.array([[0, "d", 0], ["d", 0, 0], [0, 0, 0]], dtype = "str")
         Ex = np.array([[0, 0, 0], [0, 0, "e"], [0, "e", 0]], dtype = "str")
         Ey = np.array([[0, 0, "-e"], [0, 0, 0], ["-e", 0, 0]], dtype = "str")
-        RamanTensors = ["A1", A1, "B1", B1, "B2", B2, "E(x)", Ex, "E(y)", Ey]
+        RamanTensors = ["A1", A1, "B1", B1, "B2", B2, "E", Ex, "E", Ey]
 
     elif pointgroup == "4222":
         Az = np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype = "str")
@@ -358,7 +480,7 @@ def RamanTensorComponents(pointgroup):
         B2 = np.array([[0, "d", 0], ["d", 0, 0], [0, 0, 0]], dtype = "str")
         Ex = np.array([[0, 0, 0], [0, 0, "e"], [0, "e", 0]], dtype = "str")
         Ey = np.array([[0, 0, "e"], [0, 0, 0], ["e", 0, 0]], dtype = "str")
-        RamanTensors = ["A(z)", Az, "B1", B1, "B2", B2, "E(x)", Ex, "E(y)", Ey]
+        RamanTensors = ["A", Az, "B1", B1, "B2", B2, "E", Ex, "E", Ey]
 
     elif pointgroup == "-42m":
         A1 = np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype = "str")
@@ -366,7 +488,7 @@ def RamanTensorComponents(pointgroup):
         B2z = np.array([[0, "d", 0], ["d", 0, 0], [0, 0, 0]], dtype = "str")
         Ex = np.array([[0, 0, 0], [0, 0, "e"], [0, "e", 0]], dtype = "str")
         Ey = np.array([[0, 0, "e"], [0, 0, 0], ["e", 0, 0]], dtype = "str")
-        RamanTensors = ["A1", A1, "B1", B1, "B2(z)", B2z, "E(x)", Ex, "E(y)", Ey]
+        RamanTensors = ["A1", A1, "B1", B1, "B2", B2z, "E", Ex, "E", Ey]
 
     elif pointgroup == "4/mmm":
         A1g = np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype = "str")
@@ -380,13 +502,13 @@ def RamanTensorComponents(pointgroup):
         Az = np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype= "str")
         E1x = np.array([["c", "d", "e"], ["d", "-c", "f"], ["e", "f", 0]], dtype= "str")
         E2y = np.array([["d", "-c", "-f"], ["-c", "-d", "e"], ["e", "-f", 0]], dtype= "str")
-        RamanTensors = ["A(z)", Az, "1E(x)", E1x, "2E(y)", E2y]
+        RamanTensors = ["A(z)", Az, "1E", E1x, "2E", E2y]
 
     elif pointgroup == "-3":
         Ag = np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype= "str")
         E1x = np.array([["c", "d", "e"], ["d", "-c", "f"], ["e", "f", 0]], dtype= "str")
         E2y = np.array([["d", "-c", "-f"], ["-c", "-d", "e"], ["e", "-f", 0]], dtype= "str")
-        RamanTensors = ["Ag", Az, "1E(x)", E1x, "2E(y)", E2y]
+        RamanTensors = ["Ag", Az, "1E", E1x, "2E", E2y]
 
     elif pointgroup == "32":
         A1 = np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype= "str")
@@ -398,7 +520,7 @@ def RamanTensorComponents(pointgroup):
         A1 = np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype= "str")
         Ex = np.array([[0, "c", "d"], ["c", 0, 0], ["d", 0, 0]], dtype= "str")
         Ey = np.array([["c", 0, 0], [0, "-c", "d"], [0, "d", 0]], dtype= "str")
-        RamanTensors = ["A1", A1, "Ex", Ex, "Ey", Ey]
+        RamanTensors = ["A1", A1, "E", Ex, "E", Ey]
 
     elif pointgroup == "-3m":
         A1g = np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype= "str")
@@ -412,7 +534,7 @@ def RamanTensorComponents(pointgroup):
         E12y = np.array([[0, 0, "-d"], [0, 0, "c"], ["-d", "c", 0]], dtype = "str")
         E12 = np.array([["e", "f", 0], ["f", "-e", 0], [0, 0, 0]], dtype = "str")
         E22 = np.array([["f", "-e", 0], ["-e", "-f", 0], [0, 0, 0]], dtype = "str")
-        RamanTensors = ["A(z)", Az, "1E1(x)", E11x, "2E1(y)", E12y, "1E2", E12, "2E2", E22]
+        RamanTensors = ["A(z)", Az, "1E1", E11x, "2E1", E12y, "1E2", E12, "2E2", E22]
 
     elif pointgroup == "-6":
         A = np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype = "str")
@@ -436,7 +558,7 @@ def RamanTensorComponents(pointgroup):
         E1y = np.array([[0, 0, "-c"], [0, 0, 0], ["-c", 0, 0]], dtype = "str")
         E21 = np.array([["d", 0, 0], [0, "-d", 0], [0, 0, 0]], dtype = "str")
         E22 = np.array([[0, "-d", 0], ["-d", 0, 0], [0, 0, 0]], dtype = "str")
-        RamanTensors = ["A1", Az, "E1(x)", E1x, "E1(y)", E1y, "E2", E21, "E2", E22]
+        RamanTensors = ["A1", Az, "E1", E1x, "E1", E1y, "E2", E21, "E2", E22]
 
     elif pointgroup == "6mm":
         A1z = np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype = "str")
@@ -444,7 +566,7 @@ def RamanTensorComponents(pointgroup):
         E1x = np.array([[0, 0, 0], [0, 0, "c"], [0, "c", 0]], dtype = "str")
         E21 = np.array([["d", 0, 0], [0, "-d", 0], [0, 0, 0]], dtype = "str")
         E22 = np.array([[0, "-d", 0], ["-d", 0, 0], [0, 0, 0]], dtype = "str")
-        RamanTensors = ["A1(z)", A1z, "E1(x)", E1x, "E1(y)", E1y, "E2", E21, "E2", E22]
+        RamanTensors = ["A1", A1z, "E1", E1x, "E1", E1y, "E2", E21, "E2", E22]
 
     elif pointgroup == "-62m":
         A1 = np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype = "str")
@@ -452,7 +574,7 @@ def RamanTensorComponents(pointgroup):
         E1 = np.array([[0, 0, "-c"], [0, 0, 0], ["-c", 0, 0]], dtype = "str")
         Ex = np.array([["d", 0, 0], [0, "-d", 0], [0, 0, 0]], dtype = "str")
         Ey = np.array([[0, "-d", 0], ["-d", 0, 0], [0, 0, 0]], dtype = "str")
-        RamanTensors = ["A'1", A1, "E''", E1x, "E''", E1y, "E'(x)", E21, "E'(y)", E22]
+        RamanTensors = ["A'1", A1, "E''", E1x, "E''", E1y, "E'", E21, "E'", E22]
 
     elif pointgroup == "6/mmm":
         A1g = np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype = "str")
@@ -469,7 +591,7 @@ def RamanTensorComponents(pointgroup):
         Tx = np.array([[0, 0, 0], [0, 0, "d"], [0, "d", 0]], dtype = "str")
         Ty = np.array([[0, 0, "d"], [0, 0, 0], ["d", 0, 0]], dtype = "str")
         Tz = np.array([[0, "d", 0], ["d", 0, 0], [0, 0, 0]], dtype = "str")
-        RamanTensors = ["A", A, "1E", E1, "2E", E2, "T(x)", Tx, "T(y)", Ty, "T(z)", Tz]
+        RamanTensors = ["A", A, "1E", E1, "2E", E2, "T", Tx, "T", Ty, "T", Tz]
 
     elif pointgroup == "m-3":
         Ag = np.array([["a", 0, 0], [0, "a", 0], [0, 0, "a"]], dtype = "str")
@@ -496,7 +618,7 @@ def RamanTensorComponents(pointgroup):
         T2x = np.array([[0, 0, 0], [0, 0, "d"], [0, "d", 0]], dtype = "str")
         T2y = np.array([[0, 0, "d"], [0, 0, 0], ["d", 0, 0]], dtype = "str")
         T2z = np.array([[0, "d", 0], ["d", 0, 0], [0, 0, 0]], dtype = "str")
-        RamanTensors = ["A1", A1, "E", E1, "E", E2, "T2(x)", T2x, "T2(y)", T2y, "T2(z)", T2z]
+        RamanTensors = ["A1", A1, "E", E1, "E", E2, "T2", T2x, "T2", T2y, "T2", T2z]
 
     elif pointgroup == "m-3m":
         A1g = np.array([["a", 0, 0], [0, "a", 0], [0, 0, "a"]], dtype = "str")
@@ -525,6 +647,7 @@ def RamanSelectionRules(pointgroup, RTs):
                           "A",
                           "A",
                           "A",
+                          "A",
                           "A"]
         backComponents = [RTs[1][bdDir[0]],\
                           RTs[1][bdDir[1]],\
@@ -542,6 +665,10 @@ def RamanSelectionRules(pointgroup, RTs):
                            "A",
                            "A",
                            "A",
+                           "A",
+                           "A", 
+                           "A", 
+                           "A",
                            "A"]
         rightComponents = [RTs[1][rDir[0]],\
                            RTs[1][rDir[1]],\
@@ -550,8 +677,320 @@ def RamanSelectionRules(pointgroup, RTs):
                            RTs[1][rDir[4]],\
                            RTs[1][rDir[5]],\
                            RTs[1][rDir[6]],\
-                           RTs[1][rDir[7]]]
+                           RTs[1][rDir[7]],\
+                           RTs[1][rDir[8]],\
+                           RTs[1][rDir[9]],\
+                           RTs[1][rDir[10]],\
+                           RTs[1][rDir[11]]]
     
+    elif pointgroup == "-1":
+        backscattering = ["Ag",
+                          "Ag",
+                          "Ag",
+                          "Ag",
+                          "Ag",
+                          "Ag",
+                          "Ag",
+                          "Ag",
+                          "Ag"]
+        backComponents = [RTs[1][bdDir[0]],\
+                          RTs[1][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]],\
+                          RTs[1][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]],\
+                          RTs[1][bdDir[7]],\
+                          RTs[1][bdDir[8]]]
+        rightscattering = ["Ag",
+                           "Ag",
+                           "Ag",
+                           "Ag",
+                           "Ag",
+                           "Ag",
+                           "Ag",
+                           "Ag",
+                           "Ag",
+                           "Ag",
+                           "Ag",
+                           "Ag"]
+        rightComponents = [RTs[1][rDir[0]],\
+                           RTs[1][rDir[1]],\
+                           RTs[1][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[1][rDir[4]],\
+                           RTs[1][rDir[5]],\
+                           RTs[1][rDir[6]],\
+                           RTs[1][rDir[7]],\
+                           RTs[1][rDir[8]],\
+                           RTs[1][rDir[9]],\
+                           RTs[1][rDir[10]],\
+                           RTs[1][rDir[11]]]
+    
+    elif pointgroup == "2":
+        backscattering = ["A(TO)",   # x(yy)x
+                          "B(LO+TO)",# x(yz)x
+                          "A(TO)",   # x(zz)x
+                          "A(TO)",   # y(xx)y
+                          "B(LO+TO)",# y(xz)y
+                          "A(TO)",   # y(zz)y
+                          "A(LO)",   # z(xx)z
+                          "A(LO)",   # z(xy)z
+                          "A(LO)"]   # z(yy)z
+        backComponents = [RTs[1][bdDir[0]],\
+                          RTs[3][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]],\
+                          RTs[3][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]],\
+                          RTs[1][bdDir[7]],\
+                          RTs[1][bdDir[8]]]
+        rightscattering = ["A(TO)",    # x(yx)y
+                           "B(LO)",    # x(yz)y
+                           "B(LO)",    # x(zx)y
+                           "A(TO)",    # x(zz)y
+                           "A(LO+TO)", # x(yx)z
+                           "A(LO+TO)", # x(yy)z
+                           "B(LO+TO)", # x(zx)z
+                           "B(LO+TO)", # x(zy)z
+                           "A(LO+TO)", # y(xx)z
+                           "A(LO+TO)", # y(xy)z
+                           "B(LO+TO)", # y(zx)z
+                           "B(LO+TO)"] # y(zy)z
+        rightComponents = [RTs[1][rDir[0]],\
+                           RTs[3][rDir[1]],\
+                           RTs[3][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[1][rDir[4]],\
+                           RTs[1][rDir[5]],\
+                           RTs[3][rDir[6]],\
+                           RTs[3][rDir[7]],\
+                           RTs[1][rDir[8]],\
+                           RTs[1][rDir[9]],\
+                           RTs[3][rDir[10]],\
+                           RTs[3][rDir[11]]]
+
+    elif pointgroup == "m":
+        backscattering = ["A'(LO+TO)",   # x(yy)x
+                          "A''(TO)",     # x(yz)x
+                          "A'(LO+TO)",   # x(zz)x
+                          "A'(LO+TO)",   # y(xx)y
+                          "A''(TO)",     # y(xz)y
+                          "A'(LO+TO)",   # y(zz)y
+                          "A'(TO)",      # z(xx)z
+                          "A'(TO)",      # z(xy)z
+                          "A'(TO)"]      # z(yy)z
+        backComponents = [RTs[1][bdDir[0]],\
+                          RTs[3][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]],\
+                          RTs[3][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]],\
+                          RTs[1][bdDir[7]],\
+                          RTs[1][bdDir[8]]]
+        rightscattering = ["A'(LO)",     # x(yx)y
+                           "A''(TO)",    # x(yz)y
+                           "A''(TO)",    # x(zx)y
+                           "A'(LO)",     # x(zz)y
+                           "A'(LO+TO)",  # x(yx)z
+                           "A'(LO+TO)",  # x(yy)z
+                           "A''(LO+TO)", # x(zx)z
+                           "A''(LO+TO)", # x(zy)z
+                           "A'(LO+TO)",  # y(xx)z
+                           "A'(LO+TO)",  # y(xy)z
+                           "A''(LO+TO)", # y(zx)z
+                           "A''(LO+TO)"] # y(zy)z
+        rightComponents = [RTs[1][rDir[0]],\
+                           RTs[3][rDir[1]],\
+                           RTs[3][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[1][rDir[4]],\
+                           RTs[1][rDir[5]],\
+                           RTs[3][rDir[6]],\
+                           RTs[3][rDir[7]],\
+                           RTs[1][rDir[8]],\
+                           RTs[1][rDir[9]],\
+                           RTs[3][rDir[10]],\
+                           RTs[3][rDir[11]]]
+        
+    elif pointgroup == "2/m":
+        backscattering = ["Ag",   # x(yy)x
+                          "Bg",   # x(yz)x
+                          "Ag",   # x(zz)x
+                          "Ag",   # y(xx)y
+                          "Bg",   # y(xz)y
+                          "Ag",   # y(zz)y
+                          "Ag",   # z(xx)z
+                          "Ag",   # z(xy)z
+                          "Ag"]   # z(yy)z
+        backComponents = [RTs[1][bdDir[0]],\
+                          RTs[3][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]],\
+                          RTs[3][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]],\
+                          RTs[1][bdDir[7]],\
+                          RTs[1][bdDir[8]]]
+        rightscattering = ["Ag", # x(yx)y
+                           "Bg", # x(yz)y
+                           "Bg", # x(zx)y
+                           "Ag", # x(zz)y
+                           "Ag", # x(yx)z
+                           "Ag", # x(yy)z
+                           "Bg", # x(zx)z
+                           "Bg", # x(zy)z
+                           "Ag", # y(xx)z
+                           "Ag", # y(xy)z
+                           "Bg", # y(zx)z
+                           "Bg"] # y(zy)z
+        rightComponents = [RTs[1][rDir[0]],\
+                           RTs[3][rDir[1]],\
+                           RTs[3][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[1][rDir[4]],\
+                           RTs[1][rDir[5]],\
+                           RTs[3][rDir[6]],\
+                           RTs[3][rDir[7]],\
+                           RTs[1][rDir[8]],\
+                           RTs[1][rDir[9]],\
+                           RTs[3][rDir[10]],\
+                           RTs[3][rDir[11]]]
+        
+    elif pointgroup == "222":
+        backscattering = ["A",       # x(yy)x
+                          "B3(LO)",  # x(yz)x
+                          "A",       # x(zz)x
+                          "A",       # y(xx)y
+                          "B2(LO)",  # y(xz)y
+                          "A",       # y(zz)y
+                          "A",       # z(xx)z
+                          "B1(LO)",  # z(xy)z
+                          "A"]       # z(yy)z
+        backComponents = [RTs[1][bdDir[0]],\
+                          RTs[7][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]],\
+                          RTs[5][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]],\
+                          RTs[3][bdDir[7]],\
+                          RTs[1][bdDir[8]]]
+        rightscattering = ["B1(TO)",    # x(yx)y
+                           "B3(LO+TO)", # x(yz)y
+                           "B2(LO+TO)", # x(zx)y
+                           "A",         # x(zz)y
+                           "B1(LO+TO)", # x(yx)z
+                           "A",         # x(yy)z
+                           "B2(TO)",    # x(zx)z
+                           "B3(LO+TO)", # x(zy)z
+                           "A",         # y(xx)z
+                           "B1(LO+TO)", # y(xy)z
+                           "B2(LO+TO)", # y(zx)z
+                           "B3(TO)"]    # y(zy)z
+        rightComponents = [RTs[3][rDir[0]],\
+                           RTs[7][rDir[1]],\
+                           RTs[5][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[3][rDir[4]],\
+                           RTs[1][rDir[5]],\
+                           RTs[5][rDir[6]],\
+                           RTs[7][rDir[7]],\
+                           RTs[1][rDir[8]],\
+                           RTs[3][rDir[9]],\
+                           RTs[5][rDir[10]],\
+                           RTs[7][rDir[11]]]
+        
+    elif pointgroup == "mm2":
+        backscattering = ["A1(TO)", # x(yy)x
+                          "B2(TO)", # x(yz)x
+                          "A1(TO)", # x(zz)x
+                          "A1(TO)", # y(xx)y
+                          "B1(TO)", # y(xz)y
+                          "A1(TO)", # y(zz)y
+                          "A1(LO)", # z(xx)z
+                          "A2",     # z(xy)z
+                          "A1(LO)"] # z(yy)z
+        backComponents = [RTs[1][bdDir[0]],\
+                          RTs[7][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]],\
+                          RTs[5][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]],\
+                          RTs[3][bdDir[7]],\
+                          RTs[1][bdDir[8]]]
+        rightscattering = ["A2",        # x(yx)y
+                           "B2(LO+TO)", # x(yz)y
+                           "B1(LO+TO)", # x(zx)y
+                           "A1(TO)",    # x(zz)y
+                           "A2",        # x(yx)z
+                           "A1(LO+TO)", # x(yy)z
+                           "B1(LO+TO)", # x(zx)z
+                           "B2(TO)",    # x(zy)z
+                           "A1(LO+TO)", # y(xx)z
+                           "A2",        # y(xy)z
+                           "B1(TO)",    # y(zx)z
+                           "B2(LO+TO)"] # y(zy)z
+        rightComponents = [RTs[3][rDir[0]],\
+                           RTs[7][rDir[1]],\
+                           RTs[5][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[3][rDir[4]],\
+                           RTs[1][rDir[5]],\
+                           RTs[5][rDir[6]],\
+                           RTs[7][rDir[7]],\
+                           RTs[1][rDir[8]],\
+                           RTs[3][rDir[9]],\
+                           RTs[5][rDir[10]],\
+                           RTs[7][rDir[11]]]
+        
+    elif pointgroup == "mmm":
+        backscattering = ["Ag",       # x(yy)x
+                          "B3g",      # x(yz)x
+                          "Ag",       # x(zz)x
+                          "Ag",       # y(xx)y
+                          "B2g",      # y(xz)y
+                          "Ag",       # y(zz)y
+                          "Ag",       # z(xx)z
+                          "B1g",      # z(xy)z
+                          "Ag"]       # z(yy)z
+        backComponents = [RTs[1][bdDir[0]],\
+                          RTs[7][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]],\
+                          RTs[5][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]],\
+                          RTs[3][bdDir[7]],\
+                          RTs[1][bdDir[8]]]
+        rightscattering = ["B1g", # x(yx)y
+                           "B3g", # x(yz)y
+                           "B2g", # x(zx)y
+                           "Ag",  # x(zz)y
+                           "B1g", # x(yx)z
+                           "Ag",  # x(yy)z
+                           "B2g", # x(zx)z
+                           "B3g", # x(zy)z
+                           "Ag",  # y(xx)z
+                           "B1g", # y(xy)z
+                           "B2g", # y(zx)z
+                           "B3g"] # y(zy)z
+        rightComponents = [RTs[3][rDir[0]],\
+                           RTs[7][rDir[1]],\
+                           RTs[5][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[3][rDir[4]],\
+                           RTs[1][rDir[5]],\
+                           RTs[5][rDir[6]],\
+                           RTs[7][rDir[7]],\
+                           RTs[1][rDir[8]],\
+                           RTs[3][rDir[9]],\
+                           RTs[5][rDir[10]],\
+                           RTs[7][rDir[11]]]
+        
     elif pointgroup == "3m":
         backscattering = ["A1(TO) + E(TO)",
                           "E(TO)",
@@ -574,6 +1013,10 @@ def RamanSelectionRules(pointgroup, RTs):
                            "E(LO+TO)",
                            "E(LO+TO)",
                            "A1(TO)",
+                           "E(LO+TO)",
+                           "A1(LO+TO)",
+                           "E(LO+TO)",
+                           "E(TO)",
                            "A1(LO+TO) + E(LO+TO)",
                            "E(TO)",
                            "E(TO)",
@@ -582,10 +1025,14 @@ def RamanSelectionRules(pointgroup, RTs):
                            RTs[3][rDir[1]]+RTs[5][rDir[1]],\
                            RTs[3][rDir[2]]+RTs[5][rDir[2]],\
                            RTs[1][rDir[3]],\
-                           RTs[1][rDir[4]]+RTs[3][rDir[4]]+RTs[5][rDir[4]],\
-                           RTs[3][rDir[5]]+RTs[5][rDir[5]],\
+                           RTs[3][rDir[4]]+RTs[5][rDir[4]],\
+                           RTs[1][rDir[5]],\
                            RTs[3][rDir[6]]+RTs[5][rDir[6]],\
-                           RTs[3][rDir[7]]+RTs[5][rDir[7]]]
+                           RTs[3][rDir[7]]+RTs[5][rDir[7]],\
+                           RTs[1][rDir[8]]+RTs[3][rDir[8]]+RTs[5][rDir[8]],\
+                           RTs[3][rDir[9]]+RTs[5][rDir[9]],\
+                           RTs[3][rDir[10]]+RTs[5][rDir[10]],\
+                           RTs[3][rDir[11]]+RTs[5][rDir[11]]]
         
     elif pointgroup == "m-3m":
         backscattering = ["A1g + Eg",
@@ -610,6 +1057,10 @@ def RamanSelectionRules(pointgroup, RTs):
                            "T2g",
                            "T2g",
                            "A1g + Eg",
+                           "T2g",
+                           "A1g + Eg",
+                           "T2g",
+                           "T2g",
                            "A1g + Eg",
                            "T2g",
                            "T2g",
@@ -618,10 +1069,14 @@ def RamanSelectionRules(pointgroup, RTs):
                            RTs[7][rDir[1]]+RTs[9][rDir[1]]+RTs[11][rDir[1]],\
                            RTs[7][rDir[2]]+RTs[9][rDir[2]]+RTs[11][rDir[2]],\
                            RTs[1][rDir[3]]+RTs[3][rDir[3]]+RTs[5][rDir[3]],\
-                           RTs[1][rDir[4]]+RTs[3][rDir[4]]+RTs[5][rDir[4]],\
-                           RTs[7][rDir[5]]+RTs[9][rDir[5]]+RTs[11][rDir[5]],\
+                           RTs[7][rDir[4]]+RTs[9][rDir[4]]+RTs[11][rDir[4]],\
+                           RTs[1][rDir[5]]+RTs[3][rDir[5]]+RTs[5][rDir[5]],\
                            RTs[7][rDir[6]]+RTs[9][rDir[6]]+RTs[11][rDir[6]],\
-                           RTs[7][rDir[7]]+RTs[9][rDir[7]]+RTs[11][rDir[7]]]
+                           RTs[7][rDir[7]]+RTs[9][rDir[7]]+RTs[11][rDir[7]],\
+                           RTs[1][rDir[8]]+RTs[3][rDir[8]]+RTs[5][rDir[8]],\
+                           RTs[7][rDir[9]]+RTs[9][rDir[9]]+RTs[11][rDir[9]],\
+                           RTs[7][rDir[10]]+RTs[9][rDir[10]]+RTs[11][rDir[10]],\
+                           RTs[7][rDir[11]]+RTs[9][rDir[11]]+RTs[11][rDir[11]]]
     
     # just in case...
     else:
@@ -930,8 +1385,7 @@ def getAcoustics(eigvecs, eigvals, masses):
     #
 #
 
-def getDegenerates(eigvals, basis, coord, elements, pointgroup, prec=1e0):
-    labels = getIrrepsSymbols(basis, coord, elements, pointgroup)
+def getDegenerates(eigvals, labels, prec=1e0):
     degenerates = []
     for j in range(len(eigvals)):
         if j not in degenerates:
@@ -945,13 +1399,26 @@ def getDegenerates(eigvals, basis, coord, elements, pointgroup, prec=1e0):
     return degenerates
 #
 
+def getSilent(modelist, labels, pointgroup):
+    RamanTensors = RamanTensorComponents(pointgroup)
+    silent = []
+    for mode in modelist:
+        if labels[mode-1] not in RamanTensors[::2]:
+            silent.append(mode)
+        #
+    #
+    return silent
+
 def removeModes(eigvecs, eigvals, masses, modelist, basis, coord, elements, pointgroup, prec=1e0):
-    modelist_tmp = []
+    modelist_new = []
+    labels = getIrrepsSymbols(basis, coord, elements, pointgroup)
     acoustics = getAcoustics(eigvecs, eigvals, masses)
-    degenerates = getDegenerates(eigvals, basis, coord, elements, pointgroup, prec)
+    degenerates = getDegenerates(eigvals, labels, prec)
+    silent = getSilent(modelist, labels, pointgroup)
     check_acoustic = False
     check_imag = False
     check_degenerates = False
+    check_silent = False
     for mode in modelist:
         if mode in acoustics:
             check_acoustic = True
@@ -959,8 +1426,10 @@ def removeModes(eigvecs, eigvals, masses, modelist, basis, coord, elements, poin
             check_imag = True
         elif mode in degenerates:
             check_degenerates = True
+        elif mode in silent:
+            check_silent = True
         else:
-            modelist_tmp.append(mode)
+            modelist_new.append(mode)
         #
     #
 
@@ -970,9 +1439,11 @@ def removeModes(eigvecs, eigvals, masses, modelist, basis, coord, elements, poin
         print("[removeModes]: Ignoring modes with imaginary frequency")
     if check_degenerates == True:
         print("[removeModes]: Ignoring degenerate modes")
+    if check_silent == True:
+        print("[removeModes]: Ignoring Raman silent modes")
     #
 
-    return modelist_tmp
+    return modelist_new
 #
 
 def getBorn(program, nat):
