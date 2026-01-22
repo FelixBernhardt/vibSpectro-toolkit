@@ -76,7 +76,7 @@ def calc_raman(mode, eigval, w, Im1, Re1, Im2, Re2, stepsize, basis):
 #
 
 def calcTensors(modelist, program, stepsize, disps):
-    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist, None)
+    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(None)
 
     print("[calcTensors]: Calculating Raman tensors of modes " + str(modelist))
     if os.path.isdir("Ramantensors") == False:

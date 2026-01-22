@@ -8,42 +8,35 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from parserPhonopy import parsePhonopy
+from RamanLib import portoq
 
-def plotSpectrum(modelist, w0, porto):
+def plotSpectrum(w0, porto, qdir):
     print("[plotSpectrum]: Plotting Raman spectrum")
-    # use a dummy for modes to be considered
-    freqs, eigvecs_new, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist, porto)
 
-    if (qpoint[0] != 0.0 and qpoint[1] != 0.0 and qpoint[2] != 0.0) or (qpoint[0] == 0.0 and qpoint[1] == 0.0 and qpoint[2] == 0.0):
-        ki = "K"
-        ko = "K"
-    
-    if qpoint[0] > 0.0:
+    if qdir == (1,0,0):
         ki = "x"
-    elif qpoint[0] < 0.0:
-        ki = "-x"
-    if qpoint[1] > 0.0 and qpoint[0] != 0.0:
-        ko = "y"
-    elif qpoint[1] < 0.0 and qpoint[0] != 0.0:
-        ko = "-y"
-    if qpoint[1] > 0.0 and qpoint[2] != 0.0:
+        ko = "-x"
+    elif qdir == (0,1,0):
         ki = "y"
-    elif qpoint[1] < 0.0 and qpoint[2] != 0.0:
-        ki = "-y"
-    if qpoint[2] > 0.0 and qpoint[0] != 0.0:
-        ko = "z"
-    elif qpoint[2] < 0.0 and qpoint[0] != 0.0:
+        ko = "-y"
+    elif qdir == (0,0,1):
+        ki = "z"
         ko = "-z"
-    if qpoint[2] > 0.0 and qpoint[1] != 0.0:
+    elif qdir == (1,1,0):
+        ki = "x"
+        ko = "y"
+    elif qdir == (0,1,1):
+        ki = "y"
         ko = "z"
-    elif qpoint[2] < 0.0 and qpoint[1] != 0.0:
-        ko = "-z"
-    # 
-
-    if porto == None:
-        porto = "xx"
-    elif str(porto) == "yx":
+    elif qdir == (1,0,1):
+        ki = "x"
+        ko = "z"
+    else:
+        print("[plotSpectrum]: ERROR: invalid propagation direction specified, exiting...")
+        sys.exit(1)
+    #
+    
+    if str(porto) == "yx":
         porto = "xy"
     elif str(porto) == "zy":
         porto = "yz"
@@ -52,7 +45,6 @@ def plotSpectrum(modelist, w0, porto):
     elif str(porto) != "xx" and str(porto) != "yy" and str(porto) != "zz" and str(porto) != "xy" and str(porto) != "xz" and str(porto) != "yz" and str(porto) != "avg":
         print("[plotSpectrum]: ERROR: invalid polarization direction specified, exiting...")
         sys.exit(1)
-        #
     #
 
     print("[plotSpectrum]: plotting "+ki+"("+porto+")"+ko+" configuration")

@@ -12,7 +12,7 @@ from parserPhonopy import parsePhonopy
 
 def displace(modelist, stepsize, program, disps, scffile):
     # get phonon modes and unit cell
-    eigvals, eigvecs, norms, qpoint, basis, nat, elements, positions, masses = parsePhonopy(modelist, None)
+    eigvals, eigvecs, norms, qpoint, basis, nat, elements, positions, masses = parsePhonopy(None)
     
     # write unit cells with displacements
     print("[displace]: Generating displacements...")

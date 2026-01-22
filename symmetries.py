@@ -90,10 +90,7 @@ def IRSelection(pointgroup):
 #
 
 def analysis():
-
-    phonopy_fh = open("qpoints.yaml", "r")
-    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(None, None)
-    phonopy_fh.close()
+    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(None)
 
     coord = np.empty((nat, 3))
     for atom in range(nat):
@@ -104,8 +101,8 @@ def analysis():
     print("Point Group "+dataset["pointgroup"]) 
 
     # get the corresponding Raman tensors and selection rules
-    #pointgroup = dataset["pointgroup"]
-    pointgroup = "mmm"
+    pointgroup = dataset["pointgroup"]
+    #pointgroup = "mmm"
     RamanTensors = analyzeRamanTensors(pointgroup)
     RamanSelection(pointgroup, RamanTensors)
     dielectricTensor = analyzeDielectricTensor(pointgroup)

@@ -28,6 +28,7 @@ bdDir = {0: (1,1), 1: (1,2), 2: (2,2), 3: (0,0), 4: (0,2), 5: (2,2), 6: (0,0), 7
 rightDirs = ["x(yx)y", "x(yz)y", "x(zx)y", "x(zz)y", "x(yx)z", "x(yy)z", "x(zx)z", "x(zy)z", "y(xx)z", "y(xy)z", "y(zx)z", "y(zy)z"]
 rDir = {0: (0,1), 1: (1,2), 2: (0,2), 3: (2,2), 4: (0,1), 5: (1,1), 6: (0,2), 7: (1,2), 8: (0,0), 9:(0,1), 10: (0,2), 11: (1,2)}
 IRDirs = ["E || x", "E || y", "E || z"]
+portoq = {(0, 0, 1) : "zz", (0, 1, 0) : "yy", (1, 0, 0) : "xx", (1, 1, 0) : "xy", (1, 0, 1): "xz", (0, 1, 1) : "yz" }
 
 e_charge = 1.602176634e-19   # C
 amu      = 1.66053906660e-27 # kg
@@ -1458,6 +1459,7 @@ def getBorn(program, nat):
         print("[getBorn]: Format not implemented, exiting..")
         sys.exit(1)
     #
+    return born
 #
 
 def getEpsInf(program):
@@ -1480,5 +1482,8 @@ def getEpsInf(program):
     lines = [l.strip() for l in phonopy_fh.readlines()] # Read the whole file removing tailoring spaces
     phonopy_fh.close()
 
-    return lines[1]
+    data = lines[1].split()
+    EpsInf = np.array([[float(data[0]), float(data[1]), float(data[2])], [float(data[3]), float(data[4]), float(data[5])], [float(data[6]), float(data[7]), float(data[8])]])
+
+    return EpsInf
 #

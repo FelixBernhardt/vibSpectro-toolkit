@@ -8,15 +8,15 @@ import sys
 import os.path
 import numpy as np
 from parserPhonopy import parsePhonopy
-from RamanLib import Lorentz, getBorn, getEpsInf, eps0, c_cm, h, kb, ev2rcm
+from RamanLib import Lorentz, getBorn, getEpsInf, portoq, eps0, c_cm, h, kb, ev2rcm
 from LoTo import getLOFreqs, getLOCorrection, getChi2
 
 def broaden_data(datafile, w0, col, temp, smear):
-    # apply smearing to Raman-tensors from "write_raman"
+    # apply smearing to Raman tensors from "write_raman"
     dict = {0: 'xx', 1: 'yy', 2: 'zz', 3: 'xy', 4: 'yz', 5: 'xz', 6: 'avg'}
     
-    hw = np.genfromtxt(datafile, dtype=float)
-    cm1 = hw[:,0]
+    hw = np.genfromtxt(datafile, dtype=complex)
+    cm1 = np.real(hw[:,0])
     # calculate the Raman intensity for each mode and component
     n  = (-np.exp(-h * cm1 * c_cm/(kb * temp))+1)**(-1)
     prefactor = h / (32 * np.pi**3 * (c_cm/100)**4 * eps0**2) * ( 2 * np.pi * c_cm )**3 * 10**(-30)
@@ -31,10 +31,10 @@ def broaden_data(datafile, w0, col, temp, smear):
     f.close()
 #
 
-def write_raman(filelist, modelist, modelist_orig, eigvecs, w0, basis, nat, program, porto, qdir, LOcorr):
+def write_raman(filelist, modelist, eigvals, eigvecs, w0, basis, nat, program, qdir, LOcorr):
     # apply LO correction if needed
     if LOcorr == True:
-        eigvalsLO_all = getLOFreqs(modelist_orig, eigvecs, eigvals, porto)
+        eigvalsLO_all = getLOFreqs(eigvecs, eigvals, qdir)
         eigvalsLO = np.empty(len(modelist))
         counter = 0
         for mode in modelist:
@@ -70,13 +70,13 @@ def write_raman(filelist, modelist, modelist_orig, eigvecs, w0, basis, nat, prog
     #
 
     if LOcorr == True:
-        eigvals = eigvalsLO
+        eigvals = np.real(eigvalsLO)
     #
     tmp = np.array(Raman)
     raman = np.insert(tmp, 0, eigvals, axis=1)
  
-    f = open("Raman_"+str(w0)+"eV.dat",'w')
-    f.write("# Raman tensors (10^(-30) Cm^2/V) at "+str(w0)+"eV laser-wavelength\n")
+    f = open("Raman_"+portoq[qdir]+"_"+str(w0)+"eV.dat",'w')
+    f.write("# Raman tensors (10^(-30) Cm^2/V) at "+str(w0)+"eV laser-wavelength and q-direction +"+str(qdir)+"\n")
     f.write("# freq/cm-1        xx         yy          zz        xy        yz        xz        avg\n")
     np.savetxt(f, raman, fmt='%4.8f')
     f.close()
@@ -109,8 +109,8 @@ def cat_broaden(w0):
 #
 
 
-def calcSpectrum(modelist, program, w0, temp, smear, porto, qdir, LOcorr):
-    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist, None)
+def calcSpectrum(modelist, program, w0, temp, smear, qdir, LOcorr):
+    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(None)
 
     print("[calcSpectrum]: Calculating Raman spectrum of modes "+str(modelist))
     #print("[calcSpectrum]: Note: check e.g. https://www.cryst.ehu.es/cryst/polarizationselrules.html for selection rules")
@@ -123,12 +123,12 @@ def calcSpectrum(modelist, program, w0, temp, smear, porto, qdir, LOcorr):
         filelist.append("Ramantensors/alpha_"+str(mode)+".dat")
     #
     # write Raman tensor for all modes at laser-wavelength w0
-    print("[calcSpectrum]: Writing Raman_"+str(w0)+"eV.dat")
-    write_raman(filelist, modelist, modelist_orig, eigvecs, w0, basis, nat, program, porto, qdir, LOcorr)
+    print("[calcSpectrum]: Writing Raman_"+portoq[qdir]+"_"+str(w0)+"eV.dat")
+    write_raman(filelist, modelist, eigvals, eigvecs, w0, basis, nat, program, qdir, LOcorr)
     #
     print("[calcSpectrum]: Broadening spectrum")
     for col in range(7):
-        broaden_data("Raman_"+str(w0)+"eV.dat", w0, col, temp, smear)
+        broaden_data("Raman_"+portoq[qdir]+"_"+str(w0)+"eV.dat", w0, col, temp, smear)
     #
     cat_broaden(w0)
     print("[calcSpectrum]: Done.")

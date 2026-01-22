@@ -4,9 +4,10 @@
 # parser for phonopy
 #
 
-import sys
+import sys, os
 import numpy as np
 import yaml
+from RamanLib import portoq
 
 """
 unit conventions exported from phonopy documentation at https://phonopy.github.io/phonopy/interfaces.html
@@ -30,7 +31,7 @@ LAMMPS    | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
 QLM       | au (bohr)  AMU           Ry/au         Ry/au^2
 """
 
-# conversions from WolframAlpha https://www.wolframalpha.com
+# conversions and constants from WolframAlpha https://www.wolframalpha.com
 
 eV2J = 1.602e-19
 angstrom2m = 1.e-10
@@ -46,21 +47,45 @@ V2THz = 15.633302
 THz2cm = 33.36
 
 
-def parsePhonopy(modelist, porto):
-    if porto == None:
-        with open("qpoints.yaml", "r") as stream:
-            dataDM = yaml.safe_load(stream)
+def parsePhonopy(qdir):
+    if qdir == None:
+        try:
+            with open("qpoints.yaml", "r") as stream:
+                dataDM = yaml.safe_load(stream)
+        except IOError:
+            os.system("phonopy --readfc --sym-fc --writedm --qpoints=\"0 0 0\"")
+            with open("qpoints.yaml", "r") as stream:
+                dataDM = yaml.safe_load(stream)
+            #
+        #
     else:
-        with open("qpoints_"+porto+".yaml", "r") as stream:
-            dataDM = yaml.safe_load(stream)
+        # write and read the dynamical matrix with nac correction if not already present
+        try: 
+            with open("qpoints_"+portoq[qdir]+".yaml", "r") as stream:
+                dataDM = yaml.safe_load(stream)
+            #
+        except IOError:
+            os.system("mv qpoints.yaml tmp")
+            os.system("phonopy --readfc --sym-fc --writedm --nac --qpoints=\"0 0 0\" --q-direction=\""+str(qdir)+"\"")
+            os.system("mv qpoints.yaml qpoints_"+portoq[qdir]+".yaml")
+            os.system("mv tmp qpoints.yaml")
+            with open("qpoints_"+portoq[qdir]+".yaml", "r") as stream:
+                dataDM = yaml.safe_load(stream)
+            #
+        #
     #
-    with open("phonopy.yaml", "r") as stream:
-        dataC = yaml.safe_load(stream)
+    try:
+        with open("phonopy.yaml", "r") as stream:
+            dataC = yaml.safe_load(stream)
+        #
+    except IOError:
+        print("[parsePhonopy]: Couldn't open phonopy.yaml, exiting...")
+        sys.exit(1)
     #
 
     # parse the unit cell information 
 
-    # get the units
+    # get the physical units
     #mass = dataC["physical_unit"]["atomic_mass"]
     length = dataC["physical_unit"]["length"]
     force_constants = dataC["physical_unit"]["force_constants"]
@@ -80,13 +105,6 @@ def parsePhonopy(modelist, porto):
         elements.append( dataC["primitive_cell"]["points"][j]["symbol"] )
     #
 
-    # checks
-    if modelist is not None:
-        if 3*nat < np.max(modelist):
-            print("[parsePhonopy]: invalid mode specified, check your input files for consistency, exiting...")
-            sys.exit(1)
-        #
-    #
     nat2 = dataDM["natom"]
     if nat != nat2:
         print("[parsePhonopy]: phonopy.yaml and qpoints.yaml files don't match, exiting...")

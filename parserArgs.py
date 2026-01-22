@@ -44,7 +44,7 @@ parser.add_argument("-pt", "--porto", type=str, default="xx",\
                     help="The polarization used when plotting the spectrum using porto's notation\
                          .(xx). , where \"xx\" can be set to all combinations of cartesian directions.\
                          A spatially averaged spectrum can be plotted by setting to \"avg\".")
-parser.add_argument("-q", "--qdir", type=str, default="zz",\
+parser.add_argument("-q", "--qdir", type=str, default="0 0 1",\
                     help="The propagation direction used when plotting the spectrum using porto's notation\
                          q(..)q , where \"qq\" can be set to backscattering or right angle scattering (without the sign).\
                          Only used in combination with the LO flag.")
@@ -58,9 +58,10 @@ parser.add_argument("-shg", "--nonlincorr", type=str, default=None,\
 parser.add_argument("-nosym", "--no_symmetry", action="store_true",\
                     help="ignores symmetries and explicitly calculates all given modes")
 
-
 args = parser.parse_args()
 
+# weird but works
+args.qdir = tuple(map(int, args.qdir.split()))
 """
     if opt == "h":
         print("A single script to calculate Raman spectra with external DFT codes")
