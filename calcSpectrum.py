@@ -8,6 +8,7 @@ import sys
 import os.path
 import numpy as np
 from parserPhonopy import parsePhonopy
+from parserVASP import getModesVASP, getCellVASP
 from RamanLib import Lorentz, getBorn, getEpsInf, portoq, eps0, c_cm, h, kb, ev2rcm
 from LoTo import getLOFreqs, getLOCorrection, getChi2
 
@@ -109,8 +110,14 @@ def cat_broaden(w0):
 #
 
 
-def calcSpectrum(modelist, program, w0, temp, smear, qdir, LOcorr):
-    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(None)
+def calcSpectrum(modelist, program, w0, temp, smear, qdir, LOcorr, VASPflag):
+    # get phonon modes and unit cell
+    if VASPflag == True:
+        nat, basis, positions, elements = getCellVASP("POSCAR")
+        eigvals, eigvecs, norms = getModesVASP("OUTCAR", modelist, nat)
+    else:
+        eigvals, eigvecs, norms, qpoint, basis, nat, elements, positions, masses = parsePhonopy(None)
+    #
 
     print("[calcSpectrum]: Calculating Raman spectrum of modes "+str(modelist))
     #print("[calcSpectrum]: Note: check e.g. https://www.cryst.ehu.es/cryst/polarizationselrules.html for selection rules")

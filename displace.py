@@ -6,14 +6,19 @@
 
 import sys, os
 import numpy as np
-from parserVASP import writePOSCAR, linkVASP
+from parserVASP import writePOSCAR, linkVASP, getModesVASP, getCellVASP
 from parserQE import writeSCF, linkQE
 from parserPhonopy import parsePhonopy
 
-def displace(modelist, stepsize, program, disps, scffile):
+def displace(modelist, stepsize, program, disps, scffile, VASPflag):
     # get phonon modes and unit cell
-    eigvals, eigvecs, norms, qpoint, basis, nat, elements, positions, masses = parsePhonopy(None)
-    
+    if VASPflag == True:
+        nat, basis, positions, elements = getCellVASP("POSCAR")
+        eigvals, eigvecs, norms = getModesVASP("OUTCAR", modelist, nat)
+    else:
+        eigvals, eigvecs, norms, qpoint, basis, nat, elements, positions, masses = parsePhonopy(None)
+    #
+
     # write unit cells with displacements
     print("[displace]: Generating displacements...")
     if os.path.isdir("displacements") == False:

@@ -57,6 +57,8 @@ parser.add_argument("-shg", "--nonlincorr", type=str, default=None,\
                     help="Reads in the SHG tensor from file")
 parser.add_argument("-nosym", "--no_symmetry", action="store_true",\
                     help="ignores symmetries and explicitly calculates all given modes")
+parser.add_argument("-allVASP", "--readFromVASP", action="store_true",\
+                    help="get the cell and phonon information directly from POSCAR and OUTCAR")
 
 args = parser.parse_args()
 

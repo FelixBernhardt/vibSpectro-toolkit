@@ -7,6 +7,7 @@
 import sys, os
 import numpy as np
 from parserPhonopy import parsePhonopy
+from parserVASP import getCellVASP, getModesVASP
 from RamanLib import eps0
 
 # Print iterations progress
@@ -75,8 +76,15 @@ def calc_raman(mode, eigval, w, Im1, Re1, Im2, Re2, stepsize, basis):
     f.close()
 #
 
-def calcTensors(modelist, program, stepsize, disps):
-    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(None)
+def calcTensors(modelist, program, stepsize, disps, VASPflag):
+    # get phonon modes and unit cell
+    if VASPflag == True:
+        nat, basis, positions, elements = getCellVASP("POSCAR")
+        eigvals, eigvecs, norms = getModesVASP("OUTCAR", modelist, nat)
+    else:
+        eigvals, eigvecs, norms, qpoint, basis, nat, elements, positions, masses = parsePhonopy(None)
+    #
+
 
     print("[calcTensors]: Calculating Raman tensors of modes " + str(modelist))
     if os.path.isdir("Ramantensors") == False:

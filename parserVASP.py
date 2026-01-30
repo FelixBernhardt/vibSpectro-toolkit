@@ -4,10 +4,29 @@
 # VASP parsers
 #
 
-import sys
+import sys, re
 import numpy as np
 import xml.etree.ElementTree as ET
 from typing import List, Dict
+
+def T(m):
+    p = [[ m[i][j] for i in range(len( m[j] )) ] for j in range(len( m )) ]
+    return p
+#
+
+def flatten(t):
+    a = []
+    for sublist in t:
+        if isinstance(sublist, str):
+            a.append(sublist)
+        else:
+            for item in sublist:
+                a.append(item)
+            #
+        #
+    #
+    return a
+#
 
 def _parse_array_block(block: ET.Element) -> List[Dict[str, float]]:
     """
@@ -135,6 +154,177 @@ def getBornVASP(file, nat):
     sys.exit(1)
 #
 
+def ModeParserVASP(outcar_fh, modelist, nat, case):
+    eigvals = np.zeros(3*nat)
+    eigvecs = np.zeros((3*nat, nat, 3))
+    norms   = np.zeros(3*nat)
+    if case == 1:
+        outcar_fh.readline() # empty line
+        outcar_fh.readline() # Eigenvectors and eigenvalues of the dynamical matrix
+        outcar_fh.readline() # ----------------------------------------------------
+        outcar_fh.readline() # empty line
+    elif case == 2:
+        outcar_fh.readline() # ----------------------------------------------------
+        outcar_fh.readline() # empty line
+    else:
+        print("[ModeParserVASP]: Invalid case specified, exiting...")
+        sys.exit(1)
+    #
+    for i in range(3*nat-np.min(modelist)+1):
+        outcar_fh.readline() # empty line
+        p = re.search(r'^\s*(\d+).+?([\.\d]+) cm-1', outcar_fh.readline())
+        eigvals[3*nat-1-i] = float(p.group(2))
+        # look for imaginary modes
+        if p.group(0)[7] == 'i':
+            eigvals[3*nat-1-i] = -eigvals[3*nat-1-i]
+        #
+        outcar_fh.readline() # X         Y         Z           dx          dy          dz
+        eigvec = []
+        #
+        for j in range(nat):
+            tmp = outcar_fh.readline().split()
+            # stupid VASP spacing bug...
+            if len(tmp) < 6:
+                tmp3 = []
+                for s in range(len(tmp)):
+                    if "-" in tmp[s]:
+                        tmp2 = tmp[s].split("-")
+                        if len(tmp2) == 2:
+                            tmp2[1] = "-"+tmp2[1]
+                        elif len(tmp2) == 3:
+                            tmp2[1] = "-"+tmp2[1]
+                            tmp2[2] = "-"+tmp2[2]
+                    else:
+                        tmp2 = tmp[s]
+                    #
+                    tmp3.append(tmp2)
+                #
+                tmp = flatten(tmp3)
+                tmp = [x for x in tmp if x != ""] 
+            #
+            #tmp = re.split("[\s-]+", outcar_fh.readline())
+            #
+            eigvec.append([ float(tmp[x]) for x in range(3,6) ])
+            #
+        eigvecs[3*nat-1-i] = np.array(eigvec)
+        norms[3*nat-1-i] = np.sqrt( sum( [abs(x)**2 for sublist in eigvec for x in sublist] ) )
+    #    
+    return eigvals, eigvecs, norms
+#
+
+def getModesVASP(file, modelist, nat):
+    try: 
+        outcar_fh = open(file, "r")
+    except IOError:
+        print("[getModesVASP]: ERROR Couldn't open OUTCAR, exiting...\n")
+        sys.exit(1)
+    #
+    outcar_fh.seek(0)
+    while True:
+        line = outcar_fh.readline()
+        if not line:
+            break
+        #
+        if "Eigenvectors after division by SQRT(mass)" in line:
+            eigvals, eigvecs, norms = ModeParserVASP(outcar_fh, modelist, nat, 1)
+            return eigvals, eigvecs, norms
+        elif "Eigenvectors and eigenvalues of the dynamical matrix" in line:
+            eigvals, eigvecs, norms = ModeParserVASP(outcar_fh, modelist, nat, 2)
+            return eigvals, eigvecs, norms
+        #
+    #
+    print("[getModesVASP]: ERROR Couldn't find 'Eigenvectors and eigenvalues of the dynamical matrix' in OUTCAR. Exiting...")
+    sys.exit(1)
+#
+
+def MAT_m_VEC(m, v):
+    p = [ 0.0 for i in range(len(v)) ]
+    for i in range(len(m)):
+        assert len(v) == len(m[i]), "[Mat_m_VEC]: Length of the matrix row is not equal to the length of the vector"
+        p[i] = sum( [ m[i][j]*v[j] for j in range(len(v)) ] )
+    return p
+#
+
+def getCellVASP(file):
+    try: 
+        poscar_fh = open(file, "r")
+    except IOError:
+        print("[getCellVASP]: ERROR Couldn't open POSCAR, exiting...\n")
+        sys.exit(1)
+    #
+    poscar_fh.seek(0) # just in case
+    lines = poscar_fh.readlines()
+    scale = float(lines[1])
+    if scale < 0.0:
+        vol = -scale
+        cell = np.zeros((3, 3))
+        norm = np.zeros((3))
+        for i in range(3):
+            # Get the first three numbers from the line
+            cell[i, :] = [float(x) for x in lines[i+2].split()[0:3]]
+        #
+        # set lattice constant, reset it later
+        alat = np.power(vol/np.linalg.det(cell), 1./3)
+        for i in range(3):
+            # Get the first three numbers from the line
+            cell[i, :] = [float(x) * alat for x in lines[i+2].split()[0:3]]
+            norm[i] = np.linalg.norm(cell[i, :])
+        #      
+        b = cell
+    #
+    else:
+        b = []
+        for i in range(2, 5):
+            b.append([float(x)*scale for x in lines[i].split()[:3]])
+        #
+        vol = b[0][0]*b[1][1]*b[2][2] + b[1][0]*b[2][1]*b[0][2] + b[2][0]*b[0][1]*b[1][2] - \
+              b[0][2]*b[1][1]*b[2][0] - b[2][1]*b[1][2]*b[0][0] - b[2][2]*b[0][1]*b[1][0]
+        #
+    #
+    try:
+        num_atoms = [int(x) for x in lines[5].split()]
+        line_at = 6
+    except ValueError:
+        num_atoms = [int(x) for x in lines[6].split()]
+        line_at = 7
+    atom_types = [str(x) for x in lines[line_at-2].split()]
+    nat = sum(num_atoms)
+    #
+    seldyn = 0
+    if lines[line_at][0].lower() == 's':
+        seldyn = 1
+        line_at += 1
+    #
+    if (lines[line_at][0].lower() == 'c' or lines[line_at][0].lower() == 'k'):
+        is_scaled = False
+    else:
+        is_scaled = True
+    #
+    line_at += 1
+    #
+    positions = []
+    for i in range(line_at, line_at + nat):
+        pos = [float(x) for x in lines[i].split()[:3]]
+        #
+        if is_scaled:
+            pos = MAT_m_VEC(T(b), pos)
+        #
+        positions.append(pos)
+    #
+    # add element symbols
+    indices = []
+    counter = 0
+    counter2 = 0
+    for j in range(nat):
+        if int(counter) == int(num_atoms[counter2]):
+            counter2 += 1
+            counter = 0
+        #
+        indices.append(atom_types[counter2])
+        counter += 1
+    #
+    return nat, np.array(b), np.array(positions), indices
+#
 
 def writePOSCAR(nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm):
     poscar_fh = open(file+"/POSCAR", "w")
