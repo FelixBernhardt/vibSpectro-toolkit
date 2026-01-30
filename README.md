@@ -57,14 +57,13 @@ python Ramanpy -s -m=<modelist>
 ```bash
 python Ramanpy -p
 ```
-<br><br><br>
-
+<br>
 More option can be enabled by applying additional flags when executing RamanPy. Check
 ```bash
 python Ramanpy -h
 ```
 for a complete set of flags.
-
+<br><br>
 ## Limitations
 - Ensure to not include acoustic modes when applying the -nosym flag. For numerical reasons, they would dominate the resulting spectrum.
 - Degeneracy is not completely integrated, the user has to set up the Raman tensor elements manually for the degenerate cases (but additional calculations are not necessary)
