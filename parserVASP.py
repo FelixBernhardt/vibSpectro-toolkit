@@ -170,13 +170,13 @@ def ModeParserVASP(outcar_fh, modelist, nat, case):
         print("[ModeParserVASP]: Invalid case specified, exiting...")
         sys.exit(1)
     #
-    for i in range(3*nat-np.min(modelist)+1):
+    for i in range(np.max(modelist)):
         outcar_fh.readline() # empty line
         p = re.search(r'^\s*(\d+).+?([\.\d]+) cm-1', outcar_fh.readline())
-        eigvals[3*nat-1-i] = float(p.group(2))
+        eigvals[i] = float(p.group(2))
         # look for imaginary modes
         if p.group(0)[7] == 'i':
-            eigvals[3*nat-1-i] = -eigvals[3*nat-1-i]
+            eigvals[i] = -eigvals[i]
         #
         outcar_fh.readline() # X         Y         Z           dx          dy          dz
         eigvec = []
@@ -206,8 +206,8 @@ def ModeParserVASP(outcar_fh, modelist, nat, case):
             #
             eigvec.append([ float(tmp[x]) for x in range(3,6) ])
             #
-        eigvecs[3*nat-1-i] = np.array(eigvec)
-        norms[3*nat-1-i] = np.sqrt( sum( [abs(x)**2 for sublist in eigvec for x in sublist] ) )
+        eigvecs[i] = np.array(eigvec)
+        norms[i] = np.sqrt( sum( [abs(x)**2 for sublist in eigvec for x in sublist] ) )
     #    
     return eigvals, eigvecs, norms
 #

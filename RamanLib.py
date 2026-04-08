@@ -402,39 +402,48 @@ CHAR_TABLES = {
         "Eu": [2, -1, 2, 0, 0] + [-2, 1, -2, 0, 0],
         "T1u": [3, 0, -1, 1, -1] + [-3, 0, 1, -1, 1],
         "T2u": [3, 0, -1, -1, 1] + [-3, 0, 1, 1, -1],
-    },
+    }
 }
 
+dielectricFunctionComponents = {
+        "1": np.array([["a", "d", "e"], ["d", "b", "f"], ["e", "f", "c"]], dtype = "str"),
+       "-1": np.array([["a", "d", "e"], ["d", "b", "f"], ["e", "f", "c"]], dtype = "str"),
+    
+        "2": np.array([["a", 0, "d"], [0, "b", 0], ["d", 0, "c"]], dtype = "str"),
+        "m": np.array([["a", 0, "d"], [0, "b", 0], ["d", 0, "c"]], dtype = "str"),
+    
+      "2/m": np.array([["a", 0, "d"], [0, "b", 0], ["d", 0, "c"]], dtype = "str"),
+      "222": np.array([["a", 0, 0], [0, "b", 0], [0, 0, "c"]], dtype = "str"),
+      "mm2": np.array([["a", 0, 0], [0, "b", 0], [0, 0, "c"]], dtype = "str"),
+      "mmm": np.array([["a", 0, 0], [0, "b", 0], [0, 0, "c"]], dtype = "str"),
 
-def dielectricFunctionComponents(pointgroup):
-    if pointgroup == "1" or pointgroup == "-1":
-        epsilonTensor = np.array([["a", "d", "e"], ["d", "b", "f"], ["e", "f", "c"]], dtype = "str")
-    
-    elif pointgroup == "2" or pointgroup == "m" or pointgroup == "2/m":
-        epsilonTensor = np.array([["a", 0, "d"], [0, "b", 0], ["d", 0, "c"]], dtype = "str")
-    
-    elif pointgroup == "222" or pointgroup == "mm2" or pointgroup == "mmm":
-        epsilonTensor = np.array([["a", 0, 0], [0, "b", 0], [0, 0, "c"]], dtype = "str")
-    
-    elif pointgroup == "4" or pointgroup == "-4" or pointgroup == "4/m" or pointgroup == "422" or pointgroup == "4mm"\
-        or pointgroup == "-42m" or pointgroup == "4/mmm":
-        epsilonTensor = np.array([["a", "d", "e"], ["d", "b", "f"], ["e", "f", "c"]], dtype = "str")
-    
-    elif pointgroup == "3" or pointgroup == "-3" or pointgroup == "32" or pointgroup == "3m" or pointgroup == "-3m"\
-        or pointgroup == "6" or pointgroup == "-6" or pointgroup == "6/m" or pointgroup == "622" or pointgroup == "6mm"\
-        or pointgroup == "62" or pointgroup == "6/mmm":
-        epsilonTensor = np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype = "str")
+        "4": np.array([["a", "d", "e"], ["d", "b", "f"], ["e", "f", "c"]], dtype = "str"),
+       "-4": np.array([["a", "d", "e"], ["d", "b", "f"], ["e", "f", "c"]], dtype = "str"),
+      "4/m": np.array([["a", "d", "e"], ["d", "b", "f"], ["e", "f", "c"]], dtype = "str"),
+      "422": np.array([["a", "d", "e"], ["d", "b", "f"], ["e", "f", "c"]], dtype = "str"),
+      "4mm": np.array([["a", "d", "e"], ["d", "b", "f"], ["e", "f", "c"]], dtype = "str"),
+     "-42m": np.array([["a", "d", "e"], ["d", "b", "f"], ["e", "f", "c"]], dtype = "str"),
+    "4/mmm": np.array([["a", "d", "e"], ["d", "b", "f"], ["e", "f", "c"]], dtype = "str"),
 
-    elif pointgroup == "23" or pointgroup == "m-3" or pointgroup == "432" or pointgroup == "-43m" or pointgroup == "m-3m":
-        epsilonTensor = np.array([["a", 0, 0], [0, "a", 0], [0, 0, "a"]], dtype = "str")
-    
-    # just in case...
-    else:
-        print("[RamanLib]: no valid point group found, exiting...")
-        sys.exit(1)
-    #
+        "3": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype = "str"),
+       "-3": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype = "str"),
+       "32": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype = "str"),
+       "3m": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype = "str"),
+      "-3m": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype = "str"),
+        "6": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype = "str"),
+       "-6": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype = "str"),
+      "6/m": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype = "str"),
+      "622": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype = "str"),
+      "6mm": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype = "str"),
+       "62": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype = "str"),
+    "6/mmm": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype = "str"),
 
-    return epsilonTensor
+       "23": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "a"]], dtype = "str"),
+      "m-3": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "a"]], dtype = "str"),
+      "432": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "a"]], dtype = "str"),
+     "-43m": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "a"]], dtype = "str"),
+     "m-3m": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "a"]], dtype = "str")
+}
 
 def RamanTensorComponents(pointgroup):
     if pointgroup == "1":
@@ -1369,12 +1378,15 @@ def matchLabels(class_characters, char_table):
     return labels
 #
 
-def getIrrepsSymbols(basis, coord, elements, pointgroup):
+def getIrrepsSymbols(path, basis, coord, elements, pointgroup):
     # set up a phonopy structure and get irreps
     # works for phonopy 2.32
-
+    import os
+    pwd = os.getcwd()
+    os.chdir(path)
     cell = PhonopyAtoms( symbols=elements, cell=basis, scaled_positions=coord )
     phonopy_instance = phonopy.load(unitcell=cell, supercell_matrix=np.eye(3), primitive_matrix="auto", force_constants_filename="FORCE_CONSTANTS")
+    os.chdir(pwd)
 
     ir = IrReps(phonopy_instance.dynamical_matrix, q=[0, 0, 0])
     ir.run()
@@ -1413,7 +1425,9 @@ def getAcoustics(eigvecs, eigvals, masses):
         S = np.sum(sqrt_m[:, None] * mode, axis=0) 
         indicators[j] = np.linalg.norm(S)
     #
-    if np.array_equal( np.sort(indicators.argsort()[-3:]), np.sort(acoustic) ):
+    if np.array_equal( np.sort(indicators.argsort()[-3:]), np.sort(acoustic) ) or \
+       np.array_equal( np.sort(indicators.argsort()[-2:]), np.sort(acoustic) ) or \
+       np.array_equal( np.sort(indicators.argsort()[-1:]), np.sort(acoustic) ):
         return [x+1 for x in acoustic]
     else:
         print("[removeAcoustics]: Could not determine acoustic modes, continuing...")

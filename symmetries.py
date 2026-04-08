@@ -11,32 +11,34 @@ import yaml
 from parserPhonopy import parsePhonopy
 from RamanLib import RamanTensorComponents, dielectricFunctionComponents, RamanSelectionRules, IRSelectionRules, formatString, getIrrepsSymbols, periodTable, backDirs, rightDirs, IRDirs
 
-def analyzeRamanTensors(pointgroup):
+def analyzeRamanTensors(pointgroup, varprint=False):
     RamanTensors = RamanTensorComponents(pointgroup)
 
     # print to console
-    print("Raman Tensors of point group "+pointgroup)
-    for i in range(int(len(RamanTensors)/2)):
-        print(RamanTensors[2*i])
-        for j in range(3):
-            print(RamanTensors[2*i+1][j])
+    if varprint == True:
+        print("Raman Tensors of point group "+pointgroup)
+        for i in range(int(len(RamanTensors)/2)):
+            print(RamanTensors[2*i])
+            for j in range(3):
+                print(RamanTensors[2*i+1][j])
+            #
         #
+        print("")
     #
-    print("")
-
     return RamanTensors
 #
 
-def analyzeDielectricTensor(pointgroup):
-    dielectricTensor = dielectricFunctionComponents(pointgroup)
+def analyzeDielectricTensor(pointgroup, varprint=False):
+    dielectricTensor = dielectricFunctionComponents[pointgroup]
 
     # print to console
-    print("Dielectric Tensor of point group "+pointgroup)
-    for j in range(3):
-        print(dielectricTensor[j])
+    if varprint == True:
+        print("Dielectric Tensor of point group "+pointgroup)
+        for j in range(3):
+            print(dielectricTensor[j])
+        #
+        print("")
     #
-    print("")
-
     return dielectricTensor
 #
 
@@ -109,7 +111,7 @@ def analysis():
     IRSelection(pointgroup)
     
     # get the Irreps for all modes
-    labels = getIrrepsSymbols(basis, coord, elements, pointgroup)
+    labels = getIrrepsSymbols(os.getcwd(), basis, coord, elements, pointgroup)
     print("mode freq (cm-1) label")
     for i, (f, lbl) in enumerate(zip(eigvals, labels)): 
         print(f"{i+1:2d}   {f:8.4f}     {lbl}")

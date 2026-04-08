@@ -10,19 +10,16 @@ from parserVASP import writePOSCAR, linkVASP, getModesVASP, getCellVASP
 from parserQE import writeSCF, linkQE
 from parserPhonopy import parsePhonopy
 
-def displace(modelist, stepsize, program, disps, scffile, VASPflag):
-    # get phonon modes and unit cell
-    if VASPflag == True:
-        nat, basis, positions, elements = getCellVASP("POSCAR")
-        eigvals, eigvecs, norms = getModesVASP("OUTCAR", modelist, nat)
-    else:
-        eigvals, eigvecs, norms, qpoint, basis, nat, elements, positions, masses = parsePhonopy(None)
+def displace(path, modelist, stepsize, program, disps, eigvecs, norms, basis, nat, elements, positions, scffile):
+    if program != "VASP" and code_out != "QE":
+        print("[displace]: code not supported, exiting...")
+        sys.exit(1)
     #
-
     # write unit cells with displacements
+    disps = [-1, 1]
     print("[displace]: Generating displacements...")
-    if os.path.isdir("displacements") == False:
-        os.system("mkdir displacements")
+    if os.path.isdir(path+"displacements") == False:
+        os.system("mkdir "+path+"displacements")
     #
     for mode in modelist:
         
@@ -30,7 +27,7 @@ def displace(modelist, stepsize, program, disps, scffile, VASPflag):
         
         norm = norms[mode-1]
         for disp in disps:
-            file="displacements/mode"+str(mode)+"_"+str(disp)
+            file=path+"displacements/mode"+str(mode)+"_"+str(disp)
             if os.path.isdir(file) == False:
                 os.system("mkdir "+file)
             #

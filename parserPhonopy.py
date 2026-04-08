@@ -47,39 +47,48 @@ V2THz = 15.633302
 THz2cm = 33.36
 
 
-def parsePhonopy(qdir):
+def parsePhonopy(path, qdir):
+    pwd = os.getcwd()
+    if path == None:
+        path = os.getcwd()
+    #
+
     if qdir == None:
         try:
-            with open("qpoints.yaml", "r") as stream:
+            with open(path+"qpoints.yaml", "r") as stream:
                 dataDM = yaml.safe_load(stream)
         except IOError:
+            os.chdir(path)
             os.system("phonopy --readfc --sym-fc --writedm --qpoints=\"0 0 0\"")
-            with open("qpoints.yaml", "r") as stream:
+            os.chdir(pwd)
+            with open(path+"qpoints.yaml", "r") as stream:
                 dataDM = yaml.safe_load(stream)
             #
         #
     else:
         # write and read the dynamical matrix with nac correction if not already present
         try: 
-            with open("qpoints_"+portoq[qdir]+".yaml", "r") as stream:
+            with open(path+"qpoints_"+portoq[qdir]+".yaml", "r") as stream:
                 dataDM = yaml.safe_load(stream)
             #
         except IOError:
+            os.chdir(path)
             os.system("mv qpoints.yaml tmp")
             os.system("phonopy --readfc --sym-fc --writedm --nac --qpoints=\"0 0 0\" --q-direction=\""+str(qdir)+"\"")
             os.system("mv qpoints.yaml qpoints_"+portoq[qdir]+".yaml")
             os.system("mv tmp qpoints.yaml")
-            with open("qpoints_"+portoq[qdir]+".yaml", "r") as stream:
+            os.chdir(pwd)
+            with open(path+"qpoints_"+portoq[qdir]+".yaml", "r") as stream:
                 dataDM = yaml.safe_load(stream)
             #
         #
     #
     try:
-        with open("phonopy.yaml", "r") as stream:
+        with open(path+"phonopy.yaml", "r") as stream:
             dataC = yaml.safe_load(stream)
         #
     except IOError:
-        print("[parsePhonopy]: Couldn't open phonopy.yaml, exiting...")
+        print("[parsePhonopy]: Couldn't open "+path+"phonopy.yaml, exiting...")
         sys.exit(1)
     #
 
