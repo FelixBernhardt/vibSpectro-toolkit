@@ -112,7 +112,7 @@ def getBornVASP(file, nat):
     try: 
         outcar_fh = open(file, "r")
     except IOError:
-        print("[getBornVASP]: ERROR Couldn't open OUTCAR, exiting...\n")
+        print("[getBornVASP]: ERROR Couldn't open "+file+", exiting...\n")
         sys.exit(1)
     #
 

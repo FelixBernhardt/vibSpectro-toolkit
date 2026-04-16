@@ -10,8 +10,8 @@ from parserVASP import writePOSCAR, linkVASP, getModesVASP, getCellVASP
 from parserQE import writeSCF, linkQE
 from parserPhonopy import parsePhonopy
 
-def displace(path, modelist, stepsize, program, disps, eigvecs, norms, basis, nat, elements, positions, scffile):
-    if program != "VASP" and code_out != "QE":
+def calcdisplace(path, modelist, stepsize, program, eigvecs, norms, basis, nat, elements, positions, scffile):
+    if program != "VASP" and program != "QE":
         print("[displace]: code not supported, exiting...")
         sys.exit(1)
     #

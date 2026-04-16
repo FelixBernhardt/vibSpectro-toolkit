@@ -4,19 +4,17 @@
 # calculate ionic contribution to dielectric function, i.e. IR spectrum
 #
 
-import sys
 import numpy as np
-from parserPhonopy import parsePhonopy
-from RamanLib import Lorentz, removeModes, getBorn, eps0, c_cm, e_charge, amu
+from RamanLib import Lorentz, eps0, c_cm, e_charge, amu
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
-def plotIRspectrum(file):
+def plotIRspectrum(file, path):
     # data
     epsi_data = []
     epsr_data = []
     dft_raw_data = np.loadtxt(file) # format: wavelength (cm-1) Intensity (Imag, Real)
-    dict = {0: "x", 1: "y", 2: "z"}
+    dict = {0: "x", 1: "y", 2: "z", 3: "avg"}
     w_data = [x[0] for x in dft_raw_data]
     epsi_data.append( [x[1] for x in dft_raw_data] )
     epsr_data.append( [x[2] for x in dft_raw_data] )
@@ -24,6 +22,9 @@ def plotIRspectrum(file):
     epsr_data.append( [x[4] for x in dft_raw_data] )
     epsi_data.append( [x[5] for x in dft_raw_data] )
     epsr_data.append( [x[6] for x in dft_raw_data] )
+    epsi_data.append( [x[7] for x in dft_raw_data] )
+    epsr_data.append( [x[8] for x in dft_raw_data] )
+
 
     # Fonts
     plt.rcParams.update({
@@ -42,13 +43,16 @@ def plotIRspectrum(file):
     mpl.rcParams['legend.fontsize'] = size
     mpl.rcParams['figure.titlesize'] = size
 
-    for j in range(3):
+    for j in range(4):
         # plotting    
         fig_width = 5.511 # inch
         mpl.rcParams['figure.figsize'] = [fig_width, fig_width/2]
         fig, ((ax1, ax2)) = plt.subplots(1,2, layout="constrained")
-        fig.suptitle("IR: E||"+dict[j]+" polarization")
-
+        if j == 3:
+            fig.suptitle("spatially averaged polarization")
+        else:
+            fig.suptitle("IR: E||"+dict[j]+" polarization")
+        #
         ax1.set_xlim([w_data[0], w_data[-1]])
         ax1.plot(w_data, epsr_data[j], color="black", label="Real")
         ax1.axhline(ls="dashed")
@@ -61,22 +65,16 @@ def plotIRspectrum(file):
         ax2.set_xlabel("Wavenumber (cm$^{-1}$)")
         ax2.set_ylabel("Im($\\varepsilon$)")
     
-        plt.savefig("IR_"+dict[j]+".pdf")
+        plt.savefig(path+"IR_"+dict[j]+".pdf")
     #
     print("[plotIRSpectrum]: Done.") 
 #
 
-def calcIR(modelist_orig, program, smearing):
-    # get TO phonon modes at Gamma and the unit cell
-    eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(modelist_orig, None)
-
-    born = getBorn(program, nat)
-
+def calcIR(path, modelist, eigvals, eigvecs, basis, nat, masses, born, smearing, plotFlag):
     # calculate imaginary part of the dielectric function
     # formula from https://aip.scitation.org/doi/pdf/10.1063/1.466753
     # and https://application.wiley-vch.de/books/sample/3527405062_c01.pdf
     # VibrationalSpectroscopyinLifeScience.FriedrichSiebertandPeterHildebrandt Copyright82008WILEY-VCHVerlagGmbH&Co.KGaA,Weinheim ISBN:978-3-527-40506-0
-    modelist = removeModes(eigvecs, eigvals, masses, modelist_orig)
     numModes = len(modelist)
     Sm = np.zeros((3,numModes))
     IR_Im = []
@@ -117,18 +115,19 @@ def calcIR(modelist_orig, program, smearing):
     IR_Re = IR_Re/( 2 * np.pi * c_cm )**2
 
     # write dielectric function to file
-    output_fh = open("IR.dat", "w")
-    output_fh.write("# freq(cm-1)   E||x             E||y            E||z\n")
-    output_fh.write("#            Im    Re         Im    Re        Im    Re\n")
+    output_fh = open(path+"IR.dat", "w")
+    output_fh.write("# freq(cm-1)   E||x             E||y            E||z            avg\n")
+    output_fh.write("#            Im    Re         Im    Re        Im    Re        Im    Re\n")
     for i in range(len(w)):
-        output_fh.write("{:4.3f}     {:+4.3f}  {:+4.3f}    {:+4.3f}  {:+4.3f}    {:+4.3f}  {:+4.3f}\n".format(\
-            w[i], IR_Im[0][i], IR_Re[0][i], IR_Im[1][i], IR_Re[1][i], IR_Im[2][i], IR_Re[2][i]))
+        output_fh.write("{:4.3f}     {:+4.3f}  {:+4.3f}    {:+4.3f}  {:+4.3f}    {:+4.3f}  {:+4.3f}    {:+4.3f}  {:+4.3f}\n".format(\
+            w[i], IR_Im[0][i], IR_Re[0][i], IR_Im[1][i], IR_Re[1][i], IR_Im[2][i], IR_Re[2][i], 
+            1/3*(IR_Im[0][i]+IR_Im[1][i]+IR_Im[2][i]), 1/3*(IR_Re[0][i]+IR_Re[1][i]+IR_Re[2][i])))
     #
     output_fh.close()
-
-    plotIRspectrum("IR.dat")
-
-
+    
     print("[calcIR]: DONE")
-    sys.exit(1)
+
+    if plotFlag == True:
+        plotIRspectrum(path+"IR.dat", path)
+    #
 #

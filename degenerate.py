@@ -1,30 +1,18 @@
 import numpy as np
 import re
-import sys
+from RamanLib import placzeck
 
-def calcDegenerates(pointgroup):
-    # 3m
-    R1 = np.array([["c", 0, 0], [0, "-c", "d"], [0, "d", 0]], dtype=str)
-    R2 = np.array([[0, "c", "d"], ["c", 0, 0], ["d", 0, 0]], dtype=str)
+def calcDegenerates(path, modes, labels, ramantensors):
+    # get the corresponding ramantensors
+    Rn = []
+    label = labels[modes[0]-1]
+    for i in range(int(len(ramantensors)/2)):
+        if ramantensors[2*i] == label:
+            Rn.append(ramantensors[2*i+1])
+        #
+    #
 
-    # -43m
-    RE1 = np.array([["b", 0, 0], [0, "b", 0], [0, 0, "-2b"]], dtype = "str")
-    RE2 = np.array([["-\u221A3b", 0, 0], [0, "\u221A3b", 0], [0, 0, 0]], dtype = "str")
-    RT1 = np.array([[0, 0, 0], [0, 0, "d"], [0, "d", 0]], dtype = "str")
-    RT2 = np.array([[0, 0, "d"], [0, 0, 0], ["d", 0, 0]], dtype = "str")
-    RT3 = np.array([[0, "d", 0], ["d", 0, 0], [0, 0, 0]], dtype = "str")
-
-    print(R1)
-    print(R2)
-    #print(RE1)
-    #print(RE2)
-    #print(RT1)
-    #print(RT2)
-    #print(RT3)
-
-    #Rn = [RE1, RE2]
-    #Rn = [RT1, RT2, RT3]
-    Rn = [R1, R2]
+    #print(Rn)
     Rb = []
     # decompose general tensors into their coefficients
     for letter in ["a", "b", "c", "d", "e", "f"]:
@@ -65,58 +53,76 @@ def calcDegenerates(pointgroup):
         #
     #
 
-    # orthonormalization, E holds the basis matrizes that the Ramantensor decomposes into
+    # orthonormalization, E holds the basis matrizes that the calculated Ramantensor decomposes into
     M = np.column_stack([R.reshape(-1) for R in Rb])
     U, S, Vt = np.linalg.svd( M, full_matrices=False)
     E = []
     for i in range(len(U[0])):
         E.append(U[:, i].reshape(3,3))
-        print(U[:, i].reshape(3,3))
+        #print(U[:, i].reshape(3,3))
     #
 
 
-    # get the calculated, degenerate mode
-    #data = np.genfromtxt("/Volumes/MacintoshHD-Daten/Users/felixbernhardt/LNT/LNT_IR/Raman/sqs_00/alpha_5.dat", dtype=complex)
-    data = np.genfromtxt("alpha_5.dat", dtype=complex)
+    # get the calculated, degenerate raman tensor
+    data = np.genfromtxt(path+"Ramantensors/alpha_"+str(modes[0])+".dat", dtype=complex)
 
-    for i in [0]:
-    #for i in range(len(data)):
-        if data[i,7] > 1.e-1:
-            Atest = np.zeros((3,3))
-            Atest[0,0] = np.real(data[i,1])
-            Atest[1,1] = np.real(data[i,2])
-            Atest[2,2] = np.real(data[i,3])
-            Atest[0,1] = np.real(data[i,4])
-            Atest[1,2] = np.real(data[i,5])
-            Atest[0,2] = np.real(data[i,6])
-            Atest[1,0] = np.real(Atest[0,1])
-            Atest[2,1] = np.real(Atest[1,2])
-            Atest[2,0] = np.real(Atest[0,2])
+    w = []
+    I = []
+    #for i in [0]:
+    for i in range(len(data)):
+        w.append(np.real(data[i,0]))
+        Atest = np.zeros((3,3), dtype=complex)
+        Atest[0,0] = data[i,1]
+        Atest[1,1] = data[i,2]
+        Atest[2,2] = data[i,3]
+        Atest[0,1] = data[i,4]
+        Atest[1,2] = data[i,5]
+        Atest[0,2] = data[i,6]
+        Atest[1,0] = Atest[0,1]
+        Atest[2,1] = Atest[1,2]
+        Atest[2,0] = Atest[0,2]
 
-            #Atest = np.array([[1-np.sqrt(3),0,0],[0,1+np.sqrt(3),0],[0,0,-2]])
-            #Atest = np.array([[0,1,2],[1,0,3],[2,3,0]])
-            print(Atest)
+        #print(Atest)
 
-            x = np.array( np.linalg.lstsq( np.column_stack([tmp.reshape(-1) for tmp in E]), Atest.reshape(-1), rcond=None)[0] )
-            print(x)
+        x = np.array( np.linalg.lstsq( np.column_stack([tmp.reshape(-1) for tmp in E]), Atest.reshape(-1), rcond=None)[0] )
+        #print(x)
 
-            # create degenerate ramantensors
-            u = np.linalg.svd(x.reshape(-1, 1), full_matrices=True)[0]
-            prefactor = [x[i]/u[0,i] for i in range(len(x))]
-
-            degenerates = []
-            for i in range(len(Rn)):
-                R_degen = np.zeros((3,3))
-                for j in range(len(x)):
-                    R_degen = np.add(R_degen, prefactor[j]*u[i,j]*E[j])
-                #
-                print(R_degen)
+        # create degenerate ramantensors
+        u = np.linalg.svd(x.reshape(-1, 1), full_matrices=True)[0]
+        prefactor = [x[i]/u[0,i] for i in range(len(x))]
+        for j in range(len(prefactor)):
+            if prefactor[j] == "nan":
+                prefactor[j] = 0
             #
         #
-    return degenerates
+
+        degenerates = np.zeros((len(Rn),6,1), dtype=complex)
+        for j in range(len(Rn)):
+            R_degen = np.zeros((3,3))
+            for k in range(len(x)):
+                R_degen = np.add(R_degen, prefactor[k]*u[j,k]*E[k])
+            #
+            degenerates[j] = [[R_degen[0,0]], [R_degen[1,1]], [R_degen[2,2]], [R_degen[0,1]], [R_degen[1,2]], [R_degen[0,2]]]
+        #
+        I.append(degenerates)
+    #
+    I = np.array(I, dtype=complex)
+
+    # write to file
+    for j in range(0,len(modes)):
+        outfile = path+"Ramantensors/alpha_degen_"+str(modes[j])+".dat"
+        eigval = "??"
+        f = open(outfile, "w")
+        f.write("# Raman tensor in 10^(-30) Cm^2/V\n")
+        f.write("# mode: " +str(modes[j])+"   phonon freq: "+str(eigval)+"\n")
+        f.write("# omega(eV)    xx        yy        zz        xy        yz        xz      avg\n")
+
+        for i in range(len(w)):
+            avg = placzeck( I[i][j], 1)
+            f.write("{:5.5f} {:.3e} {:.3e} {:.3e} {:.3e} {:.3e} {:.3e} {:.3f}\n"\
+                .format(w[i], I[i][j][0][0], I[i][j][1][0], I[i][j][2][0], I[i][j][3][0], I[i][j][4][0], I[i][j][5][0], avg))
+            #
+        #
+        f.close()
     #
 #
-
-
-# test calc
-degenerates = calcDegenerates(pointgroup)

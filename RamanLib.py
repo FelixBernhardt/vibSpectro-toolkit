@@ -1396,6 +1396,18 @@ def Lorentz(hw, ab, gam=0.001):
     return erange, spectrum
 #
 
+def placzeck(Intensity, col):
+    # get Placzeck-invariants
+    G0 = np.abs(Intensity[0][col-1] + Intensity[1][col-1] + Intensity[2][col-1])**2/3.0
+    G1 = 0
+    G2 = (np.abs(Intensity[0][col-1] - Intensity[1][col-1])**2 \
+          + np.abs(Intensity[0][col-1] - Intensity[2][col-1])**2 \
+          + np.abs(Intensity[1][col-1] - Intensity[2][col-1])**2)/3.0 \
+          + 2*(np.abs(Intensity[3][col-1])**2 + np.abs(Intensity[4][col-1])**2 + np.abs(Intensity[5][col-1])**2)
+    avg = np.sqrt(10*G0 + 5*G1 + 7*G2) # parallel and perpendicular components added together
+    return avg
+#
+
 def classifyRotations(rotations):
     classes = {}
     for i, R in enumerate(rotations):
@@ -1478,11 +1490,16 @@ def getAcoustics(eigvecs, eigvals, masses):
 def getDegenerates(eigvals, labels, prec=1e0):
     degenerates = []
     for j in range(len(eigvals)):
-        if j not in degenerates:
-            for k in range(j+1, len(eigvals)):
-                if np.abs(eigvals[j] - eigvals[k]) < prec and labels[j] == labels[k]:
-                    degenerates.append(k)
+        for k in range(j+1, len(eigvals)):
+            tmp = []
+            if np.abs(eigvals[j] - eigvals[k]) < prec and labels[j] == labels[k]:
+                if j not in tmp:
+                    tmp.append(j+1)
                 #
+                tmp.append(k+1)
+            #
+            if tmp != []:
+                degenerates.append(tmp)
             #
         #
     #
@@ -1490,7 +1507,7 @@ def getDegenerates(eigvals, labels, prec=1e0):
 #
 
 def getSilent(modelist, labels, pointgroup):
-    RamanTensors = RamanTensorComponents(pointgroup)
+    RamanTensors = RamanTensorComponents[pointgroup]
     silent = []
     for mode in modelist:
         if labels[mode-1] not in RamanTensors[::2]:
@@ -1536,14 +1553,14 @@ def removeModes(eigvecs, eigvals, masses, modelist, basis, coord, elements, poin
     return modelist_new
 #
 
-def getBorn(program, nat):
+def getBorn(path, program, nat):
     # get BORN charges, in |e|
     if program == "VASP":
         from parserVASP import getBornVASP
-        born = getBornVASP("OUTCAR", nat)
+        born = getBornVASP(path+"OUTCAR", nat)
     elif program == "QE":
         from parserQE import getBornQE
-        born = getBornQE("ph.out", nat)
+        born = getBornQE(path+"ph.out", nat)
     else:
         print("[getBorn]: Format not implemented, exiting..")
         sys.exit(1)

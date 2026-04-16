@@ -12,7 +12,7 @@ from parserPhonopy import parsePhonopy
 from RamanLib import RamanTensorComponents, dielectricFunctionComponents, RamanSelectionRules, IRSelectionRules, formatString, getIrrepsSymbols, periodTable, backDirs, rightDirs, IRDirs
 
 def analyzeRamanTensors(pointgroup, varprint=False):
-    RamanTensors = RamanTensorComponents(pointgroup)
+    RamanTensors = RamanTensorComponents[pointgroup]
 
     # print to console
     if varprint == True:
@@ -75,7 +75,7 @@ def RamanSelection(pointgroup, RamanTensors):
 #
 
 def IRSelection(pointgroup):
-    scattering = IRSelectionRules(pointgroup)
+    scattering = IRSelectionRules[pointgroup]
 
     maxlen = np.max(np.concatenate(([len(x) for x in scattering], [len("observable modes")])))
     print("IR selection Rules for pointgroup "+pointgroup)
