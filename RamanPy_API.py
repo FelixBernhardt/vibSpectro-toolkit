@@ -110,7 +110,7 @@ class Phonon:
         self.cartesian = positions
         self.elements = elements
         self.masses = masses
-        self._modelist = range(1,3*self._nat)
+        self._modelist = range(1,3*self._nat+1)
 
         self.direct = np.empty((self._nat, 3))
         for atom in range(self._nat):

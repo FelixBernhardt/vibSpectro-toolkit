@@ -143,7 +143,7 @@ def parsePhonopy(path, qdir):
         eigvecs.append(v) 
         norms[j] = np.linalg.norm(eigvecs[j])
     #
-    eigvecs = np.array(eigvecs)
+    eigvecs = np.real( np.array(eigvecs) )
 
     # convert all to VASP default units, phonon frequncies to cm^-1
     # length in angstrom
