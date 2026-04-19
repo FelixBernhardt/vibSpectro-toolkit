@@ -1563,33 +1563,32 @@ def getBorn(path, program, nat):
         born = getBornQE(path+"ph.out", nat)
     else:
         print("[getBorn]: Format not implemented, exiting..")
-        sys.exit(1)
+        born = []
     #
     return born
 #
 
-def getEpsInf(program):
+def getEpsInf(path, program):
     # get ion-clamped static dielectric function
-    try:
-        phonopy_fh = open("BORN", "r")
-    except IOError:
-        print("[getEpsInf]: ERROR Couldn't open BORN, trying DFT output...\n")
-        if program == "VASP":
-            from parserVASP import getEpsInfVASP
-            born = getEpsInfVASP("OUTCAR")
-        elif program == "QE":
-            from parserQE import getEpsInfQE
-            born = getEpsInfQE("ph.out")
-        else:
-            print("[getEpsInf]: Format not implemented, exiting...\n")
-            sys.exit(1)
-        #
+    if program == "phonopy":
+        try:
+            phonopy_fh = open(path+"BORN", "r")
+        except IOError:
+            print("[getEpsInf]: ERROR Couldn't open BORN")
+        lines = [l.strip() for l in phonopy_fh.readlines()] # Read the whole file removing tailoring spaces
+        phonopy_fh.close()
+
+        data = lines[1].split()
+        EpsInf = np.array([[float(data[0]), float(data[1]), float(data[2])], [float(data[3]), float(data[4]), float(data[5])], [float(data[6]), float(data[7]), float(data[8])]])
+    elif program == "VASP":
+        from parserVASP import getEpsInfVASP
+        born = getEpsInfVASP(path+"OUTCAR")
+    elif program == "QE":
+        from parserQE import getEpsInfQE
+        born = getEpsInfQE(path+"ph.out")
+    else:
+        print("[getEpsInf]: Format not implemented\n")
+        EpsInf = []
     #
-    lines = [l.strip() for l in phonopy_fh.readlines()] # Read the whole file removing tailoring spaces
-    phonopy_fh.close()
-
-    data = lines[1].split()
-    EpsInf = np.array([[float(data[0]), float(data[1]), float(data[2])], [float(data[3]), float(data[4]), float(data[5])], [float(data[6]), float(data[7]), float(data[8])]])
-
     return EpsInf
 #

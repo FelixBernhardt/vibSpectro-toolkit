@@ -4,19 +4,16 @@
 # library for VASP_Raman.py
 #
 
-import sys
-import os.path
+import sys, os
 import numpy as np
-from parserPhonopy import parsePhonopy
-from parserVASP import getModesVASP, getCellVASP
-from RamanLib import Lorentz, getBorn, getEpsInf, portoq, eps0, c_cm, h, kb, ev2rcm
+from RamanLib import flatten, Lorentz, portoq, eps0, c_cm, h, kb, ev2rcm
 from LoTo import getLOFreqs, getLOCorrection, getChi2
 
-def broaden_data(datafile, w0, col, temp, smear):
+def broaden_data(path, datafile, w0, col, temp, smear):
     # apply smearing to Raman tensors from "write_raman"
     dict = {0: 'xx', 1: 'yy', 2: 'zz', 3: 'xy', 4: 'yz', 5: 'xz', 6: 'avg'}
     
-    hw = np.genfromtxt(datafile, dtype=complex)
+    hw = np.genfromtxt(path+datafile, dtype=complex)
     cm1 = np.real(hw[:,0])
     # calculate the Raman intensity for each mode and component
     n  = (-np.exp(-h * cm1 * c_cm/(kb * temp))+1)**(-1)
@@ -24,7 +21,7 @@ def broaden_data(datafile, w0, col, temp, smear):
 
     intensity = np.abs(hw[:,col+1])**2 * (ev2rcm*w0 - cm1)**4 * n/cm1
     w, Spectrum = Lorentz(cm1, intensity, smear)
-    filename = 'Intensity_'+str(dict[col])+".dat"
+    filename = path+"Intensity_"+str(dict[col])+".dat"
     f = open(filename,'w')
     f.write('# freq [cm-1]  Intensity [m^2/sr]\n')
     for i in range(len(w)):
@@ -32,10 +29,10 @@ def broaden_data(datafile, w0, col, temp, smear):
     f.close()
 #
 
-def write_raman(filelist, modelist, eigvals, eigvecs, w0, basis, nat, program, qdir, LOcorr):
+def write_raman(path, filelist, modelist, eigvals, eigvecs, w0, basis, nat, born, eps_inf, qdir, LOcorr):
     # apply LO correction if needed
     if LOcorr == True:
-        eigvalsLO_all = getLOFreqs(eigvecs, eigvals, qdir)
+        eigvalsLO_all = getLOFreqs(path, eigvecs, eigvals, qdir)
         eigvalsLO = np.empty(len(modelist))
         counter = 0
         for mode in modelist:
@@ -43,9 +40,7 @@ def write_raman(filelist, modelist, eigvals, eigvecs, w0, basis, nat, program, q
             counter += 1
         #
         V0 = np.linalg.det(basis)
-        born = getBorn(program, nat)
-        eps_inf = getEpsInf(program)
-        LOTerm = getLOCorrection(getChi2(), born, eps_inf, qdir, V0, w0, nat)
+        LOTerm = getLOCorrection(path, getChi2(), born, eps_inf, qdir, V0, w0, nat)
     else:
         LOTerm = np.zeros(7)
     #
@@ -61,7 +56,6 @@ def write_raman(filelist, modelist, eigvals, eigvecs, w0, basis, nat, program, q
         #
         eigvals.append(eigval) 
         w_list = np.real(data[:,0])
-        index = 0
         alpha = []
 
         for i in range(1, 8):
@@ -76,19 +70,19 @@ def write_raman(filelist, modelist, eigvals, eigvecs, w0, basis, nat, program, q
     tmp = np.array(Raman)
     raman = np.insert(tmp, 0, eigvals, axis=1)
  
-    f = open("Raman_"+portoq[qdir]+"_"+str(w0)+"eV.dat",'w')
+    f = open(path+"Raman_"+portoq[qdir]+"_"+str(w0)+"eV.dat",'w')
     f.write("# Raman tensors (10^(-30) Cm^2/V) at "+str(w0)+"eV laser-wavelength and q-direction +"+str(qdir)+"\n")
     f.write("# freq/cm-1        xx         yy          zz        xy        yz        xz        avg\n")
     np.savetxt(f, raman, fmt='%4.8f')
     f.close()
 #
 
-def cat_broaden(w0):
+def cat_broaden(path, w0):
     # concat all broadened spectra into a single file
     filelist = []
     dict = {0: 'xx', 1: 'yy', 2: 'zz', 3: 'xy', 4: 'yz', 5: 'xz', 6: 'avg'}
     for col in range(7):
-        filelist.append("Intensity_"+str(dict[col])+".dat")
+        filelist.append(path+"Intensity_"+str(dict[col])+".dat")
     #
     data0 = np.genfromtxt(filelist[0], dtype=float)
     tmp = np.zeros((len(data0), 8))
@@ -102,7 +96,7 @@ def cat_broaden(w0):
         index += 1
         os.system("rm "+file)
     #
-    f = open("Intensity_"+str(w0)+"eV.dat",'w')
+    f = open(path+"Intensity_"+str(w0)+"eV.dat",'w')
     f.write("# Raman intensity at "+str(w0)+"eV laser-wavelength\n")
     f.write("# freq/cm-1        xx         yy          zz        xy        yz        xz       avg\n")
     np.savetxt(f, tmp)
@@ -110,14 +104,19 @@ def cat_broaden(w0):
 #
 
 
-def calcSpectrum(modelist, program, w0, temp, smear, qdir, LOcorr, VASPflag):
-    # get phonon modes and unit cell
-    if VASPflag == True:
-        nat, basis, positions, elements = getCellVASP("POSCAR")
-        eigvals, eigvecs, norms = getModesVASP("OUTCAR", modelist, nat)
-    else:
-        eigvals, eigvecs, norms, qpoint, basis, nat, elements, positions, masses = parsePhonopy(None)
+def calcSpectrum(path, modelist_reduced, degenerates, acoustics, eigvals, eigvecs, basis, nat, born, eps_inf, w0, temp, smear, qdir, LOcorr, plotFlag):
+    # add the degenerate modes back in
+    modelist = []
+    for mode in modelist_reduced:
+        if mode not in modelist and mode not in acoustics:
+            modelist.append(mode)
+        #
+    for mode in flatten(degenerates):
+        if mode not in modelist and mode not in acoustics:
+            modelist.append(mode)
+        #
     #
+    modelist = np.sort(np.array(modelist))
 
     print("[calcSpectrum]: Calculating Raman spectrum of modes "+str(modelist))
     #print("[calcSpectrum]: Note: check e.g. https://www.cryst.ehu.es/cryst/polarizationselrules.html for selection rules")
@@ -127,17 +126,24 @@ def calcSpectrum(modelist, program, w0, temp, smear, qdir, LOcorr, VASPflag):
 
     filelist = []
     for mode in modelist:
-        filelist.append("Ramantensors/alpha_"+str(mode)+".dat")
+        filelist.append(path+"Ramantensors/alpha_"+str(mode)+".dat")
     #
     # write Raman tensor for all modes at laser-wavelength w0
     print("[calcSpectrum]: Writing Raman_"+portoq[qdir]+"_"+str(w0)+"eV.dat")
-    write_raman(filelist, modelist, eigvals, eigvecs, w0, basis, nat, program, qdir, LOcorr)
+    write_raman(path, filelist, modelist, eigvals, eigvecs, w0, basis, nat, born, eps_inf, qdir, LOcorr)
     #
     print("[calcSpectrum]: Broadening spectrum")
     for col in range(7):
-        broaden_data("Raman_"+portoq[qdir]+"_"+str(w0)+"eV.dat", w0, col, temp, smear)
+        broaden_data(path, "Raman_"+portoq[qdir]+"_"+str(w0)+"eV.dat", w0, col, temp, smear)
     #
-    cat_broaden(w0)
+    cat_broaden(path, w0)
     print("[calcSpectrum]: Done.")
-    sys.exit(1)
+
+    if plotFlag == True:
+        from plotSpectrum import plotSpectrum
+        for porto in ["xx", "yy", "zz", "xy", "yz", "xz", "avg"]:
+            plotSpectrum(path, w0, porto, qdir)
+        #
+        print("[plotSpectrum]: Done.") 
+    #
 #

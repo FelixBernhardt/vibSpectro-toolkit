@@ -53,11 +53,11 @@ def LOTOassign(eigvecs1, eigvecs2):
     return mode_dict
 #
 
-def getLOFreqs(eigvecs, eigvals, qdir):
+def getLOFreqs(path, eigvecs, eigvals, qdir):
     # get the LO modes corresponding to the direction to be analyzed
     #<phonopy --readfc --sym-fc --writedm --qpoints="0 0 0" --nac --q-direction="0 0 1">
 
-    eigvals_pt, eigvecs_pt, norms_pt, qpoint_pt, basis, nat, elements, cPos, masses = parsePhonopy(qdir)
+    eigvals_pt, eigvecs_pt, norms_pt, qpoint_pt, basis, nat, elements, cPos, masses = parsePhonopy(path, qdir)
 
     # match the TO to the LO modes
     LoToDict = LOTOassign(eigvecs, eigvecs_pt)
@@ -83,7 +83,7 @@ def getChi2():
     # return in m/V, SI
     return 4*np.pi/(3*10e4)*1e-2*[xx, yy, zz, xy, yz, xz]
 
-def getLOCorrection(chi2_tmp, born, eps_inf, qdir, vol, w, nat):
+def getLOCorrection(path, chi2_tmp, born, eps_inf, qdir, vol, w, nat):
 
     chi2 = np.empty((3,3,3), dtype=complex)
     

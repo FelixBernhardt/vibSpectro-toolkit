@@ -5,7 +5,7 @@
 #
 
 import numpy as np
-from RamanLib import Lorentz, eps0, c_cm, e_charge, amu
+from RamanLib import flatten, Lorentz, eps0, c_cm, e_charge, amu
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
@@ -70,7 +70,24 @@ def plotIRspectrum(file, path):
     print("[plotIRSpectrum]: Done.") 
 #
 
-def calcIR(path, modelist, eigvals, eigvecs, basis, nat, masses, born, smearing, plotFlag):
+def calcIR(path, modelist_reduced, degenerates, silent, acoustics, eigvals, eigvecs, basis, nat, masses, born, smearing, plotFlag):
+    # add degenerate and raman silent modes together
+    modelist = []
+    for mode in modelist_reduced:
+        if mode not in modelist and mode not in acoustics:
+            modelist.append(mode)
+        #
+    for mode in silent:
+        if mode not in modelist and mode not in acoustics:
+            modelist.append(mode)
+        #
+    for mode in flatten(degenerates):
+        if mode not in modelist and mode not in acoustics:
+            modelist.append(mode)
+        #
+    #
+    modelist = np.sort(np.array(modelist))
+    
     # calculate imaginary part of the dielectric function
     # formula from https://aip.scitation.org/doi/pdf/10.1063/1.466753
     # and https://application.wiley-vch.de/books/sample/3527405062_c01.pdf

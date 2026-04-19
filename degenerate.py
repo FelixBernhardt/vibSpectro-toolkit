@@ -2,6 +2,8 @@ import numpy as np
 import re
 from RamanLib import placzeck
 
+# something is wrong here!
+
 def calcDegenerates(path, modes, labels, ramantensors):
     # get the corresponding ramantensors
     Rn = []
@@ -65,6 +67,10 @@ def calcDegenerates(path, modes, labels, ramantensors):
 
     # get the calculated, degenerate raman tensor
     data = np.genfromtxt(path+"Ramantensors/alpha_"+str(modes[0])+".dat", dtype=complex)
+    with open(path+"Ramantensors/alpha_"+str(modes[0])+".dat") as f:
+        f.readline()
+        eigval = f.readline().split()[-1]
+    #
 
     w = []
     I = []
@@ -110,8 +116,7 @@ def calcDegenerates(path, modes, labels, ramantensors):
 
     # write to file
     for j in range(0,len(modes)):
-        outfile = path+"Ramantensors/alpha_degen_"+str(modes[j])+".dat"
-        eigval = "??"
+        outfile = path+"Ramantensors/alpha_"+str(modes[j])+".dat"
         f = open(outfile, "w")
         f.write("# Raman tensor in 10^(-30) Cm^2/V\n")
         f.write("# mode: " +str(modes[j])+"   phonon freq: "+str(eigval)+"\n")

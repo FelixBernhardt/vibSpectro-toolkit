@@ -72,7 +72,6 @@ def calc_raman(path, mode, eigval, w, Im1, Re1, Im2, Re2, stepsize, basis):
 def calcTensors(path, modelist, program, eigvals, norms, basis, degenerates, labels, ramantensors, stepsize):
     disps = [-1, 1]
 
-    """
     print("[calcTensors]: Calculating Raman tensors of modes " + str(modelist))
     if os.path.isdir(path+"Ramantensors") == False:
         os.system("mkdir "+path+"Ramantensors")
@@ -95,7 +94,6 @@ def calcTensors(path, modelist, program, eigvals, norms, basis, degenerates, lab
             iteration += 1
         #
         print("[calcTensors]: Done.")
-        sys.exit(1)
     if program == "QE":
         from parserQE import getOpticsQE
         iteration = 0
@@ -114,20 +112,19 @@ def calcTensors(path, modelist, program, eigvals, norms, basis, degenerates, lab
             iteration += 1
         #
         print("[calcTensors]: Done.")
-        sys.exit(1)
     else:
         print("[calcTensors]: Format not implemented, exiting...")
-        sys.exit(1)
     #
-    """
 
     # calculate degenerate raman tensors
     from degenerate import calcDegenerates
     if degenerates != []:
+        print("[calcTensors]: Calculating degenerate tensors...")
         for modes in degenerates:
             if modes[0] in modelist:
                 calcDegenerates(path, modes, labels, ramantensors)
             #
         #
+        print("[calcTensors]: Done.")
     #
 #

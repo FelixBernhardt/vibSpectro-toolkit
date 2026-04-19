@@ -1,12 +1,15 @@
 from RamanPy_API import *
 
-path = "/home/felixbernhardt/Forschung/sqs_00_VASP/"
+# plots use lualatex !!
+
+path = "/home/felix/Forschung/sqs_00/"
 #path = "/home/felixbernhardt/Forschung/sqs_00_allVASP/"
 #path = "/home/felixbernhardt/Forschung/Yassine/"
-test = Phonon(path=path, born="VASP")
+test = Phonon(code_in="VASP", path=path, born="VASP", plot=True, qdir=(1,0,0))
 
+print(test.ordering)
 print(test.labels)
-print(test.eigenfreqs)
+#print(test.eigenfreqs)
 print(test.acoustics)
 print(test.silent)
 print(test.degenerates)
@@ -16,6 +19,6 @@ print(test.modelist)
 #test.print_irselection()
 #test.print_ramanselection()
 #test.displace()
-
-#test.IR(plotFlag=True)
-test.tensors()
+test.IR()
+#test.tensors()
+#test.spectrum()

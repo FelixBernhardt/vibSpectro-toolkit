@@ -8,9 +8,8 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from RamanLib import portoq
 
-def plotSpectrum(w0, porto, qdir):
+def plotSpectrum(path, w0, porto, qdir):
     print("[plotSpectrum]: Plotting Raman spectrum")
 
     if qdir == (1,0,0):
@@ -66,7 +65,7 @@ def plotSpectrum(w0, porto, qdir):
     mpl.rcParams['legend.fontsize'] = size
     mpl.rcParams['figure.titlesize'] = size
 
-    dft_raw_data = np.loadtxt("Intensity_"+str(w0)+"eV.dat") # format: wavelength (cm-1) Intensity
+    dft_raw_data = np.loadtxt(path+"Intensity_"+str(w0)+"eV.dat") # format: wavelength (cm-1) Intensity
     dict = {"xx": 1, "yy": 2, "zz": 3, "xy": 4, "yz": 5, "xz": 6, "avg": 7}
     x_data = [x[0] for x in dft_raw_data]
     y_data = [x[dict[porto]] for x in dft_raw_data]
@@ -90,6 +89,7 @@ def plotSpectrum(w0, porto, qdir):
         kos = "$\\overline{\\rm{"+ko[1]+"}}$"
     #
     ax = plt.subplot()
+    plt.cla()
     ax.plot(x_data, y_data, color="black", label="")
     #ax.legend(fontsize=fontsize)
     ax.set_title("Raman: "+kis+"("+str(porto)+")"+kos+" polarization")
@@ -97,7 +97,5 @@ def plotSpectrum(w0, porto, qdir):
     ax.set_xlim([x_data[0], x_data[-1]])
     ax.set_xlabel("Wavenumber (cm$^{-1}$)")
     ax.set_ylabel("Intensity (m$^2$/sr)", fontsize=size)
-    plt.savefig("Raman_"+str(ki)+str(porto)+str(ko)+"_"+str(w0)+"eV.pdf")
-    print("[plotSpectrum]: Done.")
-    sys.exit(1)    
+    plt.savefig(path+"Raman_"+str(ki)+str(porto)+str(ko)+"_"+str(w0)+"eV.pdf") 
 #
