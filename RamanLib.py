@@ -1483,7 +1483,7 @@ def getAcoustics(eigvecs, eigvals, masses):
         return [x+1 for x in acoustic]
     else:
         print("[removeAcoustics]: Could not determine acoustic modes, continuing...")
-        return None
+        return []
     #
 #
 

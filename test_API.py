@@ -5,7 +5,7 @@ from RamanPy_API import *
 path = "/home/felix/Forschung/sqs_00/"
 #path = "/home/felixbernhardt/Forschung/sqs_00_allVASP/"
 #path = "/home/felixbernhardt/Forschung/Yassine/"
-test = Phonon(code_in="VASP", path=path, born="VASP", plot=True, qdir=(1,0,0))
+test = Phonon(code_in="phonopy", path=path, born="VASP", plot=True, qdir=(1,0,0))
 
 print(test.ordering)
 print(test.labels)
@@ -19,6 +19,6 @@ print(test.modelist)
 #test.print_irselection()
 #test.print_ramanselection()
 #test.displace()
-test.IR()
+#test.IR()
 #test.tensors()
-#test.spectrum()
+test.spectrum()

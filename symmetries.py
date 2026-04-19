@@ -91,6 +91,7 @@ def IRSelection(pointgroup):
     print("")
 #
 
+"""
 def analysis():
     eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(None)
 
@@ -118,3 +119,4 @@ def analysis():
 
     sys.exit(1)
 #
+"""

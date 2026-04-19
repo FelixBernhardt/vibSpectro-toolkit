@@ -61,9 +61,8 @@ def calcDegenerates(path, modes, labels, ramantensors):
     E = []
     for i in range(len(U[0])):
         E.append(U[:, i].reshape(3,3))
-        #print(U[:, i].reshape(3,3))
+        #print(E[-1])
     #
-
 
     # get the calculated, degenerate raman tensor
     data = np.genfromtxt(path+"Ramantensors/alpha_"+str(modes[0])+".dat", dtype=complex)
@@ -95,12 +94,7 @@ def calcDegenerates(path, modes, labels, ramantensors):
 
         # create degenerate ramantensors
         u = np.linalg.svd(x.reshape(-1, 1), full_matrices=True)[0]
-        prefactor = [x[i]/u[0,i] for i in range(len(x))]
-        for j in range(len(prefactor)):
-            if prefactor[j] == "nan":
-                prefactor[j] = 0
-            #
-        #
+        prefactor = [x[i]/u[0,i] if u[0,i] != 0 else 0 for i in range(len(x))]
 
         degenerates = np.zeros((len(Rn),6,1), dtype=complex)
         for j in range(len(Rn)):

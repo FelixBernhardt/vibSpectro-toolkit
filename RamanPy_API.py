@@ -15,30 +15,48 @@ from calcSpectrum import calcSpectrum
 class Phonon:
     """
     Attributes:
-    -path
-    -modelist
+    _nat -> the number of atoms in the unit cell
+    _modelist -> the number of expected phonon modes, 3*_nat
+    _labels_tmp -> the labels for all modes in _modelist, as output by phonopy (frequencies always in ascending order)
+    _dataset -> the spglib object used to extract the symmetry configuration
+    _norms -> euclidean norms of the phonon eigenvectors
 
-    -basis (angstrom)
-    -atomic positions
-    --cartesian (angstrom)
-    --direct
-    -elements
-    -masses (amu)
-    -qpoint
-    -eigenvectors
-    -eigenfreqs (cm^-1)
+    path -> the folder path where the calculated phonon eigenmodes can be found, and where the subsequent calculations are run, has to end with "/"
+    modelist -> the modes the user wants to calculate, the ordering of modes is the same as used in the "code_in" software
 
-    -spacegroup
-    -pointgroup
-    -Raman tensors
-    -dielectric tensor
+    code_in -> software to read the phonon information from
+    ordering -> are the phonons ordered by ascending/descending frequency?
+    code_out -> software to be used to calculate the Raman spectra and read the dielectric function from
+    born -> code to read the effective charges from
+    eps_inf -> code to read the "high frequency" dielectric function from
 
-    -Raman selection rules
-    -IR selection rules
+    basis -> basis vectors of unit cell in angstrom
+    cartesian -> positions of ions in cartesian coords. (angstrom)
+    direct -> position of ions in direct coords.
+    elements -> element identifier for the ions
+    masses -> atomic masses of the ions in amu
+    eigenvectors -> phononic eigenvectors that have been found in "code_in", displacements in cartesian coords. and angstrom
+    eigenfreqs -> phononic eigenfrequencies in cm^-1
 
-    -labels
-    -acoustics
-    -degenerates
+    nosym -> do we want to ignore symmetries? Symmetries require a FORCE_CONSTANTS file, as well as all 3*_nat phonon modes to be present in "code_in"
+    spacegroup -> spacegroup of the unit cell
+    pointgroup -> pointgroup of the unit cell
+    ramantensors -> general raman tensor associated with the point group
+    dielectrictensor -> general dielectric tensor associated with the point group
+    labels -> symetry labels of the phonon modes
+
+    acoustic -> indizes of acoustic phonon modes
+    silent -> indices of raman silent phonon modes
+    degenerates -> tuple of indices for degenerate phonon modes
+
+    stepsize -> scaling factor for the finite-differences method used to displace the ions along the phononic eigenvectors
+    smearing -> the smearing to be applied to the spectra in cm⁻1
+    temperature -> the temperature to calculate the specrta for in Kelvin
+    photon_freq -> the photon energy of the laser light used to simulate the Raman spectra in eV
+
+    qdir -> the momentum direction of the incoming photon in cartesian coordinates. This defines the outermost values in Porto's notation. Make sure to correctly account for LO modes!
+    LOcorr -> the LO correction that needs to be applied for specific q-directions
+    plot -> do we want to plot the resulting spectra? requires LuaLatex
     """
 
     def __init__(
@@ -46,7 +64,7 @@ class Phonon:
         path: str = "",
         code_in: str = "phonopy",
         code_out: str = "VASP",
-        modelist: NDArray[int] = None,
+        modelist: NDArray[int] = np.array([0]),
         nosym: bool = False,
         born: str = "", # change to code-in !! when implemented...
         eps_inf: str = "",
@@ -55,8 +73,8 @@ class Phonon:
         temperature: float = 300,
         photon_freq: float = 2.0,
         plot: bool = False,
-        qdir: list = (1, 0, 0),
-        LOcorr: NDArray[int] = None,
+        qdir: tuple = (1, 0, 0),
+        LOcorr: NDArray[int] = np.array([0]),
     ) -> None:
 
         self.path = path
@@ -64,15 +82,18 @@ class Phonon:
         if code_in == "phonopy":
             from parserPhonopy import parsePhonopy
             eigvals, eigvecs, _norms, qpoint, basis, _nat, elements, positions, masses = parsePhonopy(path, None)
-            if modelist == None:
-                modelist = range(1, 3*_nat+1)
+            if np.all(modelist == 0):
+                modelist = np.array(range(1, 3*_nat+1))
             #
             self.ordering = "ascending"
         elif code_in == "VASP":
+
             from parserVASP import getCellVASP, getModesVASP
-            _nat, basis, positions, elements = getCellVASP(self.path+"POSCAR")
-            if modelist == None:
-                modelist = range(1, 3*_nat + 1)
+            _nat, basis, positions, elements = getCellVASP(self.path+"POSCAR") # rewrite the parser such that it yields the _modelist
+            if np.all(modelist == 0):
+                modelist = np.array(range(1, 3*_nat + 1))
+            else:
+                nosym = True
             #
             eigvals, eigvecs, _norms = getModesVASP(self.path+"OUTCAR", modelist, _nat)
             masses = [periodTableMasses[element] for element in elements]
@@ -83,30 +104,30 @@ class Phonon:
         #
         self._nat = _nat
         self._norms = _norms
-        self.eigenfreqs = [eigvals[i-1] for i in modelist]
-        self.eigenvecs = [eigvecs[i-1] for i in modelist]
+        self.eigenfreqs = eigvals
+        self.eigenvecs = eigvecs
         self.basis = basis
         self.cartesian = positions
         self.elements = elements
         self.masses = masses
-        self._modelist = modelist
+        self._modelist = range(1,3*self._nat)
 
         self.direct = np.empty((self._nat, 3))
         for atom in range(self._nat):
             self.direct[atom, :] = np.dot(np.linalg.inv(self.basis.T), self.cartesian[atom, :])
         #
         self.acoustics = getAcoustics(self.eigenvecs, self.eigenfreqs, self.masses)
-        self.modelist = [mode for mode in self._modelist if mode not in self.acoustics]
+        self.modelist = [mode for mode in modelist if mode not in self.acoustics]
                          
         if nosym == False:
-            self.set_symmetries()
+            self.set_symmetries(modelist)
         else:
             self._dataset = []
             self.spacegroup = "",
             self.pointgroup = "",
             self.ramantensors = [],
             self.dielectrictensor = [],
-            self._labels = []
+            self._labels_tmp = []
             self.labels = []
             self.degenerates = []
             self.silent = []
@@ -131,21 +152,21 @@ class Phonon:
         self.LOcorr = LOcorr
         self.stepsize = stepsize
     #
-    def set_symmetries(self):
+    def set_symmetries(self, modelist):
         self._dataset = get_symmetry_dataset((self.basis, self.direct, [periodTable[element] for element in self.elements]), symprec=1.e-5)
         self.spacegroup = str(self._dataset["number"])
         self.pointgroup = str(self._dataset["pointgroup"])   
         self.ramantensors = analyzeRamanTensors(self.pointgroup, varprint=False)
         self.dielectrictensor = analyzeDielectricTensor(self.pointgroup, varprint=False)
-        self._labels = getIrrepsSymbols(self.path, self.basis, self.direct, self.elements, self.pointgroup)
+        self._labels_tmp = getIrrepsSymbols(self.path, self.basis, self.direct, self.elements, self.pointgroup)
         if self.ordering == "ascending":
-            self.labels = [self._labels[i-1] for i in self._modelist]
+            self.labels = [self._labels_tmp[i-1] for i in self._modelist]
         elif self.ordering == "descending":
-            self.labels = [self._labels[3*self._nat-i] for i in self._modelist]
+            self.labels = [self._labels_tmp[3*self._nat-i] for i in self._modelist]
         #    
         self.degenerates = getDegenerates(self.eigenfreqs, self.labels, prec=1e0)
-        self.silent = getSilent(self.modelist, self.labels, self.pointgroup)
-        self.modelist = [mode for mode in self._modelist if mode not in self.silent and mode not in self.acoustics and mode not in [x[1] for x in self.degenerates]]
+        self.silent = getSilent(self._modelist, self.labels, self.pointgroup)
+        self.modelist = [mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in [x[1] for x in self.degenerates]]
     #
     def print_ramantensors(self):
         if self.pointgroup == "":

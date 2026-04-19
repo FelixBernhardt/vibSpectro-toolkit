@@ -94,7 +94,7 @@ def calcTensors(path, modelist, program, eigvals, norms, basis, degenerates, lab
             iteration += 1
         #
         print("[calcTensors]: Done.")
-    if program == "QE":
+    elif program == "QE":
         from parserQE import getOpticsQE
         iteration = 0
         for mode in modelist:
