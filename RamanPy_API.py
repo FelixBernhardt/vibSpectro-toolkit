@@ -5,12 +5,13 @@
 #
 import numpy as np
 from numpy.typing import NDArray
-from RamanLib import periodTable, periodTableMasses, getAcoustics, getDegenerates, getSilent, getBorn, getEpsInf
-from symmetries import *
+from spglib import get_symmetry_dataset
+from RamanLib import periodTable, periodTableMasses, getAcoustics, getDegenerates, getSilent, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols, getBorn, getEpsInf
 from IR import calcIR
 from displace import calcdisplace
 from calcTensors import calcTensors
 from calcSpectrum import calcSpectrum
+from plotSpectrum import plotSpectrum, plotIRspectrum
 
 class Phonon:
     """
@@ -54,9 +55,9 @@ class Phonon:
     temperature -> the temperature to calculate the specrta for in Kelvin
     photon_freq -> the photon energy of the laser light used to simulate the Raman spectra in eV
 
+    ALL LO STUFF NOT IMPLEMENTED!
     qdir -> the momentum direction of the incoming photon in cartesian coordinates. This defines the outermost values in Porto's notation. Make sure to correctly account for LO modes!
     LOcorr -> the LO correction that needs to be applied for specific q-directions
-    plot -> do we want to plot the resulting spectra? requires LuaLatex
     """
 
     def __init__(
@@ -72,7 +73,6 @@ class Phonon:
         smearing: float = 5.0,
         temperature: float = 300,
         photon_freq: float = 2.0,
-        plot: bool = False,
         qdir: tuple = (1, 0, 0),
         LOcorr: NDArray[int] = np.array([0]),
     ) -> None:
@@ -147,7 +147,6 @@ class Phonon:
         self.smearing = smearing
         self.temperature = temperature
         self.photon_freq = photon_freq
-        self.plot = plot
         self.qdir = qdir
         self.LOcorr = LOcorr
         self.stepsize = stepsize
@@ -205,8 +204,11 @@ class Phonon:
         if np.all(self.born == 0):
             print("ERROR, need effective charges")
         else:
-            calcIR(self.path, self.modelist, self.degenerates, self.silent, self.acoustics, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.masses, self.born, self.smearing, self.plot)
+            calcIR(self.path, self.modelist, self.degenerates, self.silent, self.acoustics, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.masses, self.born, self.smearing)
         #
+    #
+    def plotIR(self, lualatex=False):
+        plotIRspectrum(self.path+"IR.dat", self.path, lualatex)
     #
     def displace(self, scffile="scf.in"):
         calcdisplace(self.path, self.modelist, self.stepsize, self.code_out, self.eigenvecs, self._norms, self.basis, self._nat, self.elements, self.cartesian, scffile)
@@ -215,6 +217,13 @@ class Phonon:
         calcTensors(self.path, self.modelist, self.code_out, self.eigenfreqs, self._norms, self.basis, self.degenerates, self.labels, self.ramantensors, self.stepsize)
     #
     def spectrum(self):
-        calcSpectrum(self.path, self.modelist, self.degenerates, self.acoustics, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.born, self.eps_inf, self.photon_freq, self.temperature, self.smearing, self.qdir, self.LOcorr, self.plot)        
+        calcSpectrum(self.path, self.modelist, self.degenerates, self.acoustics, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.born, self.eps_inf, self.photon_freq, self.temperature, self.smearing, self.qdir, self.LOcorr)        
+    #
+    def plotRaman(self, porto=["xx", "yy", "zz", "xy", "yz", "xz", "perp", "back"], lualatex=False):
+        print("[plotRaman]: Plotting Raman spectrum")
+        for pt in porto:
+            plotSpectrum(self.path, self.photon_freq, pt, self.qdir, lualatex)
+        #
+        print("[plotRaman]: Done.") 
     #
 #

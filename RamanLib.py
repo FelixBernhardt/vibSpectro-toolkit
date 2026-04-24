@@ -1555,6 +1555,86 @@ def removeModes(eigvecs, eigvals, masses, modelist, basis, coord, elements, poin
     return modelist_new
 #
 
+def analyzeRamanTensors(pointgroup, varprint=False):
+    RamanTensors = RamanTensorComponents[pointgroup]
+
+    # print to console
+    if varprint == True:
+        print("Raman Tensors of point group "+pointgroup)
+        for i in range(int(len(RamanTensors)/2)):
+            print(RamanTensors[2*i])
+            for j in range(3):
+                print(RamanTensors[2*i+1][j])
+            #
+        #
+        print("")
+    #
+    return RamanTensors
+#
+
+def analyzeDielectricTensor(pointgroup, varprint=False):
+    dielectricTensor = dielectricFunctionComponents[pointgroup]
+
+    # print to console
+    if varprint == True:
+        print("Dielectric Tensor of point group "+pointgroup)
+        for j in range(3):
+            print(dielectricTensor[j])
+        #
+        print("")
+    #
+    return dielectricTensor
+#
+
+def RamanSelection(pointgroup, RamanTensors):
+    backscattering, backComponents, rightscattering, rightComponents = RamanSelectionRules(pointgroup, RamanTensors)
+
+    # format the components
+    for j in range(len(backComponents)):
+        backComponents[j] = formatString(backComponents[j])
+    #
+    for j in range(len(rightComponents)):
+        rightComponents[j] = formatString(rightComponents[j])
+    #               
+
+    # print to console
+    maxlen = np.max(np.concatenate(([len(x) for x in backscattering], [len(x) for x in rightscattering], [len("observable modes")])))
+    print("Raman selection Rules for pointgroup "+pointgroup)
+    placeholder1 = " " * int(np.ceil(np.abs(maxlen - len("observable modes"))/2))
+    placeholder2 = " " * int(np.floor(np.abs(maxlen - len("observable modes"))/2))
+    header = "        | "+placeholder1+"observable modes"+placeholder2+" | tensor components"
+    print(header)
+    for j in range(len(backDirs)):
+        placeholder1 = " " * int(np.ceil(np.abs(maxlen - len(backscattering[j]))/2))
+        placeholder2 = " " * int(np.floor(np.abs(maxlen - len(backscattering[j]))/2))
+        print(" " + backDirs[j] + " | " + placeholder1 + backscattering[j] + placeholder2 + " | " + backComponents[j] )
+    #
+    print("-"*len(header))
+    for j in range(len(rightDirs)):
+        placeholder1 = " " * int(np.ceil(np.abs(maxlen - len(rightscattering[j]))/2))
+        placeholder2 = " " * int(np.floor(np.abs(maxlen - len(rightscattering[j]))/2))
+        print(" " + rightDirs[j] + " | " + placeholder1 + rightscattering[j] + placeholder2 + " | " + rightComponents[j] )
+    #
+    print("")
+#
+
+def IRSelection(pointgroup):
+    scattering = IRSelectionRules[pointgroup]
+
+    maxlen = np.max(np.concatenate(([len(x) for x in scattering], [len("observable modes")])))
+    print("IR selection Rules for pointgroup "+pointgroup)
+    placeholder1 = " " * int(np.ceil(np.abs(maxlen - len("observable modes"))/2))
+    placeholder2 = " " * int(np.floor(np.abs(maxlen - len("observable modes"))/2))
+    header = "        | "+placeholder1+"observable modes"+placeholder2
+    print(header)
+    for j in range(len(IRDirs)):
+        placeholder1 = " " * int(np.ceil(np.abs(maxlen - len(scattering[j]))/2))
+        placeholder2 = " " * int(np.floor(np.abs(maxlen - len(scattering[j]))/2))
+        print(" " + IRDirs[j] + " | " + placeholder1 + scattering[j] + placeholder2 )
+    #
+    print("")
+#
+
 def getBorn(path, program, nat):
     # get BORN charges, in |e|
     if program == "VASP":

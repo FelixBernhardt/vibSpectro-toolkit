@@ -4,7 +4,7 @@
 # This lib calculates the Raman tensors
 #
 
-import sys, os
+import os
 import numpy as np
 from RamanLib import eps0, placzeck_invs
 

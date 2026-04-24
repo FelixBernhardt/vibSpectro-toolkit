@@ -6,9 +6,8 @@
 
 import sys, os
 import numpy as np
-from parserVASP import writePOSCAR, linkVASP, getModesVASP, getCellVASP
+from parserVASP import writePOSCAR, linkVASP
 from parserQE import writeSCF, linkQE
-from parserPhonopy import parsePhonopy
 
 def calcdisplace(path, modelist, stepsize, program, eigvecs, norms, basis, nat, elements, positions, scffile):
     if program != "VASP" and program != "QE":

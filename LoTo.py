@@ -4,8 +4,7 @@
 # Lib to account for LO modes
 #
 
-import sys
-import os.path
+
 import numpy as np
 from parserPhonopy import parsePhonopy
 from RamanLib import flatten, e_charge
@@ -72,7 +71,7 @@ def getLOFreqs(path, eigvecs, eigvals, qdir):
 #
 
 def getChi2():
-    # from yambo o.xx
+    # from yambo o.xx, test case
     # unit cm/V, gaussian
     xx = np.genfromtxt("oxx", dtype=float)
     xy = np.genfromtxt("oxy", dtype=float)

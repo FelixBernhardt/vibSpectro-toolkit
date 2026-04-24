@@ -4,7 +4,7 @@
 # library for VASP_Raman.py
 #
 
-import sys, os
+import os
 import numpy as np
 from RamanLib import flatten, Lorentz, portoq, eps0, c_cm, h, kb, ev2rcm
 from LoTo import getLOFreqs, getLOCorrection, getChi2
@@ -104,7 +104,7 @@ def cat_broaden(path, w0):
 #
 
 
-def calcSpectrum(path, modelist_reduced, degenerates, acoustics, eigvals, eigvecs, basis, nat, born, eps_inf, w0, temp, smear, qdir, LOcorr, plotFlag):
+def calcSpectrum(path, modelist_reduced, degenerates, acoustics, eigvals, eigvecs, basis, nat, born, eps_inf, w0, temp, smear, qdir, LOcorr):
     # add the degenerate modes back in
     modelist = []
     for mode in modelist_reduced:
@@ -138,12 +138,4 @@ def calcSpectrum(path, modelist_reduced, degenerates, acoustics, eigvals, eigvec
     #
     cat_broaden(path, w0)
     print("[calcSpectrum]: Done.")
-
-    if plotFlag == True:
-        from plotSpectrum import plotSpectrum
-        for porto in ["xx", "yy", "zz", "xy", "yz", "xz", "perp", "back"]:
-            plotSpectrum(path, w0, porto, qdir)
-        #
-        print("[plotSpectrum]: Done.") 
-    #
 #

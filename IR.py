@@ -9,68 +9,7 @@ from RamanLib import flatten, Lorentz, eps0, c_cm, e_charge, amu
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
-def plotIRspectrum(file, path):
-    # data
-    epsi_data = []
-    epsr_data = []
-    dft_raw_data = np.loadtxt(file) # format: wavelength (cm-1) Intensity (Imag, Real)
-    dict = {0: "x", 1: "y", 2: "z", 3: "avg"}
-    w_data = [x[0] for x in dft_raw_data]
-    epsi_data.append( [x[1] for x in dft_raw_data] )
-    epsr_data.append( [x[2] for x in dft_raw_data] )
-    epsi_data.append( [x[3] for x in dft_raw_data] )
-    epsr_data.append( [x[4] for x in dft_raw_data] )
-    epsi_data.append( [x[5] for x in dft_raw_data] )
-    epsr_data.append( [x[6] for x in dft_raw_data] )
-    epsi_data.append( [x[7] for x in dft_raw_data] )
-    epsr_data.append( [x[8] for x in dft_raw_data] )
-
-
-    # Fonts
-    plt.rcParams.update({
-        "text.usetex": True,
-        "pgf.rcfonts": False,
-        "pgf.texsystem": "lualatex",
-    })
-    mpl.use('pgf')
-    
-    size = 12
-    mpl.rcParams['font.size'] = size
-    mpl.rcParams['axes.titlesize'] = size
-    mpl.rcParams['axes.labelsize'] = size
-    mpl.rcParams['xtick.labelsize'] = size
-    mpl.rcParams['ytick.labelsize'] = size
-    mpl.rcParams['legend.fontsize'] = size
-    mpl.rcParams['figure.titlesize'] = size
-
-    for j in range(4):
-        # plotting    
-        fig_width = 5.511 # inch
-        mpl.rcParams['figure.figsize'] = [fig_width, fig_width/2]
-        fig, ((ax1, ax2)) = plt.subplots(1,2, layout="constrained")
-        if j == 3:
-            fig.suptitle("spatially averaged polarization")
-        else:
-            fig.suptitle("IR: E||"+dict[j]+" polarization")
-        #
-        ax1.set_xlim([w_data[0], w_data[-1]])
-        ax1.plot(w_data, epsr_data[j], color="black", label="Real")
-        ax1.axhline(ls="dashed")
-        ax1.set_xlabel("Wavenumber (cm$^{-1}$)")
-        ax1.set_ylabel("Re($\\varepsilon$)")
-
-        ax2.set_xlim([w_data[0], w_data[-1]])
-        ax2.set_ylim([0, np.max(epsi_data[j])*1.1])
-        ax2.plot(w_data, epsi_data[j], color="black", label="Imag")
-        ax2.set_xlabel("Wavenumber (cm$^{-1}$)")
-        ax2.set_ylabel("Im($\\varepsilon$)")
-    
-        plt.savefig(path+"IR_"+dict[j]+".pdf")
-    #
-    print("[plotIRSpectrum]: Done.") 
-#
-
-def calcIR(path, modelist_reduced, degenerates, silent, acoustics, eigvals, eigvecs, basis, nat, masses, born, smearing, plotFlag):
+def calcIR(path, modelist_reduced, degenerates, silent, acoustics, eigvals, eigvecs, basis, nat, masses, born, smearing):
     # add degenerate and raman silent modes together
     modelist = []
     for mode in modelist_reduced:
@@ -143,8 +82,4 @@ def calcIR(path, modelist_reduced, degenerates, silent, acoustics, eigvals, eigv
     output_fh.close()
     
     print("[calcIR]: DONE")
-
-    if plotFlag == True:
-        plotIRspectrum(path+"IR.dat", path)
-    #
 #

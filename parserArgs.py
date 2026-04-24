@@ -4,9 +4,7 @@
 # argument parser for RamanPy
 #
 
-import sys
 import argparse
-import numpy as np
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", "--version", action="store_true",\
