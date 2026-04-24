@@ -7,8 +7,8 @@ from RamanPy_API import *
 #test.eigenvecs=[test.eigenvecs[29-mode] for mode in range(30)]
 #test.eigenfreqs=[test.eigenfreqs[29-mode] for mode in range(30)]
 
-
-path = "/home/felix/Forschung/sqs_00/"
+path = "/Users/felixbernhardt/Desktop/sqs_00"
+#path = "/home/felix/Forschung/sqs_00/"
 #path = "/home/felixbernhardt/Forschung/sqs_00_allVASP/"
 #path = "/home/felixbernhardt/Forschung/Yassine/"
 test = Phonon(code_in="VASP", path=path, born="VASP", plot=True, qdir=(1,0,0))
@@ -24,7 +24,7 @@ test = Phonon(code_in="VASP", path=path, born="VASP", plot=True, qdir=(1,0,0))
 #test.print_irselection()
 #test.print_ramanselection()
 #test.displace()
-#test.IR()
+test.IR()
 
 test.tensors()
 test.spectrum()

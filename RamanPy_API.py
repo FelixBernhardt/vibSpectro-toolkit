@@ -166,7 +166,12 @@ class Phonon:
         #    
         self.degenerates = getDegenerates(self.eigenfreqs, self.labels, prec=1e0)
         self.silent = getSilent(self._modelist, self.labels, self.pointgroup)
-        self.modelist = [mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in [x[1] for x in self.degenerates]]
+        self.modelist = [mode for mode in modelist if mode not in self.silent and mode not in self.acoustics]
+        #self.modelist = [mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in [x[1] for x in self.degenerates]]
+        
+        #if self.modelist != modelist:
+        #    print("[__init__]: Removing Raman silent and degenerate modes")
+        #
     #
     def print_ramantensors(self):
         if self.pointgroup == "":

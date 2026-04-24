@@ -41,7 +41,7 @@ def plotSpectrum(path, w0, porto, qdir):
         porto = "yz"
     elif str(porto) == "zx":
         porto = "xz"
-    elif str(porto) != "xx" and str(porto) != "yy" and str(porto) != "zz" and str(porto) != "xy" and str(porto) != "xz" and str(porto) != "yz" and str(porto) != "avg":
+    elif str(porto) != "xx" and str(porto) != "yy" and str(porto) != "zz" and str(porto) != "xy" and str(porto) != "xz" and str(porto) != "yz" and str(porto) != "perp" and str(porto) != "back":
         print("[plotSpectrum]: ERROR: invalid polarization direction specified, exiting...")
         sys.exit(1)
     #
@@ -66,7 +66,7 @@ def plotSpectrum(path, w0, porto, qdir):
     mpl.rcParams['figure.titlesize'] = size
 
     dft_raw_data = np.loadtxt(path+"Intensity_"+str(w0)+"eV.dat") # format: wavelength (cm-1) Intensity
-    dict = {"xx": 1, "yy": 2, "zz": 3, "xy": 4, "yz": 5, "xz": 6, "avg": 7}
+    dict = {"xx": 1, "yy": 2, "zz": 3, "xy": 4, "yz": 5, "xz": 6, "perp": 7, "back": 8}
     x_data = [x[0] for x in dft_raw_data]
     y_data = [x[dict[porto]] for x in dft_raw_data]
     ymax = np.max(y_data)

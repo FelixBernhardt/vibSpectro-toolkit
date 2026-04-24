@@ -11,7 +11,7 @@ from LoTo import getLOFreqs, getLOCorrection, getChi2
 
 def broaden_data(path, datafile, w0, col, temp, smear):
     # apply smearing to Raman tensors from "write_raman"
-    dict = {0: 'xx', 1: 'yy', 2: 'zz', 3: 'xy', 4: 'yz', 5: 'xz', 6: 'avg'}
+    dict = {0: 'xx', 1: 'yy', 2: 'zz', 3: 'xy', 4: 'yz', 5: 'xz', 6: 'perp', 7:'back'}
     
     hw = np.genfromtxt(path+datafile, dtype=complex)
     cm1 = np.real(hw[:,0])
@@ -42,7 +42,7 @@ def write_raman(path, filelist, modelist, eigvals, eigvecs, w0, basis, nat, born
         V0 = np.linalg.det(basis)
         LOTerm = getLOCorrection(path, getChi2(), born, eps_inf, qdir, V0, w0, nat)
     else:
-        LOTerm = np.zeros(7)
+        LOTerm = np.zeros(8)
     #
     
     # read "alpha_X.dat" and collect raman-shift at laser-wavelength w0
@@ -58,7 +58,7 @@ def write_raman(path, filelist, modelist, eigvals, eigvecs, w0, basis, nat, born
         w_list = np.real(data[:,0])
         alpha = []
 
-        for i in range(1, 8):
+        for i in range(1, 9):
             alpha.append(np.abs(np.interp([w0], w_list, data[:,i]))[0] + LOTerm[i-1])
         #
         Raman.append(alpha)
@@ -72,7 +72,7 @@ def write_raman(path, filelist, modelist, eigvals, eigvecs, w0, basis, nat, born
  
     f = open(path+"Raman_"+portoq[qdir]+"_"+str(w0)+"eV.dat",'w')
     f.write("# Raman tensors (10^(-30) Cm^2/V) at "+str(w0)+"eV laser-wavelength and q-direction +"+str(qdir)+"\n")
-    f.write("# freq/cm-1        xx         yy          zz        xy        yz        xz        avg\n")
+    f.write("# freq/cm-1        xx         yy          zz        xy        yz        xz        perp        back\n")
     np.savetxt(f, raman, fmt='%4.8f')
     f.close()
 #
@@ -80,12 +80,12 @@ def write_raman(path, filelist, modelist, eigvals, eigvecs, w0, basis, nat, born
 def cat_broaden(path, w0):
     # concat all broadened spectra into a single file
     filelist = []
-    dict = {0: 'xx', 1: 'yy', 2: 'zz', 3: 'xy', 4: 'yz', 5: 'xz', 6: 'avg'}
-    for col in range(7):
+    dict = {0: 'xx', 1: 'yy', 2: 'zz', 3: 'xy', 4: 'yz', 5: 'xz', 6: 'perp', 7: 'back'}
+    for col in range(8):
         filelist.append(path+"Intensity_"+str(dict[col])+".dat")
     #
     data0 = np.genfromtxt(filelist[0], dtype=float)
-    tmp = np.zeros((len(data0), 8))
+    tmp = np.zeros((len(data0), 9))
     index = 0
     for file in filelist:
         data = np.genfromtxt(file, dtype=float)
@@ -98,7 +98,7 @@ def cat_broaden(path, w0):
     #
     f = open(path+"Intensity_"+str(w0)+"eV.dat",'w')
     f.write("# Raman intensity at "+str(w0)+"eV laser-wavelength\n")
-    f.write("# freq/cm-1        xx         yy          zz        xy        yz        xz       avg\n")
+    f.write("# freq/cm-1        xx         yy          zz        xy        yz        xz       perp       back\n")
     np.savetxt(f, tmp)
     f.close()
 #
@@ -133,7 +133,7 @@ def calcSpectrum(path, modelist_reduced, degenerates, acoustics, eigvals, eigvec
     write_raman(path, filelist, modelist, eigvals, eigvecs, w0, basis, nat, born, eps_inf, qdir, LOcorr)
     #
     print("[calcSpectrum]: Broadening spectrum")
-    for col in range(7):
+    for col in range(8):
         broaden_data(path, "Raman_"+portoq[qdir]+"_"+str(w0)+"eV.dat", w0, col, temp, smear)
     #
     cat_broaden(path, w0)
@@ -141,7 +141,7 @@ def calcSpectrum(path, modelist_reduced, degenerates, acoustics, eigvals, eigvec
 
     if plotFlag == True:
         from plotSpectrum import plotSpectrum
-        for porto in ["xx", "yy", "zz", "xy", "yz", "xz", "avg"]:
+        for porto in ["xx", "yy", "zz", "xy", "yz", "xz", "perp", "back"]:
             plotSpectrum(path, w0, porto, qdir)
         #
         print("[plotSpectrum]: Done.") 

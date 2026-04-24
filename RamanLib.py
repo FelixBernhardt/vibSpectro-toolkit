@@ -1396,7 +1396,7 @@ def Lorentz(hw, ab, gam=0.001):
     return erange, spectrum
 #
 
-def placzeck(Intensity, col):
+def placzeck_invs(Intensity, col):
     # get Placzeck-invariants
     G0 = np.abs(Intensity[0][col-1] + Intensity[1][col-1] + Intensity[2][col-1])**2/3.0
     G1 = 0
@@ -1404,8 +1404,10 @@ def placzeck(Intensity, col):
           + np.abs(Intensity[0][col-1] - Intensity[2][col-1])**2 \
           + np.abs(Intensity[1][col-1] - Intensity[2][col-1])**2)/3.0 \
           + 2*(np.abs(Intensity[3][col-1])**2 + np.abs(Intensity[4][col-1])**2 + np.abs(Intensity[5][col-1])**2)
-    avg = np.sqrt(10*G0 + 5*G1 + 7*G2) # parallel and perpendicular components added together
-    return avg
+    perp = np.sqrt(5*G1 + 3*G2)
+    back = np.sqrt(10*G0 + 4*G2)
+    #avg = np.sqrt(10*G0 + 5*G1 + 7*G2) # parallel and perpendicular components added together
+    return perp, back
 #
 
 def classifyRotations(rotations):
