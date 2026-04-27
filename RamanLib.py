@@ -11,7 +11,7 @@ from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.phonon.irreps import IrReps
 from parserVASP import getBornVASP
 
-periodTable = {'H': 1, 'He': 2, 'Li': 3, 'Be': 4, 'B': 5, 'C': 6, 'N': 7, 'O': 8, 'F': 9, 'Ne': 10,
+periodTable = {'': 0, 'H': 1, 'He': 2, 'Li': 3, 'Be': 4, 'B': 5, 'C': 6, 'N': 7, 'O': 8, 'F': 9, 'Ne': 10,
    'Na': 11, 'Mg': 12, 'Al': 13, 'Si': 14, 'P': 15, 'S': 16, 'Cl': 17, 'Ar': 18,
    'K': 19, 'Ca': 20, 'Sc': 21, 'Ti': 22, 'V': 23, 'Cr': 24, 'Mn': 25, 'Fe': 26, 'Co': 27, 'Ni': 28,
    'Cu': 29, 'Zn': 30, 'Ga': 31, 'Ge': 32, 'As': 33, 'Se': 34, 'Br': 35, 'Kr': 36,
@@ -25,7 +25,7 @@ periodTable = {'H': 1, 'He': 2, 'Li': 3, 'Be': 4, 'B': 5, 'C': 6, 'N': 7, 'O': 8
 
 # masses in atomic units
 # from https://www.angelo.edu/faculty/kboudrea/periodic/structure_mass.htm
-periodTableMasses = {'H':  1.00797, 'He':  4.00260, 'Li':  6.941,
+periodTableMasses = {'': 0, 'H':  1.00797, 'He':  4.00260, 'Li':  6.941,
          'Be':  9.01218, 'B':   10.81, 'C':     12.011,
          'N':   14.0067, 'O':   15.9994, 'F': 18.998403,
          'Ne':  20.179, 'Na':   22.98977, 'Mg': 24.305,
@@ -1459,6 +1459,25 @@ def getIrrepsSymbols(path, basis, coord, elements, pointgroup):
     
     labels = matchLabels(class_characters, CHAR_TABLES[HM_TO_SCHOENFLIES[pointgroup]])
 
+    return labels
+#
+
+def getPointgroup_pymole(coord, elements):
+    from posym import Molecule, Symmetry
+    
+    mol = Molecule(symbols=elements, coordinates=coord)
+    sym = Symmetry(mol)
+    pointgroup = sym.get_point_group()
+   
+
+    return pointgroup
+
+def getIrrepsSymbols_pymole(eigenvectors, coord, elements, pointgroup):
+    from posym import SymmetryNormalModes
+    
+    sym_modes_gs = SymmetryNormalModes(group=pointgroup, coordinates=coord, modes=eigenvectors, symbols=elements)
+    labels = [sym_modes_gs.get_state_mode(i) for i in range(len(eigenvectors)) ]
+    
     return labels
 #
 

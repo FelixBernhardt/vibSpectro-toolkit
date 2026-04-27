@@ -10,7 +10,7 @@ from RamanPy_API import Phonon
 path = "/home/felix/Forschung/sqs_00/"
 #path = "/home/felixbernhardt/Forschung/sqs_00_allVASP/"
 #path = "/home/felixbernhardt/Forschung/Yassine/"
-test = Phonon(code_in="VASP", path=path, born="VASP", qdir=(1,0,0))
+test = Phonon(code_in="VASP", path=path, born="VASP", qdir=(1,0,0), nosym=False)
 
 #print(test.ordering)
 #print(test.labels)
@@ -24,8 +24,8 @@ test = Phonon(code_in="VASP", path=path, born="VASP", qdir=(1,0,0))
 #test.print_ramanselection()
 #test.displace()
 #test.IR()
-test.plotIR(lualatex=False)
+#test.plotIR(lualatex=False)
 
-#test.tensors()
-#test.spectrum()
+test.tensors()
+test.spectrum()
 test.plotRaman(lualatex=False)

@@ -151,7 +151,7 @@ def getBornVASP(file, nat):
         #
     #
     print("[getBornVASP]: ERROR Couldn't find 'BORN EFFECTIVE CHARGES' in OUTCAR. Exiting...")
-    sys.exit(1)
+    return np.zeros((nat, 3, 3))
 #
 
 def ModeParserVASP(outcar_fh, modelist, nat, case):
@@ -168,7 +168,7 @@ def ModeParserVASP(outcar_fh, modelist, nat, case):
         outcar_fh.readline() # empty line
     else:
         print("[ModeParserVASP]: Invalid case specified, exiting...")
-        sys.exit(1)
+        return [0], np.zeros(3), [0]
     #
     for i in range(np.max(modelist)):
         outcar_fh.readline() # empty line
@@ -216,8 +216,8 @@ def getModesVASP(file, modelist, nat):
     try: 
         outcar_fh = open(file, "r")
     except IOError:
-        print("[getModesVASP]: ERROR Couldn't open OUTCAR, exiting...\n")
-        sys.exit(1)
+        print("[getModesVASP]: ERROR Couldn't open OUTCAR\n")
+        return np.zeros(3)
     #
     outcar_fh.seek(0)
     while True:
@@ -233,8 +233,8 @@ def getModesVASP(file, modelist, nat):
             return eigvals, eigvecs, norms
         #
     #
-    print("[getModesVASP]: ERROR Couldn't find 'Eigenvectors and eigenvalues of the dynamical matrix' in OUTCAR. Exiting...")
-    sys.exit(1)
+    print("[getModesVASP]: ERROR Couldn't find 'Eigenvectors and eigenvalues of the dynamical matrix' in OUTCAR")
+    return np.zeros(3)
 #
 
 def MAT_m_VEC(m, v):
@@ -249,8 +249,8 @@ def getCellVASP(file):
     try: 
         poscar_fh = open(file, "r")
     except IOError:
-        print("[getCellVASP]: ERROR Couldn't open POSCAR, exiting...\n")
-        sys.exit(1)
+        print("[getCellVASP]: ERROR Couldn't open POSCAR\n")
+        return 1, np.eye(3), np.zeros(3), [""]
     #
     poscar_fh.seek(0) # just in case
     lines = poscar_fh.readlines()

@@ -6,7 +6,7 @@
 import numpy as np
 from numpy.typing import NDArray
 from spglib import get_symmetry_dataset
-from RamanLib import periodTable, periodTableMasses, getAcoustics, getDegenerates, getSilent, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols, getBorn, getEpsInf
+from RamanLib import periodTable, periodTableMasses, getAcoustics, getDegenerates, getSilent, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols, getPointgroup_pymole, getIrrepsSymbols_pymole, getBorn, getEpsInf
 from IR import calcIR
 from displace import calcdisplace
 from calcTensors import calcTensors
@@ -24,7 +24,8 @@ class Phonon:
 
     path -> the folder path where the calculated phonon eigenmodes can be found, and where the subsequent calculations are run, has to end with "/"
     modelist -> the modes the user wants to calculate, the ordering of modes is the same as used in the "code_in" software
-
+    molecule -> is the structure to calculate a solid (default) or a molecule?
+    
     code_in -> software to read the phonon information from
     ordering -> are the phonons ordered by ascending/descending frequency?
     code_out -> software to be used to calculate the Raman spectra and read the dielectric function from
@@ -40,7 +41,6 @@ class Phonon:
     eigenfreqs -> phononic eigenfrequencies in cm^-1
 
     nosym -> do we want to ignore symmetries? Symmetries require a FORCE_CONSTANTS file, as well as all 3*_nat phonon modes to be present in "code_in"
-    spacegroup -> spacegroup of the unit cell
     pointgroup -> pointgroup of the unit cell
     ramantensors -> general raman tensor associated with the point group
     dielectrictensor -> general dielectric tensor associated with the point group
@@ -66,6 +66,7 @@ class Phonon:
         code_in: str = "phonopy",
         code_out: str = "VASP",
         modelist: NDArray[int] = np.array([0]),
+        molecule: bool = False,
         nosym: bool = False,
         born: str = "", # change to code-in !! when implemented...
         eps_inf: str = "",
@@ -110,6 +111,7 @@ class Phonon:
         self.cartesian = positions
         self.elements = elements
         self.masses = masses
+        self.molecule = molecule
         self._modelist = range(1,3*self._nat+1)
 
         self.direct = np.empty((self._nat, 3))
@@ -123,7 +125,6 @@ class Phonon:
             self.set_symmetries(modelist)
         else:
             self._dataset = []
-            self.spacegroup = "",
             self.pointgroup = "",
             self.ramantensors = [],
             self.dielectrictensor = [],
@@ -152,12 +153,19 @@ class Phonon:
         self.stepsize = stepsize
     #
     def set_symmetries(self, modelist):
-        self._dataset = get_symmetry_dataset((self.basis, self.direct, [periodTable[element] for element in self.elements]), symprec=1.e-5)
-        self.spacegroup = str(self._dataset["number"])
-        self.pointgroup = str(self._dataset["pointgroup"])   
-        self.ramantensors = analyzeRamanTensors(self.pointgroup, varprint=False)
-        self.dielectrictensor = analyzeDielectricTensor(self.pointgroup, varprint=False)
-        self._labels_tmp = getIrrepsSymbols(self.path, self.basis, self.direct, self.elements, self.pointgroup)
+        if self.molecule == False:
+            self._dataset = get_symmetry_dataset((self.basis, self.direct, [periodTable[element] for element in self.elements]), symprec=1.e-5)
+            self.pointgroup = str(self._dataset["pointgroup"])   
+            self.ramantensors = analyzeRamanTensors(self.pointgroup, varprint=False)
+            self.dielectrictensor = analyzeDielectricTensor(self.pointgroup, varprint=False)
+            self._labels_tmp = getIrrepsSymbols(self.path, self.basis, self.direct, self.elements, self.pointgroup)
+        else:
+            self._dataset = ""
+            self.pointgroup = getPointgroup_pymole(self.cartesian, self.elements)
+            self.ramantensors = analyzeRamanTensors(self.pointgroup, varprint=False)
+            self.dielectrictensor = analyzeDielectricTensor(self.pointgroup, varprint=False)
+            self._labels_tmp = getIrrepsSymbols_pymole(self.eigenvecs, self.cartesian, self.elements, self.pointgroup)
+        #
         if self.ordering == "ascending":
             self.labels = [self._labels_tmp[i-1] for i in self._modelist]
         elif self.ordering == "descending":
@@ -166,6 +174,7 @@ class Phonon:
         self.degenerates = getDegenerates(self.eigenfreqs, self.labels, prec=1e0)
         self.silent = getSilent(self._modelist, self.labels, self.pointgroup)
         self.modelist = [mode for mode in modelist if mode not in self.silent and mode not in self.acoustics]
+
         #self.modelist = [mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in [x[1] for x in self.degenerates]]
         
         #if self.modelist != modelist:

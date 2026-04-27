@@ -4,7 +4,7 @@
 # This lib calculates the Raman tensors
 #
 
-import os
+import os, re
 import numpy as np
 from RamanLib import eps0, placzeck_invs
 
@@ -149,27 +149,47 @@ def calcDegenerates(path, modes, labels, ramantensors):
         Atest[2,1] = Atest[1,2]
         Atest[2,0] = Atest[0,2]
 
+        
         # decompose calculated tensor into its general tensor components
         x = np.array( np.linalg.lstsq( np.column_stack([tmp.reshape(-1) for tmp in E]), Atest.reshape(-1), rcond=1.e-12)[0] )
-        prefactor = np.linalg.norm(x)
-        
-        # create orthogonal vectors to x
-        u = np.linalg.svd(x.reshape(1, -1))[2]
 
-        # create degenerate ramantensors, including reconstruction of the original one
+        # 1. Normalize the first vector
+        norm = np.linalg.norm(x)
+
+        if norm < 1e-18:
+            # pick an arbitrary unit vector as v1
+            v1 = np.zeros_like(x)
+            v1[0] = 1.0
+        else:
+            v1 = x / norm
+        #
+
+        # 2. Build an orthonormal basis with v1 as first vector
+        # Start with random matrix and insert v1
+        n = len(x)
+        M = np.random.randn(n, n) + 1j * np.random.randn(n, n)
+        M[0] = v1
+
+        # QR gives orthonormal rows if we transpose
+        Q = np.linalg.qr(M.T)[0]
+        V = Q.T   # rows are orthonormal vectors in coefficient space
+
+        # 3. Construct degenerate Raman tensors and reconstruct original tensor
         degenerates = np.zeros((len(Rn),6,1), dtype=complex)
         for j in range(len(Rn)):
-            R_degen = np.sum( prefactor*u[j,k] * E[k] for k in range(len(x)))
+            coeffs = V[j]  # vector of length n
+            print(coeffs)
+            R_degen = sum(coeffs[k] * E[k] for k in range(n))
             degenerates[j] = [[R_degen[0,0]], [R_degen[1,1]], [R_degen[2,2]], [R_degen[0,1]], [R_degen[1,2]], [R_degen[0,2]]]
         #
+
         I.append(degenerates)
-        
     #
     I = np.array(I, dtype=complex)
 
     # write to file
     for j in range(0,len(modes)):
-        outfile = path+"Ramantensors/alpha_"+str(modes[j])+".dat"
+        outfile = path+"Ramantensors/alpha_"+str(modes[j])+"_degen.dat"
         f = open(outfile, "w")
         f.write("# Raman tensor in 10^(-30) Cm^2/V\n")
         f.write("# mode: " +str(modes[j])+"   phonon freq: "+str(eigval)+"\n")
@@ -232,10 +252,11 @@ def calcTensors(path, modelist, program, eigvals, norms, basis, degenerates, lab
         print("[calcTensors]: Format not implemented, exiting...")
     #
 
-    """
+ 
     # calculate degenerate raman tensors
     if degenerates != []:
         print("[calcTensors]: Calculating degenerate tensors...")
+        print(degenerates)
         for modes in degenerates:
             if modes[0] in modelist:
                 calcDegenerates(path, modes, labels, ramantensors)
@@ -243,5 +264,5 @@ def calcTensors(path, modelist, program, eigvals, norms, basis, degenerates, lab
         #
         print("[calcTensors]: Done.")
     #
-    """
+
 #
