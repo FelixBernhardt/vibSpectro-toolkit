@@ -4,7 +4,7 @@
 # VASP parsers
 #
 
-import sys, re
+import re
 import numpy as np
 import xml.etree.ElementTree as ET
 from typing import List, Dict
@@ -112,8 +112,8 @@ def getBornVASP(file, nat):
     try: 
         outcar_fh = open(file, "r")
     except IOError:
-        print("[getBornVASP]: ERROR Couldn't open "+file+", exiting...\n")
-        sys.exit(1)
+        print("[getBornVASP]: ERROR Couldn't open "+file+"\n")
+        return np.zeros((nat, 3, 3))
     #
 
     outcar_fh.seek(0)
@@ -152,6 +152,33 @@ def getBornVASP(file, nat):
     #
     print("[getBornVASP]: ERROR Couldn't find 'BORN EFFECTIVE CHARGES' in OUTCAR. Exiting...")
     return np.zeros((nat, 3, 3))
+#
+
+def getEpsInfVASP(file):
+    try: 
+        eps = []
+        with open(outcar) as f:
+            lines = f.readlines()
+        #
+        start = None
+        for i, line in enumerate(lines):
+            if "MACROSCOPIC STATIC DIELECTRIC TENSOR" in line:
+                start = i + 2
+                break
+        #
+        if start is None:
+            return np.zeros((3, 3))
+        #
+        for i in range(start, start + 3):
+            row = list(map(float, lines[i].split()))
+            eps.append(row)
+        #
+        return np.array(eps)
+    
+    except IOError:
+        print("[getEpsInfVASP]: ERROR Couldn't open "+file+"\n")
+        return np.zeros((3, 3))
+    #
 #
 
 def ModeParserVASP(outcar_fh, modelist, nat, case):

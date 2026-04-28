@@ -6,8 +6,18 @@
 
 import os
 import numpy as np
-from RamanLib import flatten, Lorentz, portoq, eps0, c_cm, h, kb, ev2rcm
+from RamanLib import flatten, portoq, eps0, c_cm, h, kb, ev2rcm
 from LoTo import getLOFreqs, getLOCorrection, getChi2
+
+def Lorentz(hw, ab, gam=0.001):
+    fmax = max(hw)
+    erange = np.arange(0, 1.1*fmax, gam/10)
+    spectrum = 0.0 * erange
+    for i in range(len(hw)):
+        spectrum +=  ab[i] * gam  / ( (hw[i]-erange)**2 + gam**2 )
+    #
+    return erange, spectrum
+#
 
 def broaden_data(path, datafile, w0, col, temp, smear):
     # apply smearing to Raman tensors from "write_raman"

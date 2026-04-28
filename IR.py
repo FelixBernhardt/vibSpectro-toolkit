@@ -5,9 +5,8 @@
 #
 
 import numpy as np
-from RamanLib import flatten, Lorentz, eps0, c_cm, e_charge, amu
-import matplotlib.pyplot as plt
-import matplotlib as mpl
+from RamanLib import flatten, eps0, c_cm, e_charge, amu
+from calcSpectrum import Lorentz
 
 def calcIR(path, modelist_reduced, degenerates, silent, acoustics, eigvals, eigvecs, basis, nat, masses, born, smearing):
     # add degenerate and raman silent modes together

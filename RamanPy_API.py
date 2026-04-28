@@ -6,12 +6,13 @@
 import numpy as np
 from numpy.typing import NDArray
 from spglib import get_symmetry_dataset
-from RamanLib import periodTable, periodTableMasses, getAcoustics, getDegenerates, getSilent, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols, getPointgroup_pymole, getIrrepsSymbols_pymole, getBorn, getEpsInf
+from RamanLib import periodTable, getAcoustics, getDegenerates, getSilent, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols, getPointgroup_pymole, getIrrepsSymbols_pymole
 from IR import calcIR
 from displace import calcdisplace
 from calcTensors import calcTensors
 from calcSpectrum import calcSpectrum
 from plotSpectrum import plotSpectrum, plotIRspectrum
+from parserASE import ASEParser
 
 class Phonon:
     """
@@ -29,8 +30,7 @@ class Phonon:
     code_in -> software to read the phonon information from
     ordering -> are the phonons ordered by ascending/descending frequency?
     code_out -> software to be used to calculate the Raman spectra and read the dielectric function from
-    born -> code to read the effective charges from
-    eps_inf -> code to read the "high frequency" dielectric function from
+    born -> do we need effective charges?
 
     basis -> basis vectors of unit cell in angstrom
     cartesian -> positions of ions in cartesian coords. (angstrom)
@@ -56,6 +56,7 @@ class Phonon:
     photon_freq -> the photon energy of the laser light used to simulate the Raman spectra in eV
 
     ALL LO STUFF NOT IMPLEMENTED!
+    eps_inf -> do we need epsilon_inf ?
     qdir -> the momentum direction of the incoming photon in cartesian coordinates. This defines the outermost values in Porto's notation. Make sure to correctly account for LO modes!
     LOcorr -> the LO correction that needs to be applied for specific q-directions
     """
@@ -63,13 +64,13 @@ class Phonon:
     def __init__(
         self,
         path: str = "",
-        code_in: str = "phonopy",
+        file: str = "OUTCAR",
         code_out: str = "VASP",
         modelist: NDArray[int] = np.array([0]),
         molecule: bool = False,
         nosym: bool = False,
-        born: str = "", # change to code-in !! when implemented...
-        eps_inf: str = "",
+        born: bool = False,
+        eps_inf: bool = False,
         stepsize: float = 0.001,
         smearing: float = 5.0,
         temperature: float = 300,
@@ -80,44 +81,29 @@ class Phonon:
 
         self.path = path
 
-        if code_in == "phonopy":
-            from parserPhonopy import parsePhonopy
-            eigvals, eigvecs, _norms, qpoint, basis, _nat, elements, positions, masses = parsePhonopy(path, None)
-            if np.all(modelist == 0):
-                modelist = np.array(range(1, 3*_nat+1))
-            #
-            self.ordering = "ascending"
-        elif code_in == "VASP":
+        parser = ASEParser(path+file, modelist=modelist)
 
-            from parserVASP import getCellVASP, getModesVASP
-            _nat, basis, positions, elements = getCellVASP(self.path+"POSCAR") # rewrite the parser such that it yields the _modelist
-            if np.all(modelist == 0):
-                modelist = np.array(range(1, 3*_nat + 1))
-            else:
-                nosym = True
-            #
-            eigvals, eigvecs, _norms = getModesVASP(self.path+"OUTCAR", modelist, _nat)
-            masses = [periodTableMasses[element] for element in elements]
-            self.ordering = "descending"
-        else:
-            print("__init__ of Phonon class failed: code \""+code_in+"\" not supported")
-            return None
-        #
-        self._nat = _nat
-        self._norms = _norms
-        self.eigenfreqs = eigvals
-        self.eigenvecs = eigvecs
-        self.basis = basis
-        self.cartesian = positions
-        self.elements = elements
-        self.masses = masses
+        atoms = parser.get_structure()
+        self.eigenfreqs, self.eigenvecs = parser.get_vibrations()
+        self.elements = atoms.get_chemical_symbols()
+        self.cartesian = atoms.get_positions()
+        self.direct = atoms.get_scaled_positions()
+        self.basis = atoms.get_cell()
+        self._nat = len(atoms)
+        self._norms = np.array([np.linalg.norm(self.eigenvecs[i-1]) for i in modelist])
+        self.masses = atoms.get_masses()
         self.molecule = molecule
         self._modelist = range(1,3*self._nat+1)
 
-        self.direct = np.empty((self._nat, 3))
-        for atom in range(self._nat):
-            self.direct[atom, :] = np.dot(np.linalg.inv(self.basis.T), self.cartesian[atom, :])
+        # check the mode's ordering
+        if np.all(np.diff(self.eigenfreqs) >= 0):
+            self.ordering = "ascending"
+        elif np.all(np.diff(self.eigenfreqs) <= 0):
+            self.ordering = "descending"
+        else:
+            print("could not detect ordering of frequencies !?")
         #
+
         self.acoustics = getAcoustics(self.eigenvecs, self.eigenfreqs, self.masses)
         self.modelist = [mode for mode in modelist if mode not in self.acoustics]
                          
@@ -133,13 +119,13 @@ class Phonon:
             self.degenerates = []
             self.silent = []
         #
-        if born != "":
-            self.born = getBorn(self.path, born, self._nat)
+        if born == True:
+            self.born = parser.get_born_charges()
         else:
             self.born = np.zeros((self._nat, 3, 3))
         #
-        if eps_inf != "":
-            self.eps_inf = getEpsInf(self.path, eps_inf)
+        if eps_inf == True:
+            self.eps_inf = parser.get_epsilon_inf()
         else:
             self.eps_inf = np.zeros((3, 3))
         #

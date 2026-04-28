@@ -6,7 +6,7 @@
 
 import os, re
 import numpy as np
-from RamanLib import eps0, placzeck_invs
+from RamanLib import eps0
 
 # Print iterations progress
 def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
@@ -26,6 +26,20 @@ def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1, l
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
     print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
+#
+
+def placzeck_invs(Intensity, col):
+    # get Placzeck-invariants
+    G0 = np.abs(Intensity[0][col-1] + Intensity[1][col-1] + Intensity[2][col-1])**2/3.0
+    G1 = 0
+    G2 = (np.abs(Intensity[0][col-1] - Intensity[1][col-1])**2 \
+          + np.abs(Intensity[0][col-1] - Intensity[2][col-1])**2 \
+          + np.abs(Intensity[1][col-1] - Intensity[2][col-1])**2)/3.0 \
+          + 2*(np.abs(Intensity[3][col-1])**2 + np.abs(Intensity[4][col-1])**2 + np.abs(Intensity[5][col-1])**2)
+    perp = np.sqrt(5*G1 + 3*G2)
+    back = np.sqrt(10*G0 + 4*G2)
+    #avg = np.sqrt(10*G0 + 5*G1 + 7*G2) # parallel and perpendicular components added together
+    return perp, back
 #
 
 def align_omega(w1, w2, Im1_tmp, Re1_tmp, Im2_tmp, Re2_tmp):

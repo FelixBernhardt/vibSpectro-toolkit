@@ -37,7 +37,6 @@ eV2J = 1.602e-19
 angstrom2m = 1.e-10
 amu2kg = 1.66053907e-27
 
-eV2rcm = 8066
 au2angstrom = 0.529177211
 Ry2eV = 13.605693123
 mRy2eV = Ry2eV/1000

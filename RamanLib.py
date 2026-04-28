@@ -9,7 +9,15 @@ import numpy as np
 import phonopy
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.phonon.irreps import IrReps
-from parserVASP import getBornVASP
+
+# physical constants
+e_charge = 1.602176634e-19   # C
+amu      = 1.66053906660e-27 # kg
+eps0     = 8.8541878128e-12  # F/m
+c_cm     = 2.99792458e10     # cm/s
+h        = 6.62606957e-34    # Js
+kb       = 1.3806488e-23     # J/K
+ev2rcm   = 8065.5401
 
 periodTable = {'': 0, 'H': 1, 'He': 2, 'Li': 3, 'Be': 4, 'B': 5, 'C': 6, 'N': 7, 'O': 8, 'F': 9, 'Ne': 10,
    'Na': 11, 'Mg': 12, 'Al': 13, 'Si': 14, 'P': 15, 'S': 16, 'Cl': 17, 'Ar': 18,
@@ -64,14 +72,6 @@ rightDirs = ["x(yx)y", "x(yz)y", "x(zx)y", "x(zz)y", "x(yx)z", "x(yy)z", "x(zx)z
 rDir = {0: (0,1), 1: (1,2), 2: (0,2), 3: (2,2), 4: (0,1), 5: (1,1), 6: (0,2), 7: (1,2), 8: (0,0), 9:(0,1), 10: (0,2), 11: (1,2)}
 IRDirs = ["E || x", "E || y", "E || z"]
 portoq = {(0, 0, 1) : "zz", (0, 1, 0) : "yy", (1, 0, 0) : "xx", (1, 1, 0) : "xy", (1, 0, 1): "xz", (0, 1, 1) : "yz" }
-
-e_charge = 1.602176634e-19   # C
-amu      = 1.66053906660e-27 # kg
-eps0     = 8.8541878128e-12  # F/m
-c_cm     = 2.99792458e10     # cm/s
-h        = 6.62606957e-34    # Js
-kb       = 1.3806488e-23     # J/K
-ev2rcm   = 8065.5401
 
 HM_TO_SCHOENFLIES = {
     "1":      "C1",
@@ -1386,30 +1386,6 @@ def flatten(t):
     return a
 #
 
-def Lorentz(hw, ab, gam=0.001):
-    fmax = max(hw)
-    erange = np.arange(0, 1.1*fmax, gam/10)
-    spectrum = 0.0 * erange
-    for i in range(len(hw)):
-        spectrum +=  ab[i] * gam  / ( (hw[i]-erange)**2 + gam**2 )
-    #
-    return erange, spectrum
-#
-
-def placzeck_invs(Intensity, col):
-    # get Placzeck-invariants
-    G0 = np.abs(Intensity[0][col-1] + Intensity[1][col-1] + Intensity[2][col-1])**2/3.0
-    G1 = 0
-    G2 = (np.abs(Intensity[0][col-1] - Intensity[1][col-1])**2 \
-          + np.abs(Intensity[0][col-1] - Intensity[2][col-1])**2 \
-          + np.abs(Intensity[1][col-1] - Intensity[2][col-1])**2)/3.0 \
-          + 2*(np.abs(Intensity[3][col-1])**2 + np.abs(Intensity[4][col-1])**2 + np.abs(Intensity[5][col-1])**2)
-    perp = np.sqrt(5*G1 + 3*G2)
-    back = np.sqrt(10*G0 + 4*G2)
-    #avg = np.sqrt(10*G0 + 5*G1 + 7*G2) # parallel and perpendicular components added together
-    return perp, back
-#
-
 def classifyRotations(rotations):
     classes = {}
     for i, R in enumerate(rotations):
@@ -1652,44 +1628,4 @@ def IRSelection(pointgroup):
         print(" " + IRDirs[j] + " | " + placeholder1 + scattering[j] + placeholder2 )
     #
     print("")
-#
-
-def getBorn(path, program, nat):
-    # get BORN charges, in |e|
-    if program == "VASP":
-        from parserVASP import getBornVASP
-        born = getBornVASP(path+"OUTCAR", nat)
-    elif program == "QE":
-        from parserQE import getBornQE
-        born = getBornQE(path+"ph.out", nat)
-    else:
-        print("[getBorn]: Format not implemented, exiting..")
-        born = []
-    #
-    return born
-#
-
-def getEpsInf(path, program):
-    # get ion-clamped static dielectric function
-    if program == "phonopy":
-        try:
-            phonopy_fh = open(path+"BORN", "r")
-        except IOError:
-            print("[getEpsInf]: ERROR Couldn't open BORN")
-        lines = [l.strip() for l in phonopy_fh.readlines()] # Read the whole file removing tailoring spaces
-        phonopy_fh.close()
-
-        data = lines[1].split()
-        EpsInf = np.array([[float(data[0]), float(data[1]), float(data[2])], [float(data[3]), float(data[4]), float(data[5])], [float(data[6]), float(data[7]), float(data[8])]])
-    elif program == "VASP":
-        from parserVASP import getEpsInfVASP
-        born = getEpsInfVASP(path+"OUTCAR")
-    elif program == "QE":
-        from parserQE import getEpsInfQE
-        born = getEpsInfQE(path+"ph.out")
-    else:
-        print("[getEpsInf]: Format not implemented\n")
-        EpsInf = []
-    #
-    return EpsInf
 #
