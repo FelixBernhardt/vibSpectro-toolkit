@@ -50,7 +50,7 @@ def write_raman(path, filelist, modelist, eigvals, eigvecs, w0, basis, nat, born
             counter += 1
         #
         V0 = np.linalg.det(basis)
-        LOTerm = getLOCorrection(path, getChi2(), born, eps_inf, qdir, V0, w0, nat)
+        LOTerm = getLOCorrection(born, eps_inf, qdir, V0, w0, nat, eigvecs)
     else:
         LOTerm = np.zeros(8)
     #

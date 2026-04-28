@@ -1,5 +1,10 @@
+#!/usr/bin/env python
+
+#
+# the wrapper for the parsers, using ase wherever possible
+#
+
 from ase.io import read
-from ase.vibrations import Vibrations
 
 class CalculatorParser:
     def __init__(self, filename, modelist=None):
@@ -24,7 +29,6 @@ class CalculatorParser:
 #
 
 # VASP
-from ase.io import read
 from parserVASP import getModesVASP, getBornVASP, getEpsInfVASP
 
 class VASPParser(CalculatorParser):
@@ -33,7 +37,6 @@ class VASPParser(CalculatorParser):
         return atoms
 
     def parse_vibrations(self):
-        print(self.filename)
         try:
             atoms = read(self.filename)
             nat = len(atoms)
@@ -63,9 +66,6 @@ class VASPParser(CalculatorParser):
 #
 
 # QE
-import numpy as np
-from ase.io import read
-
 class QEParser(CalculatorParser):
     def parse_structure(self):
         return read(self.filename)
@@ -100,34 +100,36 @@ class QEParser(CalculatorParser):
 #
 
 # phonopy
-import yaml
-import numpy as np
+from parserPhonopy import parsePhonopy
+from phonopy.interface.phonopy_yaml import PhonopyYaml
 
 class PhonopyParser(CalculatorParser):
     def parse_structure(self):
-        with open("phonopy.yaml") as f:
-            data = yaml.safe_load(f)
+        frequencies, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(self.filename, None)
 
         from ase import Atoms
-        cell = data["unit_cell"]["lattice"]
-        symbols = [a["symbol"] for a in data["unit_cell"]["points"]]
-        positions = [a["coordinates"] for a in data["unit_cell"]["points"]]
+        cell = basis
+        symbols = elements
+        positions = cPos
 
         return Atoms(symbols=symbols, positions=positions, cell=cell)
 
     def parse_vibrations(self):
-        with open("phonopy.yaml") as f:
-            data = yaml.safe_load(f)
+        frequencies, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(self.filename, None)
 
-        freqs = []
-        modes = []
-
-        for qpt in data["phonon"]:
-            for band in qpt["band"]:
-                freqs.append(band["frequency"])
-                modes.append(np.array(band["eigenvector"]))
-
-        return np.array(freqs), modes
+        return np.array(frequencies), np.array(eigvecs)
+    
+    def parse_eps_inf(self):
+        yaml = PhonopyYaml().read(self.filename)
+        epsilon = yaml.nac_params["dielectric"]
+        
+        return epsilon
+    
+    def parse_born_charges(self):
+        yaml = PhonopyYaml().read(self.filename)
+        born = yaml.nac_params["born"]
+        
+        return born
     #
 #
 
@@ -150,7 +152,7 @@ class ASEParser:
         if fn.endswith(".pwo") or fn.endswith(".out") or "qe" in fn:
             return QEParser(self.filename)
 
-        if "phonopy.yaml" or "qpoints.yaml" in fn:
+        if "phonopy.yaml" in fn:
             return PhonopyParser(self.filename)
 
         raise ValueError("Unknown calculator format")

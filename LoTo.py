@@ -8,7 +8,8 @@
 import numpy as np
 from parserPhonopy import parsePhonopy
 from RamanLib import flatten, e_charge
-    
+from calcTensors import placzeck_invs
+
 def LOTOassign(eigvecs1, eigvecs2):
     nat = int(len(eigvecs1)/3)
     # assign phonopy LO-TO splitting
@@ -82,8 +83,39 @@ def getChi2():
     # return in m/V, SI
     return 4*np.pi/(3*10e4)*1e-2*[xx, yy, zz, xy, yz, xz]
 
-def getLOCorrection(path, chi2_tmp, born, eps_inf, qdir, vol, w, nat):
+def getLOCorrection(born, eps_inf, qdir, vol, w, nat, eigvecs):
+    # using Fröhlich formula
 
+    eps_inf_q = np.dot( qdir, np.dot(eps_inf, qdir) )
+    corr = np.empty(7, dtype=complex)
+    for mode in range(len(eigvecs)):
+        tot = []
+        for i in range(3):
+            for j in range(3):
+                tmp1 = 0
+                tmp2 = 0
+                for atom in range(nat):
+                    for x in range(3):
+                        tmp1 += born[atom][i][x] * eigvecs[mode][atom][x]
+                        tmp2 += born[atom][j][x] * eigvecs[mode][atom][x]
+                        #
+                    #
+                #
+                tot.append((4*np.pi/eps_inf_q)**2*tmp1*tmp2)
+            #
+        #
+        tmp3 = [tot[0], tot[4], tot[-1], tot[1], tot[5], tot[2]]
+        perp, back = placzeck_invs(tmp3, 1)
+        #             xx      yy      zz       xy      yz      xz    perp   back
+        corr.append(tot[0], tot[4], tot[-1], tot[1], tot[5], tot[2], perp, back)
+    #
+
+    return corr
+#                
+
+
+
+    """
     chi2 = np.empty((3,3,3), dtype=complex)
     
     chi2[0,0,0] = np.interp([w], [x[0] for x in chi2_tmp[0]], [complex(x[2], x[1]) for x in chi2_tmp[0]])
@@ -142,7 +174,9 @@ def getLOCorrection(path, chi2_tmp, born, eps_inf, qdir, vol, w, nat):
         #
         corr[dir] += 8*np.pi / vol * ( tmpZ * e_charge) / tmpEps * tmpChi2
     #
-    
+        
     # units are now 10e-30 C/Vm^2
+    """
+    
     return corr
 #

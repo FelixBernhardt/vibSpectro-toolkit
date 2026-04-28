@@ -56,9 +56,8 @@ class Phonon:
     photon_freq -> the photon energy of the laser light used to simulate the Raman spectra in eV
 
     ALL LO STUFF NOT IMPLEMENTED!
-    eps_inf -> do we need epsilon_inf ?
     qdir -> the momentum direction of the incoming photon in cartesian coordinates. This defines the outermost values in Porto's notation. Make sure to correctly account for LO modes!
-    LOcorr -> the LO correction that needs to be applied for specific q-directions
+    LOcorr -> do we need to correct for LO modes in geometry setup with qdir?
     """
 
     def __init__(
@@ -70,13 +69,12 @@ class Phonon:
         molecule: bool = False,
         nosym: bool = False,
         born: bool = False,
-        eps_inf: bool = False,
         stepsize: float = 0.001,
         smearing: float = 5.0,
         temperature: float = 300,
         photon_freq: float = 2.0,
         qdir: tuple = (1, 0, 0),
-        LOcorr: NDArray[int] = np.array([0]),
+        LOcorr: bool = False,
     ) -> None:
 
         self.path = path
@@ -124,7 +122,7 @@ class Phonon:
         else:
             self.born = np.zeros((self._nat, 3, 3))
         #
-        if eps_inf == True:
+        if LOcorr == True:
             self.eps_inf = parser.get_epsilon_inf()
         else:
             self.eps_inf = np.zeros((3, 3))
