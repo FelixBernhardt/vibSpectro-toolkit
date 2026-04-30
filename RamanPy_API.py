@@ -6,7 +6,8 @@
 import numpy as np
 from numpy.typing import NDArray
 from spglib import get_symmetry_dataset
-from RamanLib import periodTable, getAcoustics, getDegenerates, getSilent, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols, getPointgroup_pymole, getIrrepsSymbols_pymole
+import pymsym
+from RamanLib import periodTable, getAcoustics, getDegenerates, getRamanSilent, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols
 from IR import calcIR
 from displace import calcdisplace
 from calcTensors import calcTensors
@@ -21,13 +22,12 @@ class Phonon:
     _modelist -> the number of expected phonon modes, 3*_nat
     _labels_tmp -> the labels for all modes in _modelist, as output by phonopy (frequencies always in ascending order)
     _dataset -> the spglib object used to extract the symmetry configuration
-    _norms -> euclidean norms of the phonon eigenvectors
+    _norms -> euclidean norms of the phonon eigenvectors, should be 1 for all modes
 
     path -> the folder path where the calculated phonon eigenmodes can be found, and where the subsequent calculations are run, has to end with "/"
     modelist -> the modes the user wants to calculate, the ordering of modes is the same as used in the "code_in" software
     molecule -> is the structure to calculate a solid (default) or a molecule?
     
-    code_in -> software to read the phonon information from
     ordering -> are the phonons ordered by ascending/descending frequency?
     code_out -> software to be used to calculate the Raman spectra and read the dielectric function from
     born -> do we need effective charges?
@@ -58,6 +58,8 @@ class Phonon:
     ALL LO STUFF NOT IMPLEMENTED!
     qdir -> the momentum direction of the incoming photon in cartesian coordinates. This defines the outermost values in Porto's notation. Make sure to correctly account for LO modes!
     LOcorr -> do we need to correct for LO modes in geometry setup with qdir?
+
+    version -> the version number
     """
 
     def __init__(
@@ -65,33 +67,38 @@ class Phonon:
         path: str = "",
         file: str = "OUTCAR",
         code_out: str = "VASP",
-        modelist: NDArray[int] = np.array([0]),
+        modelist: NDArray[int] = None,
         molecule: bool = False,
         nosym: bool = False,
-        born: bool = False,
         stepsize: float = 0.001,
         smearing: float = 5.0,
         temperature: float = 300,
+        stokes: str = "stokes",
         photon_freq: float = 2.0,
         qdir: tuple = (1, 0, 0),
         LOcorr: bool = False,
     ) -> None:
 
+        self.version = "0.0.1"
         self.path = path
+        self.file = file
 
         parser = ASEParser(path+file, modelist=modelist)
 
         atoms = parser.get_structure()
+        self._nat = len(atoms)
+        self._modelist = range(1,3*self._nat+1)
+        if np.all(modelist == None) or any(modelist > 3*self._nat):
+            print("[__init__]: invalid mode specified, resorting to default modelist")
+            modelist = self._modelist
         self.eigenfreqs, self.eigenvecs = parser.get_vibrations()
         self.elements = atoms.get_chemical_symbols()
         self.cartesian = atoms.get_positions()
         self.direct = atoms.get_scaled_positions()
         self.basis = atoms.get_cell()
-        self._nat = len(atoms)
         self._norms = np.array([np.linalg.norm(self.eigenvecs[i-1]) for i in modelist])
         self.masses = atoms.get_masses()
         self.molecule = molecule
-        self._modelist = range(1,3*self._nat+1)
 
         # check the mode's ordering
         if np.all(np.diff(self.eigenfreqs) >= 0):
@@ -99,12 +106,14 @@ class Phonon:
         elif np.all(np.diff(self.eigenfreqs) <= 0):
             self.ordering = "descending"
         else:
-            print("could not detect ordering of frequencies !?")
+            print("[__init__]: Could not detect ordering of frequencies !?")
         #
 
         self.acoustics = getAcoustics(self.eigenvecs, self.eigenfreqs, self.masses)
         self.modelist = [mode for mode in modelist if mode not in self.acoustics]
-                         
+
+        print(self.modelist)
+
         if nosym == False:
             self.set_symmetries(modelist)
         else:
@@ -116,15 +125,13 @@ class Phonon:
             self.labels = []
             self.degenerates = []
             self.silent = []
-        #
-        if born == True:
-            self.born = parser.get_born_charges()
-        else:
-            self.born = np.zeros((self._nat, 3, 3))
+            self.IRmodelist = self.modelist
         #
         if LOcorr == True:
+            self.born = parser.get_born_charges()
             self.eps_inf = parser.get_epsilon_inf()
         else:
+            self.born = np.zeros((self._nat, 3, 3))
             self.eps_inf = np.zeros((3, 3))
         #
 
@@ -132,9 +139,18 @@ class Phonon:
         self.smearing = smearing
         self.temperature = temperature
         self.photon_freq = photon_freq
+        if stokes.lower() == "anti-stokes":
+            self.stokes = "anti-stokes"
+        else:
+            self.stokes = "stokes"
+        #
         self.qdir = qdir
         self.LOcorr = LOcorr
         self.stepsize = stepsize
+
+        # LO not implemented
+        if self.LOcorr == True:
+            print("[__init__]: LO correction not implemented, please switch off! Results may be unreliable")
     #
     def set_symmetries(self, modelist):
         if self.molecule == False:
@@ -145,10 +161,10 @@ class Phonon:
             self._labels_tmp = getIrrepsSymbols(self.path, self.basis, self.direct, self.elements, self.pointgroup)
         else:
             self._dataset = ""
-            self.pointgroup = getPointgroup_pymole(self.cartesian, self.elements)
+            self.pointgroup = pymsym.get_point_group([periodTable[x] for x in self.elements], self.cartesian)
             self.ramantensors = analyzeRamanTensors(self.pointgroup, varprint=False)
             self.dielectrictensor = analyzeDielectricTensor(self.pointgroup, varprint=False)
-            self._labels_tmp = getIrrepsSymbols_pymole(self.eigenvecs, self.cartesian, self.elements, self.pointgroup)
+            #self._labels_tmp = getIrrepsSymbols_pymole(self.eigenvecs, self.cartesian, self.elements, self.pointgroup)
         #
         if self.ordering == "ascending":
             self.labels = [self._labels_tmp[i-1] for i in self._modelist]
@@ -156,52 +172,52 @@ class Phonon:
             self.labels = [self._labels_tmp[3*self._nat-i] for i in self._modelist]
         #    
         self.degenerates = getDegenerates(self.eigenfreqs, self.labels, prec=1e0)
-        self.silent = getSilent(self._modelist, self.labels, self.pointgroup)
+        self.silent = getRamanSilent(self._modelist, self.labels, self.pointgroup)
         self.modelist = [mode for mode in modelist if mode not in self.silent and mode not in self.acoustics]
-
+        self.IRmodelist = [mode for mode in modelist if mode not in self.acoustics]
         #self.modelist = [mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in [x[1] for x in self.degenerates]]
         
-        #if self.modelist != modelist:
-        #    print("[__init__]: Removing Raman silent and degenerate modes")
         #
     #
     def print_ramantensors(self):
         if self.pointgroup == "":
-            print("ERROR, need pointgroup")
+            print("[print_ramantensors]: ERROR, need pointgroup")
         else:
             analyzeRamanTensors(self.pointgroup, varprint=True)
         #
     #
     def print_dielectrictensor(self):
         if self.pointgroup == "":
-            print("ERROR, need pointgroup")
+            print("[print_dielectritensor]: ERROR, need pointgroup")
         else:
             analyzeDielectricTensor(self.pointgroup, varprint=True)
         # 
     #
     def print_ramanselection(self):
         if self.pointgroup == "" or self.ramantensors == []:
-            print("ERROR, need pointgroup and corresponding general Ramantensors")
+            print("[print_ramanselection]: ERROR, need pointgroup and corresponding general Ramantensors")
         else:
             RamanSelection(self.pointgroup, self.ramantensors)
         #
     #
     def print_irselection(self):
         if self.pointgroup == "":
-            print("ERROR, need pointgroup")
+            print("[print_irselection]: ERROR, need pointgroup")
         else:
             IRSelection(self.pointgroup)
         #
     #
     def IR(self):
+        parser = ASEParser(self.path+self.file, modelist=self.modelist)
+        self.born = parser.get_born_charges()
         if np.all(self.born == 0):
-            print("ERROR, need effective charges")
+            print("[IR]: ERROR, need effective charges")
         else:
-            calcIR(self.path, self.modelist, self.degenerates, self.silent, self.acoustics, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.masses, self.born, self.smearing)
+            calcIR(self.path, self.IRmodelist, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.masses, self.born, self.smearing)
         #
     #
     def plotIR(self, lualatex=False):
-        plotIRspectrum(self.path+"IR.dat", self.path, lualatex)
+        plotIRspectrum(self.path, "IR.dat", lualatex)
     #
     def displace(self, scffile="scf.in"):
         calcdisplace(self.path, self.modelist, self.stepsize, self.code_out, self.eigenvecs, self._norms, self.basis, self._nat, self.elements, self.cartesian, scffile)
@@ -210,7 +226,7 @@ class Phonon:
         calcTensors(self.path, self.modelist, self.code_out, self.eigenfreqs, self._norms, self.basis, self.degenerates, self.labels, self.ramantensors, self.stepsize)
     #
     def spectrum(self):
-        calcSpectrum(self.path, self.modelist, self.degenerates, self.acoustics, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.born, self.eps_inf, self.photon_freq, self.temperature, self.smearing, self.qdir, self.LOcorr)        
+        calcSpectrum(self.path, self.modelist, self.degenerates, self.acoustics, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.born, self.eps_inf, self.photon_freq, self.temperature, self.smearing, self.stokes, self.qdir, self.LOcorr)        
     #
     def plotRaman(self, porto=["xx", "yy", "zz", "xy", "yz", "xz", "perp", "back"], lualatex=False):
         print("[plotRaman]: Plotting Raman spectrum")

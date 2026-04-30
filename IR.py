@@ -8,24 +8,7 @@ import numpy as np
 from RamanLib import flatten, eps0, c_cm, e_charge, amu
 from calcSpectrum import Lorentz
 
-def calcIR(path, modelist_reduced, degenerates, silent, acoustics, eigvals, eigvecs, basis, nat, masses, born, smearing):
-    # add degenerate and raman silent modes together
-    modelist = []
-    for mode in modelist_reduced:
-        if mode not in modelist and mode not in acoustics:
-            modelist.append(mode)
-        #
-    for mode in silent:
-        if mode not in modelist and mode not in acoustics:
-            modelist.append(mode)
-        #
-    for mode in flatten(degenerates):
-        if mode not in modelist and mode not in acoustics:
-            modelist.append(mode)
-        #
-    #
-    modelist = np.sort(np.array(modelist))
-    
+def calcIR(path, modelist, eigvals, eigvecs, basis, nat, masses, born, smearing): 
     # calculate imaginary part of the dielectric function
     # formula from https://aip.scitation.org/doi/pdf/10.1063/1.466753
     # and https://application.wiley-vch.de/books/sample/3527405062_c01.pdf
@@ -80,5 +63,5 @@ def calcIR(path, modelist_reduced, degenerates, silent, acoustics, eigvals, eigv
     #
     output_fh.close()
     
-    print("[calcIR]: DONE")
+    print("[calcIR]: Done.")
 #

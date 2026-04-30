@@ -19,7 +19,7 @@ def Lorentz(hw, ab, gam=0.001):
     return erange, spectrum
 #
 
-def broaden_data(path, datafile, w0, col, temp, smear):
+def broaden_data(path, datafile, w0, col, temp, smear, stokes):
     # apply smearing to Raman tensors from "write_raman"
     dict = {0: 'xx', 1: 'yy', 2: 'zz', 3: 'xy', 4: 'yz', 5: 'xz', 6: 'perp', 7:'back'}
     
@@ -29,7 +29,15 @@ def broaden_data(path, datafile, w0, col, temp, smear):
     n  = (-np.exp(-h * cm1 * c_cm/(kb * temp))+1)**(-1)
     prefactor = h / (32 * np.pi**3 * (c_cm/100)**4 * eps0**2) * ( 2 * np.pi * c_cm )**3 * 10**(-30)
 
-    intensity = np.abs(hw[:,col+1])**2 * (ev2rcm*w0 - cm1)**4 * n/cm1
+    # anti-stokes
+    if stokes == "anti-stokes":
+        intensity = np.abs(hw[:,col+1])**2 * (ev2rcm*w0 + cm1)**4 * (n-1)/cm1
+    # Stokes
+    else:
+        intensity = np.abs(hw[:,col+1])**2 * (ev2rcm*w0 - cm1)**4 * n/cm1
+    #
+        
+    
     w, Spectrum = Lorentz(cm1, intensity, smear)
     filename = path+"Intensity_"+str(dict[col])+".dat"
     f = open(filename,'w')
@@ -114,7 +122,7 @@ def cat_broaden(path, w0):
 #
 
 
-def calcSpectrum(path, modelist_reduced, degenerates, acoustics, eigvals, eigvecs, basis, nat, born, eps_inf, w0, temp, smear, qdir, LOcorr):
+def calcSpectrum(path, modelist_reduced, degenerates, acoustics, eigvals, eigvecs, basis, nat, born, eps_inf, w0, temp, smear, stokes, qdir, LOcorr):
     # add the degenerate modes back in
     modelist = []
     for mode in modelist_reduced:
@@ -144,7 +152,7 @@ def calcSpectrum(path, modelist_reduced, degenerates, acoustics, eigvals, eigvec
     #
     print("[calcSpectrum]: Broadening spectrum")
     for col in range(8):
-        broaden_data(path, "Raman_"+portoq[qdir]+"_"+str(w0)+"eV.dat", w0, col, temp, smear)
+        broaden_data(path, "Raman_"+portoq[qdir]+"_"+str(w0)+"eV.dat", w0, col, temp, smear, stokes)
     #
     cat_broaden(path, w0)
     print("[calcSpectrum]: Done.")

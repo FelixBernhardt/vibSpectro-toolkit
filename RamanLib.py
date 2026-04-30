@@ -442,7 +442,11 @@ dielectricFunctionComponents = {
       "m-3": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "a"]], dtype = "str"),
       "432": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "a"]], dtype = "str"),
      "-43m": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "a"]], dtype = "str"),
-     "m-3m": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "a"]], dtype = "str")
+     "m-3m": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "a"]], dtype = "str"),
+
+     # molecules
+     "Cinfv": np.array([["a", 0, 0], [0, "a", 0], [0, 0, "a"]], dtype = "str"),
+
 }
 
 RamanTensorComponents = {
@@ -1438,25 +1442,6 @@ def getIrrepsSymbols(path, basis, coord, elements, pointgroup):
     return labels
 #
 
-def getPointgroup_pymole(coord, elements):
-    from posym import Molecule, Symmetry
-    
-    mol = Molecule(symbols=elements, coordinates=coord)
-    sym = Symmetry(mol)
-    pointgroup = sym.get_point_group()
-   
-
-    return pointgroup
-
-def getIrrepsSymbols_pymole(eigenvectors, coord, elements, pointgroup):
-    from posym import SymmetryNormalModes
-    
-    sym_modes_gs = SymmetryNormalModes(group=pointgroup, coordinates=coord, modes=eigenvectors, symbols=elements)
-    labels = [sym_modes_gs.get_state_mode(i) for i in range(len(eigenvectors)) ]
-    
-    return labels
-#
-
 def getAcoustics(eigvecs, eigvals, masses): 
     # get the candidates for possible acoustic modes
     acoustic = []
@@ -1479,7 +1464,7 @@ def getAcoustics(eigvecs, eigvals, masses):
        np.array_equal( np.sort(indicators.argsort()[-1:]), np.sort(acoustic) ):
         return [x+1 for x in acoustic]
     else:
-        print("[removeAcoustics]: Could not determine acoustic modes, continuing...")
+        print("[getAcoustics]: Could not determine acoustic modes, continuing...")
         return []
     #
 #
@@ -1503,7 +1488,7 @@ def getDegenerates(eigvals, labels, prec=1e0):
     return degenerates
 #
 
-def getSilent(modelist, labels, pointgroup):
+def getRamanSilent(modelist, labels, pointgroup):
     RamanTensors = RamanTensorComponents[pointgroup]
     silent = []
     for mode in modelist:
@@ -1518,7 +1503,7 @@ def removeModes(eigvecs, eigvals, masses, modelist, basis, coord, elements, poin
     labels = getIrrepsSymbols(basis, coord, elements, pointgroup)
     acoustics = getAcoustics(eigvecs, eigvals, masses)
     degenerates = getDegenerates(eigvals, labels, prec)
-    silent = getSilent(modelist, labels, pointgroup)
+    silent = getRamanSilent(modelist, labels, pointgroup)
     check_acoustic = False
     check_imag = False
     check_degenerates = False

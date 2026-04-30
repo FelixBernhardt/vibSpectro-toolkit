@@ -102,11 +102,11 @@ def plotSpectrum(path, w0, porto, qdir, lualatex=False):
     plt.close()
 #
 
-def plotIRspectrum(file, path, lualatex=False):
+def plotIRspectrum(path, file, lualatex=False):
     # data
     epsi_data = []
     epsr_data = []
-    dft_raw_data = np.loadtxt(file) # format: wavelength (cm-1) Intensity (Imag, Real)
+    dft_raw_data = np.loadtxt(path+file) # format: wavelength (cm-1) Intensity (Imag, Real)
     dict = {0: "x", 1: "y", 2: "z", 3: "avg"}
     w_data = [x[0] for x in dft_raw_data]
     epsi_data.append( [x[1] for x in dft_raw_data] )

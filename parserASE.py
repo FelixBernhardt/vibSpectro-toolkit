@@ -5,6 +5,7 @@
 #
 
 from ase.io import read
+import numpy as np
 
 class CalculatorParser:
     def __init__(self, filename, modelist=None):
@@ -40,7 +41,15 @@ class VASPParser(CalculatorParser):
         try:
             atoms = read(self.filename)
             nat = len(atoms)
-            freqs, modes, norms = getModesVASP(self.filename, self.modelist, nat)
+            if np.all(self.modelist == None):
+                modelist = range(1,3*nat+1)
+            else:
+                if any(self.modelist > 3*nat):
+                    modelist = range(1,3*nat+1)
+                else:
+                    modelist = self.modelist
+            #
+            freqs, modes, norms = getModesVASP(self.filename, modelist, nat)
             return freqs, modes      
         except IOError:
             return None, None
