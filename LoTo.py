@@ -82,6 +82,7 @@ def getChi2():
     zz = np.genfromtxt("ozz", dtype=float)
     # return in m/V, SI
     return 4*np.pi/(3*10e4)*1e-2*[xx, yy, zz, xy, yz, xz]
+#
 
 def getLOCorrection(born, eps_inf, qdir, vol, w, nat, eigvecs):
     # using Fröhlich formula

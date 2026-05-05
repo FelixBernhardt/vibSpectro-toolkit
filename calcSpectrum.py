@@ -7,7 +7,7 @@
 import os
 import numpy as np
 from RamanLib import flatten, portoq, eps0, c_cm, h, kb, ev2rcm
-from LoTo import getLOFreqs, getLOCorrection, getChi2
+from LoTo import getLOFreqs, getLOCorrection
 
 def Lorentz(hw, ab, gam=0.001):
     fmax = max(hw)
@@ -30,7 +30,7 @@ def broaden_data(path, datafile, w0, col, temp, smear, stokes):
     prefactor = h / (32 * np.pi**3 * (c_cm/100)**4 * eps0**2) * ( 2 * np.pi * c_cm )**3 * 10**(-30)
 
     # anti-stokes
-    if stokes == "anti-stokes":
+    if stokes == False:
         intensity = np.abs(hw[:,col+1])**2 * (ev2rcm*w0 + cm1)**4 * (n-1)/cm1
     # Stokes
     else:

@@ -8,24 +8,11 @@ import re
 import numpy as np
 import xml.etree.ElementTree as ET
 from typing import List, Dict
+from RamanLib import flatten
 
 def T(m):
     p = [[ m[i][j] for i in range(len( m[j] )) ] for j in range(len( m )) ]
     return p
-#
-
-def flatten(t):
-    a = []
-    for sublist in t:
-        if isinstance(sublist, str):
-            a.append(sublist)
-        else:
-            for item in sublist:
-                a.append(item)
-            #
-        #
-    #
-    return a
 #
 
 def _parse_array_block(block: ET.Element) -> List[Dict[str, float]]:
@@ -150,14 +137,14 @@ def getBornVASP(file, nat):
             return born
         #
     #
-    print("[getBornVASP]: ERROR Couldn't find 'BORN EFFECTIVE CHARGES' in OUTCAR. Exiting...")
+    print("[getBornVASP]: ERROR Couldn't find 'BORN EFFECTIVE CHARGES' in OUTCAR.")
     return np.zeros((nat, 3, 3))
 #
 
 def getEpsInfVASP(file):
     try: 
         eps = []
-        with open(outcar) as f:
+        with open(file) as f:
             lines = f.readlines()
         #
         start = None
@@ -176,7 +163,7 @@ def getEpsInfVASP(file):
         return np.array(eps)
     
     except IOError:
-        print("[getEpsInfVASP]: ERROR Couldn't open "+file+"\n")
+        print("[getEpsInfVASP]: ERROR Couldn't open "+file+".")
         return np.zeros((3, 3))
     #
 #
@@ -194,7 +181,7 @@ def ModeParserVASP(outcar_fh, modelist, nat, case):
         outcar_fh.readline() # ----------------------------------------------------
         outcar_fh.readline() # empty line
     else:
-        print("[ModeParserVASP]: Invalid case specified, exiting...")
+        print("[ModeParserVASP]: Invalid case specified")
         return [0], np.zeros(3), [0]
     #
     for i in range(np.max(modelist)):
@@ -243,7 +230,7 @@ def getModesVASP(file, modelist, nat):
     try: 
         outcar_fh = open(file, "r")
     except IOError:
-        print("[getModesVASP]: ERROR Couldn't open OUTCAR\n")
+        print("[getModesVASP]: ERROR Couldn't open "+file+".")
         return np.zeros(3)
     #
     outcar_fh.seek(0)
@@ -252,22 +239,19 @@ def getModesVASP(file, modelist, nat):
         if not line:
             break
         #
-        if "Eigenvectors after division by SQRT(mass)" in line:
-            eigvals, eigvecs, norms = ModeParserVASP(outcar_fh, modelist, nat, 1)
-            return eigvals, eigvecs, norms
-        elif "Eigenvectors and eigenvalues of the dynamical matrix" in line:
+        if "Eigenvectors and eigenvalues of the dynamical matrix" in line:
             eigvals, eigvecs, norms = ModeParserVASP(outcar_fh, modelist, nat, 2)
             return eigvals, eigvecs, norms
         #
     #
-    print("[getModesVASP]: ERROR Couldn't find 'Eigenvectors and eigenvalues of the dynamical matrix' in OUTCAR")
+    print("[getModesVASP]: ERROR Couldn't find 'Eigenvectors and eigenvalues of the dynamical matrix' in OUTCAR.")
     return np.zeros(3)
 #
 
 def MAT_m_VEC(m, v):
     p = [ 0.0 for i in range(len(v)) ]
     for i in range(len(m)):
-        assert len(v) == len(m[i]), "[Mat_m_VEC]: Length of the matrix row is not equal to the length of the vector"
+        assert len(v) == len(m[i]), "[Mat_m_VEC]: Length of the matrix row is not equal to the length of the vector."
         p[i] = sum( [ m[i][j]*v[j] for j in range(len(v)) ] )
     return p
 #
@@ -276,7 +260,7 @@ def getCellVASP(file):
     try: 
         poscar_fh = open(file, "r")
     except IOError:
-        print("[getCellVASP]: ERROR Couldn't open POSCAR\n")
+        print("[getCellVASP]: ERROR Couldn't open "+file+".")
         return 1, np.eye(3), np.zeros(3), [""]
     #
     poscar_fh.seek(0) # just in case

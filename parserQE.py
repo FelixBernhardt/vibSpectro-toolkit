@@ -4,7 +4,7 @@
 # QuantumEspresso parsers
 #
 
-import sys, os
+import os
 import numpy as np
 from collections import Counter
 
@@ -30,15 +30,15 @@ def writeSCF(nat, basis, positions, elements, file, mode, disp, stepsize, eigvec
         try:
             ff = open(scffile, "r")
         except IOError:
-            print("[writeSCF]: ERROR Couldn't open scf-inputfile, exiting...\n")
-            sys.exit(1)
+            print("[writeSCF]: ERROR Couldn't open "+scffile+".")
+            return None
         #
         lines = [l.strip() for l in ff.readlines()] # Read the whole file removing tailoring spaces
         ff.close()
     #
     else:
-        print("[writeSCF]: "+scffile+" not found, exiting...\n")
-        sys.exit(1)
+        print("[writeSCF]: "+scffile+" not found.")
+        return None
     # 
 
     control_start = lines.index(next(l for l in lines if len(l) > 0 if (l.split()[0] == "&control" or l.split()[0] == "&CONTROL") ))

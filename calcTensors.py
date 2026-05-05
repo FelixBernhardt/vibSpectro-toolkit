@@ -82,6 +82,7 @@ def calc_raman(path, mode, eigval, w, Im1, Re1, Im2, Re2, stepsize, basis):
 #
 
 def calcDegenerates(path, modes, labels, ramantensors):
+    # not used or tested !!
     # this might be mathematically impossible !!
     # get the corresponding ramantensors
     Rn = []
@@ -266,7 +267,7 @@ def calcTensors(path, modelist, program, eigvals, norms, basis, degenerates, lab
         print("[calcTensors]: Format not implemented, exiting...")
     #
 
- 
+    """
     # calculate degenerate raman tensors
     if degenerates != []:
         print("[calcTensors]: Calculating degenerate tensors...")
@@ -278,5 +279,6 @@ def calcTensors(path, modelist, program, eigvals, norms, basis, degenerates, lab
         #
         print("[calcTensors]: Done.")
     #
+    """
 
 #

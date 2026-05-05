@@ -10,7 +10,9 @@ import phonopy
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.phonon.irreps import IrReps
 
+#####################
 # physical constants
+#####################
 e_charge = 1.602176634e-19   # C
 amu      = 1.66053906660e-27 # kg
 eps0     = 8.8541878128e-12  # F/m
@@ -18,6 +20,10 @@ c_cm     = 2.99792458e10     # cm/s
 h        = 6.62606957e-34    # Js
 kb       = 1.3806488e-23     # J/K
 ev2rcm   = 8065.5401
+
+#####################
+# elements
+#####################
 
 periodTable = {'': 0, 'H': 1, 'He': 2, 'Li': 3, 'Be': 4, 'B': 5, 'C': 6, 'N': 7, 'O': 8, 'F': 9, 'Ne': 10,
    'Na': 11, 'Mg': 12, 'Al': 13, 'Si': 14, 'P': 15, 'S': 16, 'Cl': 17, 'Ar': 18,
@@ -65,6 +71,9 @@ periodTableMasses = {'': 0, 'H':  1.00797, 'He':  4.00260, 'Li':  6.941,
          'Ra':  226.0254, 'Ac': 227.0278, 'Pa': 231.0359,
          'Th':  232.0381, 'Np': 237.0482, 'U':  238.029}
 
+##################
+# polarization and propagation directions of photons
+##################
 
 backDirs = ["x(yy)x\u0305", "x(yz)x\u0305", "x(zz)x\u0305", "y(xx)y\u0305", "y(xz)y\u0305", "y(zz)y\u0305", "z(xx)z\u0305", "z(xy)z\u0305", "z(yy)z\u0305"]
 bdDir = {0: (1,1), 1: (1,2), 2: (2,2), 3: (0,0), 4: (0,2), 5: (2,2), 6: (0,0), 7: (0,1), 8: (1,1)}
@@ -72,6 +81,10 @@ rightDirs = ["x(yx)y", "x(yz)y", "x(zx)y", "x(zz)y", "x(yx)z", "x(yy)z", "x(zx)z
 rDir = {0: (0,1), 1: (1,2), 2: (0,2), 3: (2,2), 4: (0,1), 5: (1,1), 6: (0,2), 7: (1,2), 8: (0,0), 9:(0,1), 10: (0,2), 11: (1,2)}
 IRDirs = ["E || x", "E || y", "E || z"]
 portoq = {(0, 0, 1) : "zz", (0, 1, 0) : "yy", (1, 0, 0) : "xx", (1, 1, 0) : "xy", (1, 0, 1): "xz", (0, 1, 1) : "yz" }
+
+###################
+# pointgroup information
+###################
 
 HM_TO_SCHOENFLIES = {
     "1":      "C1",
@@ -1314,6 +1327,8 @@ IRSelectionRules = {
     ]
 }
 
+
+# get the tensor information to printable output
 def formatString(Component):
     newstring = ""
     stop = False
@@ -1390,6 +1405,10 @@ def flatten(t):
     return a
 #
 
+#############
+# phonon symmetry analysis
+#############
+
 def classifyRotations(rotations):
     classes = {}
     for i, R in enumerate(rotations):
@@ -1442,6 +1461,10 @@ def getIrrepsSymbols(path, basis, coord, elements, pointgroup):
     return labels
 #
 
+###########
+# phonon analysis for Raman
+###########
+
 def getAcoustics(eigvecs, eigvals, masses): 
     # get the candidates for possible acoustic modes
     acoustic = []
@@ -1467,6 +1490,49 @@ def getAcoustics(eigvecs, eigvals, masses):
         print("[getAcoustics]: Could not determine acoustic modes, continuing...")
         return []
     #
+#
+
+def getRotations(masses, positions, eigvecs, tol=0.8):
+
+    def mw_dot(a, b):
+        return np.sum(masses[:, None] * a * b)
+
+    M = np.sum(masses)
+    r_cm = np.sum(positions * masses[:, None], axis=0) / M
+
+    rotations = []
+
+    for j in range(len(eigvecs)):
+        eigvec = eigvecs[j]
+        A = []
+        b = []
+        for m, r, u in zip(masses, positions, eigvec):
+            dr = r - r_cm
+            C = np.array([
+                        [0,      -dr[2],  dr[1]],
+                        [dr[2],   0,     -dr[0]],
+                        [-dr[1],  dr[0],  0    ]
+                        ])
+            # mass-weighted least squares
+            A.append(np.sqrt(m) * C)
+            b.append(np.sqrt(m) * u)
+        A = np.vstack(A)
+        b = np.vstack(b).reshape(-1)
+
+        omega, *_ = np.linalg.lstsq(A, b, rcond=None)
+
+        u_rot = np.cross(omega, positions - r_cm)
+
+        num = mw_dot(eigvec, u_rot)
+        den = np.sqrt(mw_dot(eigvec, eigvec) * mw_dot(u_rot, u_rot))
+
+        overlap = np.abs(num / den) if den > 0 else 0.0
+
+        if overlap > tol:
+            rotations.append(j)
+        #
+
+    return np.array([x+1 for x in rotations])
 #
 
 def getDegenerates(eigvals, labels, prec=1e0):
@@ -1498,42 +1564,9 @@ def getRamanSilent(modelist, labels, pointgroup):
     #
     return silent
 
-def removeModes(eigvecs, eigvals, masses, modelist, basis, coord, elements, pointgroup, prec=1e0):
-    modelist_new = []
-    labels = getIrrepsSymbols(basis, coord, elements, pointgroup)
-    acoustics = getAcoustics(eigvecs, eigvals, masses)
-    degenerates = getDegenerates(eigvals, labels, prec)
-    silent = getRamanSilent(modelist, labels, pointgroup)
-    check_acoustic = False
-    check_imag = False
-    check_degenerates = False
-    check_silent = False
-    for mode in modelist:
-        if mode in acoustics:
-            check_acoustic = True
-        elif eigvals[mode-1] < 0:
-            check_imag = True
-        elif mode in degenerates:
-            check_degenerates = True
-        elif mode in silent:
-            check_silent = True
-        else:
-            modelist_new.append(mode)
-        #
-    #
-
-    if check_acoustic == True:
-        print("[removeModes]: Ignoring acoustic modes")
-    if check_imag == True:
-        print("[removeModes]: Ignoring modes with imaginary frequency")
-    if check_degenerates == True:
-        print("[removeModes]: Ignoring degenerate modes")
-    if check_silent == True:
-        print("[removeModes]: Ignoring Raman silent modes")
-    #
-
-    return modelist_new
-#
+############
+# get tensors and selection rules
+###########
 
 def analyzeRamanTensors(pointgroup, varprint=False):
     RamanTensors = RamanTensorComponents[pointgroup]

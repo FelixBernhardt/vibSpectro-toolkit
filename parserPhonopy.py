@@ -4,7 +4,7 @@
 # parser for phonopy
 #
 
-import sys, os
+import os
 import numpy as np
 import yaml
 from RamanLib import portoq
@@ -56,7 +56,8 @@ def parsePhonopy(file, qdir):
                 dataDM = yaml.safe_load(stream)
         except IOError:
             os.chdir(path)
-            os.system("phonopy --readfc --sym-fc --writedm --qpoints=\"0 0 0\"")
+            #os.system("phonopy --fc vasprun.xml --dim=\"1 1 1\"")
+            os.system("phonopy --readfc --sym-fc --writedm --qpoints=\"0 0 0\" --dim=\"1 1 1\"")
             os.chdir(pwd)
             with open(path+"qpoints.yaml", "r") as stream:
                 dataDM = yaml.safe_load(stream)
@@ -88,8 +89,8 @@ def parsePhonopy(file, qdir):
             dataC = yaml.safe_load(stream)
         #
     except IOError:
-        print("[parsePhonopy]: Couldn't open "+path+"phonopy.yaml, exiting...")
-        sys.exit(1)
+        print("[parsePhonopy]: Couldn't open "+path+"phonopy.yaml.")
+        return None
     #
 
     # parse the unit cell information 
@@ -116,8 +117,8 @@ def parsePhonopy(file, qdir):
 
     nat2 = dataDM["natom"]
     if nat != nat2:
-        print("[parsePhonopy]: phonopy.yaml and qpoints.yaml files don't match, exiting...")
-        sys.exit(1)
+        print("[parsePhonopy]: phonopy.yaml and qpoints.yaml files don't match!")
+        return None
     #
 
     # parse the dynamical matrix
@@ -152,8 +153,8 @@ def parsePhonopy(file, qdir):
     elif length == "angstrom":
         pass
     else:
-        print("[parsePhonopy]: The unit "+length+" is currently not supported for lengths, exiting...")
-        sys.exit(1)
+        print("[parsePhonopy]: The unit "+length+" is currently not supported for lengths.")
+        return None
     #
     # force constants in eV/angstrom^2
     # frequencies in cm^-1
@@ -170,8 +171,8 @@ def parsePhonopy(file, qdir):
     elif force_constants == "eV/angstrom^2":
         frequencies = frequencies*np.sqrt(eV2J)
     else:
-        print("[parsePhonopy]: The unit "+force_constants+" is currently not supported for force constants, exiting...")
-        sys.exit(1)
+        print("[parsePhonopy]: The unit "+force_constants+" is currently not supported for force constants.")
+        return None
     #
 
     # all positions to cartesian coordinates

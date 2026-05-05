@@ -111,12 +111,12 @@ class QEParser(CalculatorParser):
 # phonopy
 from parserPhonopy import parsePhonopy
 from phonopy.interface.phonopy_yaml import PhonopyYaml
+from ase import Atoms
 
 class PhonopyParser(CalculatorParser):
     def parse_structure(self):
         frequencies, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(self.filename, None)
 
-        from ase import Atoms
         cell = basis
         symbols = elements
         positions = cPos
@@ -144,7 +144,6 @@ class PhonopyParser(CalculatorParser):
 
 
 # wrapper code
-import os
 
 class ASEParser:
     def __init__(self, filename, modelist=None):

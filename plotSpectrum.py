@@ -164,3 +164,55 @@ def plotIRspectrum(path, file, lualatex=False):
     #
     print("[plotIR]: Done.") 
 #
+
+def plotRspectrum(path, file, lualatex=False):
+    # data
+    T_data = []
+    dft_raw_data = np.loadtxt(path+file) # format: wavelength (cm-1) Transmittance
+    dict = {0: "x", 1: "y", 2: "z", 3: "avg"}
+    w_data = [x[0] for x in dft_raw_data]
+    T_data.append( [x[1] for x in dft_raw_data] )
+    T_data.append( [x[2] for x in dft_raw_data] )
+    T_data.append( [x[3] for x in dft_raw_data] )
+    T_data.append( [x[4] for x in dft_raw_data] )
+
+
+    # Fonts
+    if lualatex == True:
+        plt.rcParams.update({
+            "text.usetex": True,
+            "pgf.rcfonts": False,
+            "pgf.texsystem": "lualatex",
+        })
+        mpl.use('pgf')
+    #
+    fig_width = 5.511 # inch
+    mpl.rcParams['figure.figsize'] = [fig_width, fig_width/1.2]
+    size = 12
+    mpl.rcParams['font.size'] = size
+    mpl.rcParams['axes.titlesize'] = size
+    mpl.rcParams['axes.labelsize'] = size
+    mpl.rcParams['xtick.labelsize'] = size
+    mpl.rcParams['ytick.labelsize'] = size
+    mpl.rcParams['legend.fontsize'] = size
+    mpl.rcParams['figure.titlesize'] = size
+
+    for j in range(4):
+        # plotting    
+        fig, ax = plt.subplots(1,1, layout="constrained")
+        if j == 3:
+            fig.suptitle("spatially averaged polarization")
+        else:
+            fig.suptitle("Reflectance: E||"+dict[j]+" polarization")
+        #
+        ax.set_xlim([w_data[0], w_data[-1]])
+        ax.set_ylim([0, 1.05])
+        ax.plot(w_data, T_data[j], color="black", label="T")
+        ax.set_xlabel("Wavenumber (cm$^{-1}$)")
+        ax.set_ylabel("R")
+    
+        plt.savefig(path+"R_"+dict[j]+".pdf")
+        plt.close()
+    #
+    print("[plotRspectrum]: Done.") 
+#

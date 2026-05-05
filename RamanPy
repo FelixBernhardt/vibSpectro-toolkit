@@ -67,23 +67,35 @@ if __name__ == '__main__':
         print("[__main__]: Version "+version)
         sys.exit(1)
 
+    ###################################
+    # checks
+    ###################################
+    if args.antistokes == True:
+        args.stokes = False
+    #
+    if args.infrared == True or args.LOcorr == True:
+        born = True
+    else:
+        born = False
+    #
+
     # setup the Phonon object
     ph = Phonon(
         path = args.path,
         file = args.file, 
         code_out = args.code_out, 
         modelist = args.modelist,
-        molecule = args.molecule,
         nosym = args.no_symmetry,
         stepsize = args.stepsize,
         smearing = args.smearing,
         temperature = args.temperature,
-        photon_freq= args.laser,
-        stokes=args.stokes,
+        photon_freq= args.photon,
+        stokes = args.stokes,
+        born = born,
         qdir = args.qdir,
         LOcorr = args.LOcorr )
 
-    if args.analysis == True and args.no_symmetry == False:
+    if args.analysis == True and args.symmetry == True:
         print("[__main__]: Analyzing symmetries")
         ph.print_ramantensors()
         ph.print_dielectrictensor()
@@ -99,9 +111,19 @@ if __name__ == '__main__':
 
     if args.plotIR == True:
         print("[__main__]: Plotting IR spectrum")
-        ph.plotIR(lualatex=args.lualatex)
+        ph.plot_IR(lualatex=args.lualatex)
     
-    if args.infrared == True or args.plotIR == True:
+    # IR Reflectance
+    if args.reflectance == True:
+        print("[__main__]: Calculating Reflectance")
+        ph.reflectance()
+
+    if args.plotReflectance == True:
+        print("[__main__]: Plotting Reflectance")
+        ph.plot_reflectance(lualatex=args.lualatex)
+
+    # avoid combinations of IR and Raman processing in a single command
+    if args.infrared == True or args.plotIR == True or args.reflectance == True or args.plotReflectance == True:
         sys.exit(1)
     #
     ###########
@@ -130,7 +152,11 @@ if __name__ == '__main__':
     
     if args.plotRaman == True:
         print("[__main__]: Plotting Raman spectrum", args.porto)
-        ph.plotRaman(porto=args.porto, lualatex=args.lualatex)
+        if args.porto == "":
+            ph.plot_Raman(lualatex=args.lualatex)
+        else:
+            ph.plot_Raman(porto=args.porto, lualatex=args.lualatex)
+        #
         
     sys.exit(1)
 #
