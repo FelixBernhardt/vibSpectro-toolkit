@@ -1037,13 +1037,454 @@ def RamanSelectionRules(pointgroup, RTs):
                            RTs[3][rDir[9]],\
                            RTs[5][rDir[10]],\
                            RTs[7][rDir[11]]]
+    
+    elif pointgroup == "4":
+        backscattering = ["A(TO) + B",       # x(yy)x
+                          "2E(TO)",      # x(yz)x
+                          "A(TO)",       # x(zz)x
+                          "A(TO) + B",       # y(xx)y
+                          "1E(TO) + 2E(LO)",      # y(xz)y
+                          "A(TO)",       # y(zz)y
+                          "A(LO) + B",       # z(xx)z
+                          "B",      # z(xy)z
+                          "A(LO) + B"]       # z(yy)z
+        backComponents = [RTs[1][bdDir[0]]+RTs[3][bdDir[0]],\
+                          RTs[7][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]]+RTs[3][bdDir[3]],\
+                          RTs[5][bdDir[4]]+RTs[7][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]]+RTs[3][bdDir[6]],\
+                          RTs[3][bdDir[7]],\
+                          RTs[1][bdDir[8]]+RTs[3][bdDir[8]]]
+        rightscattering = ["B", # x(yx)y
+                           "E1(LO+TO) + E2(LO+TO)", # x(yz)y
+                           "E1(LO+TO) + E2(LO+TO)", # x(zx)y
+                           "A(TO)",  # x(zz)y
+                           "B", # x(yx)z
+                           "A(LO+TO) + B",  # x(yy)z
+                           "E1(LO+TO) + E2(TO)", # x(zx)z
+                           "E1(LO+TO) + E2(TO)", # x(zy)z
+                           "A(TO)",  # y(xx)z
+                           "B", # y(xy)z
+                           "E1(TO) + E2(LO+TO)", # y(zx)z
+                           "E1(TO) + E2(LO+TO)"] # y(zy)z
+        rightComponents = [RTs[3][rDir[0]],\
+                           RTs[5][rDir[1]]+RTs[7][rDir[1]],\
+                           RTs[5][rDir[2]]+RTs[7][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[3][rDir[4]],\
+                           RTs[1][rDir[5]]+RTs[3][bdDir[5]],\
+                           RTs[5][rDir[6]]+RTs[7][rDir[6]],\
+                           RTs[5][rDir[7]]+RTs[7][rDir[7]],\
+                           RTs[1][rDir[8]],\
+                           RTs[3][rDir[9]],\
+                           RTs[5][rDir[10]]+RTs[7][rDir[10]],\
+                           RTs[5][rDir[11]]+RTs[7][rDir[11]]]
+    
+    elif pointgroup == "-4":
+        backscattering = ["A + B(TO)",       # x(yy)x
+                          "E1(LO) + E2(TO)",      # x(yz)x
+                          "A",       # x(zz)x
+                          "A + B(TO)",       # y(xx)y
+                          "E1(TO) + E2(LO)",      # y(xz)y
+                          "A",       # y(zz)y
+                          "A + B(LO)",       # z(xx)z
+                          "B(LO)",      # z(xy)z
+                          "A + B(LO)"]       # z(yy)z
+        backComponents = [RTs[1][bdDir[0]]+RTs[3][bdDir[0]],\
+                          RTs[7][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]]+RTs[3][bdDir[3]],\
+                          RTs[5][bdDir[4]]+RTs[7][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]]+RTs[3][bdDir[6]],\
+                          RTs[3][bdDir[7]],\
+                          RTs[1][bdDir[8]]+RTs[3][bdDir[8]]]
+        rightscattering = ["B(TO)", # x(yx)y
+                           "E1(LO+TO) + E2(LO+TO)", # x(yz)y
+                           "E1(LO+TO) + E2(LO+TO)", # x(zx)y
+                           "A",  # x(zz)y
+                           "B(LO+TO)", # x(yx)z
+                           "A + B(LO+TO)",  # x(yy)z
+                           "E1(LO+TO) + E2(TO)", # x(zx)z
+                           "E1(LO+TO) + E2(TO)", # x(zy)z
+                           "A +  B(LO+TO)",  # y(xx)z
+                           "B(LO+TO)", # y(xy)z
+                           "E1(TO) + E2(LO+TO)", # y(zx)z
+                           "E1(TO) + E2(LO+TO)"] # y(zy)z
+        rightComponents = [RTs[3][rDir[0]],\
+                           RTs[5][rDir[1]]+RTs[7][rDir[1]],\
+                           RTs[5][rDir[2]]+RTs[7][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[3][rDir[4]],\
+                           RTs[1][rDir[5]]+RTs[3][bdDir[5]],\
+                           RTs[5][rDir[6]]+RTs[7][rDir[6]],\
+                           RTs[5][rDir[7]]+RTs[7][rDir[7]],\
+                           RTs[1][rDir[8]],\
+                           RTs[3][rDir[9]],\
+                           RTs[5][rDir[10]]+RTs[7][rDir[10]],\
+                           RTs[5][rDir[11]]+RTs[7][rDir[11]]]
+        
+    elif pointgroup == "4/m":
+        backscattering = ["Ag + Bg",       # x(yy)x
+                          "1Eg + 2Eg",      # x(yz)x
+                          "Ag",       # x(zz)x
+                          "Ag + Bg",       # y(xx)y
+                          "1Eg + 2Eg",      # y(xz)y
+                          "Ag",       # y(zz)y
+                          "Ag + Bg",       # z(xx)z
+                          "Bg",      # z(xy)z
+                          "Ag + Bg"]       # z(yy)z
+        backComponents = [RTs[1][bdDir[0]]+RTs[3][bdDir[0]],\
+                          RTs[5][bdDir[1]]+RTs[7][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]]+RTs[3][bdDir[3]],\
+                          RTs[5][bdDir[4]]+RTs[7][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]]+RTs[3][bdDir[6]],\
+                          RTs[3][bdDir[7]],\
+                          RTs[1][bdDir[8]]+RTs[3][bdDir[8]]]
+        rightscattering = ["Bg", # x(yx)y
+                           "1Eg + 2Eg", # x(yz)y
+                           "1Eg + 2Eg", # x(zx)y
+                           "Ag",  # x(zz)y
+                           "Bg", # x(yx)z
+                           "Ag + Bg",  # x(yy)z
+                           "1Eg + 2Eg", # x(zx)z
+                           "1Eg + 2Eg", # x(zy)z
+                           "Ag",  # y(xx)z
+                           "Bg", # y(xy)z
+                           "1Eg + 2Eg", # y(zx)z
+                           "1Eg + 2Eg"] # y(zy)z
+        rightComponents = [RTs[3][rDir[0]],\
+                           RTs[5][rDir[1]]+RTs[7][rDir[1]],\
+                           RTs[5][rDir[2]]+RTs[7][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[3][rDir[4]],\
+                           RTs[1][rDir[5]]+RTs[3][bdDir[5]],\
+                           RTs[5][rDir[6]]+RTs[7][rDir[6]],\
+                           RTs[5][rDir[7]]+RTs[7][rDir[7]],\
+                           RTs[1][rDir[8]],\
+                           RTs[3][rDir[9]],\
+                           RTs[5][rDir[10]]+RTs[7][rDir[10]],\
+                           RTs[5][rDir[11]]+RTs[7][rDir[11]]]
+        
+    elif pointgroup == "422":
+        backscattering = ["A1 + B1",       # x(yy)x
+                          "E(LO)",      # x(yz)x
+                          "A1",       # x(zz)x
+                          "A1 + B1",       # y(xx)y
+                          "E(LO)",      # y(xz)y
+                          "A1",       # y(zz)y
+                          "A1 + B1",       # z(xx)z
+                          "B2",      # z(xy)z
+                          "A1 + B1"]       # z(yy)z
+        backComponents = [RTs[1][bdDir[0]]+RTs[3][bdDir[0]],\
+                          RTs[7][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]]+RTs[3][bdDir[3]],\
+                          RTs[7][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]]+RTs[3][bdDir[6]],\
+                          RTs[5][bdDir[7]],\
+                          RTs[1][bdDir[8]]+RTs[3][bdDir[8]]]
+        rightscattering = ["B2", # x(yx)y
+                           "E(LO+TO)", # x(yz)y
+                           "E(LO+TO)", # x(zx)y
+                           "A1",  # x(zz)y
+                           "B2", # x(yx)z
+                           "A1 + B1",  # x(yy)z
+                           "E(TO)", # x(zx)z
+                           "E(LO+TO)", # x(zy)z
+                           "A1 + B1",  # y(xx)z
+                           "B2", # y(xy)z
+                           "E(LO+TO)", # y(zx)z
+                           "E(TO)"] # y(zy)z
+        rightComponents = [RTs[5][rDir[0]],\
+                           RTs[7][rDir[1]],\
+                           RTs[7][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[5][rDir[4]],\
+                           RTs[1][rDir[5]]+RTs[3][rDir[5]],\
+                           RTs[7][rDir[6]],\
+                           RTs[7][rDir[7]],\
+                           RTs[1][rDir[8]]+RTs[3][rDir[8]],\
+                           RTs[5][rDir[9]],\
+                           RTs[7][rDir[10]],\
+                           RTs[7][rDir[11]]]
+        
+    elif pointgroup == "4mm":
+        backscattering = ["A(TO) + B1",       # x(yy)x
+                          "E(TO)",      # x(yz)x
+                          "A(TO)",       # x(zz)x
+                          "A(TO) + B1",       # y(xx)y
+                          "E(TO)",      # y(xz)y
+                          "A(TO)",       # y(zz)y
+                          "A(LO) + B1",       # z(xx)z
+                          "B2",      # z(xy)z
+                          "A(LO) + B1"]       # z(yy)z
+        backComponents = [RTs[1][bdDir[0]]+RTs[3][bdDir[0]],\
+                          RTs[7][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]]+RTs[3][bdDir[3]],\
+                          RTs[7][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]]+RTs[3][bdDir[6]],\
+                          RTs[5][bdDir[7]],\
+                          RTs[1][bdDir[8]]+RTs[3][bdDir[8]]]
+        rightscattering = ["B2", # x(yx)y
+                           "E(LO+TO)", # x(yz)y
+                           "E(LO+TO)", # x(zx)y
+                           "A(TO)",  # x(zz)y
+                           "B2", # x(yx)z
+                           "A(LO+TO) + B1",  # x(yy)z
+                           "E(TO)", # x(zx)z
+                           "E(LO+TO)", # x(zy)z
+                           "A(LO+TO) + B1",  # y(xx)z
+                           "B2", # y(xy)z
+                           "E(TO)", # y(zx)z
+                           "E(LO+TO)"] # y(zy)z
+        rightComponents = [RTs[5][rDir[0]],\
+                           RTs[7][rDir[1]],\
+                           RTs[7][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[5][rDir[4]],\
+                           RTs[1][rDir[5]]+RTs[3][rDir[5]],\
+                           RTs[7][rDir[6]],\
+                           RTs[7][rDir[7]],\
+                           RTs[1][rDir[8]]+RTs[3][rDir[8]],\
+                           RTs[5][rDir[9]],\
+                           RTs[7][rDir[10]],\
+                           RTs[7][rDir[11]]]
+        
+    elif pointgroup == "-42m":
+        backscattering = ["A1 + B1",       # x(yy)x
+                          "E(LO)",      # x(yz)x
+                          "A1",       # x(zz)x
+                          "A1 + B1",       # y(xx)y
+                          "E(LO)",      # y(xz)y
+                          "A1",       # y(zz)y
+                          "A1 + B1",       # z(xx)z
+                          "B2(LO)",      # z(xy)z
+                          "A1 + B1"]       # z(yy)z
+        backComponents = [RTs[1][bdDir[0]]+RTs[3][bdDir[0]],\
+                          RTs[7][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]]+RTs[3][bdDir[3]],\
+                          RTs[7][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]]+RTs[3][bdDir[6]],\
+                          RTs[5][bdDir[7]],\
+                          RTs[1][bdDir[8]]+RTs[3][bdDir[8]]]
+        rightscattering = ["B2(TO)", # x(yx)y
+                           "E(LO+TO)", # x(yz)y
+                           "E(LO+TO)", # x(zx)y
+                           "A1",  # x(zz)y
+                           "B2(LO+TO)", # x(yx)z
+                           "A1 + B1",  # x(yy)z
+                           "E(TO)", # x(zx)z
+                           "E(LO+TO)", # x(zy)z
+                           "A1 + B1",  # y(xx)z
+                           "B2(LO+TO)", # y(xy)z
+                           "E(LO+TO)", # y(zx)z
+                           "E(TO)"] # y(zy)z
+        rightComponents = [RTs[5][rDir[0]],\
+                           RTs[7][rDir[1]],\
+                           RTs[7][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[5][rDir[4]],\
+                           RTs[1][rDir[5]]+RTs[3][rDir[5]],\
+                           RTs[7][rDir[6]],\
+                           RTs[7][rDir[7]],\
+                           RTs[1][rDir[8]]+RTs[3][rDir[8]],\
+                           RTs[5][rDir[9]],\
+                           RTs[7][rDir[10]],\
+                           RTs[7][rDir[11]]]
+        
+    elif pointgroup == "4/mmm":
+        backscattering = ["A1g + B1g",       # x(yy)x
+                          "Eg",      # x(yz)x
+                          "A1g",       # x(zz)x
+                          "A1g + B1g",       # y(xx)y
+                          "Eg",      # y(xz)y
+                          "A1g",       # y(zz)y
+                          "A1g + B1g",       # z(xx)z
+                          "B2g",      # z(xy)z
+                          "A1g + B1g"]       # z(yy)z
+        backComponents = [RTs[1][bdDir[0]]+RTs[3][bdDir[0]],\
+                          RTs[7][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]]+RTs[3][bdDir[3]],\
+                          RTs[7][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]]+RTs[3][bdDir[6]],\
+                          RTs[5][bdDir[7]],\
+                          RTs[1][bdDir[8]]+RTs[3][bdDir[8]]]
+        rightscattering = ["B2g", # x(yx)y
+                           "Eg", # x(yz)y
+                           "Eg", # x(zx)y
+                           "A1g",  # x(zz)y
+                           "B2g", # x(yx)z
+                           "A1g + B1g",  # x(yy)z
+                           "Eg", # x(zx)z
+                           "Eg", # x(zy)z
+                           "A1g + B1g",  # y(xx)z
+                           "B2g", # y(xy)z
+                           "Eg", # y(zx)z
+                           "Eg"] # y(zy)z
+        rightComponents = [RTs[5][rDir[0]],\
+                           RTs[7][rDir[1]],\
+                           RTs[7][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[5][rDir[4]],\
+                           RTs[1][rDir[5]]+RTs[3][rDir[5]],\
+                           RTs[7][rDir[6]],\
+                           RTs[7][rDir[7]],\
+                           RTs[1][rDir[8]]+RTs[3][rDir[8]],\
+                           RTs[5][rDir[9]],\
+                           RTs[7][rDir[10]],\
+                           RTs[7][rDir[11]]]
+    
+    elif pointgroup == "3":
+        backscattering = ["A(TO) + 1E(LO) + 2E(TO)",
+                          "1E(LO) + 2E(TO)",
+                          "A(TO)",
+                          "A(TO) + 1E(TO) + 2E(LO)",
+                          "1E(TO)+ 2E(LO)",
+                          "A(TO)",
+                          "A(LO) + 1E(TO) + 2E(TO)",
+                          "1E(TO) + 2E(TO)",
+                          "A(LO) + 1E(TO) + 2E(TO)"]
+        backComponents = [RTs[1][bdDir[0]]+RTs[3][bdDir[0]]+RTs[5][bdDir[0]],\
+                          RTs[3][bdDir[1]]+RTs[5][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]]+RTs[3][bdDir[3]]+RTs[5][bdDir[3]],\
+                          RTs[3][bdDir[4]]+RTs[5][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]]+RTs[3][bdDir[6]]+RTs[5][bdDir[6]],\
+                          RTs[3][bdDir[7]]+RTs[5][bdDir[7]],\
+                          RTs[1][bdDir[8]]+RTs[3][bdDir[8]]+RTs[5][bdDir[8]]]
+        rightscattering = ["1E(LO+TO) + 2E(LO+TO)",  # x(yx)y
+                           "1E(LO+TO) + 2E(LO+TO)", # x(yz)y
+                           "1E(LO+TO) + 2E(LO+TO)",  # x(zx)y
+                           "A(TO)",  # x(zz)y
+                           "1E(LO+TO) + 2E(TO)", # x(yx)z
+                           "1E(LO+TO) + 2E(TO)",  # x(yy)z
+                           "1E(LO+TO) + 2E(TO)", # x(zx)z
+                           "1E(LO+TO) + 2E(TO)", # x(zy)z
+                           "1E(TO) + 2E(LO+TO)", # y(xx)z
+                           "1E(TO) + 2E(LO+TO)",  # y(xy)z
+                           "1E(TO) + 2E(LO+TO)", # y(zx)z
+                           "1E(TO) + 2E(LO+TO)"] # y(zy)z
+        rightComponents = [RTs[3][rDir[0]]+RTs[5][rDir[0]],\
+                           RTs[3][rDir[1]]+RTs[5][rDir[1]],\
+                           RTs[3][rDir[2]]+RTs[5][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[3][rDir[4]]+RTs[5][rDir[4]],\
+                           RTs[3][rDir[5]]+RTs[5][rDir[5]],\
+                           RTs[3][rDir[6]]+RTs[5][rDir[6]],\
+                           RTs[3][rDir[7]]+RTs[5][rDir[7]],\
+                           RTs[3][rDir[8]]+RTs[5][rDir[8]],\
+                           RTs[3][rDir[9]]+RTs[5][rDir[9]],\
+                           RTs[3][rDir[10]]+RTs[5][rDir[10]],\
+                           RTs[3][rDir[11]]+RTs[5][rDir[11]]]
+        
+    elif pointgroup == "-3":
+        backscattering = ["Ag + 1Eg + 2Eg",
+                          "1Eg + 2Eg",
+                          "Ag",
+                          "Ag + 1Eg + 2Eg",
+                          "1Eg+ 2Eg",
+                          "Ag",
+                          "Ag + 1Eg + 2Eg",
+                          "1Eg + 2Eg",
+                          "Ag + 1Eg + 2Eg"]
+        backComponents = [RTs[1][bdDir[0]]+RTs[3][bdDir[0]]+RTs[5][bdDir[0]],\
+                          RTs[3][bdDir[1]]+RTs[5][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]]+RTs[3][bdDir[3]]+RTs[5][bdDir[3]],\
+                          RTs[3][bdDir[4]]+RTs[5][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]]+RTs[3][bdDir[6]]+RTs[5][bdDir[6]],\
+                          RTs[3][bdDir[7]]+RTs[5][bdDir[7]],\
+                          RTs[1][bdDir[8]]+RTs[3][bdDir[8]]+RTs[5][bdDir[8]]]
+        rightscattering = ["1Eg + 2Eg",  # x(yx)y
+                           "1Eg + 2Eg", # x(yz)y
+                           "1Eg + 2Eg",  # x(zx)y
+                           "Ag",  # x(zz)y
+                           "1Eg + 2Eg", # x(yx)z
+                           "Ag + 1Eg + 2Eg",  # x(yy)z
+                           "1Eg + 2Eg", # x(zx)z
+                           "1Eg + 2Eg", # x(zy)z
+                           "Ag + 1Eg + 2Eg", # y(xx)z
+                           "1Eg + 2Eg",  # y(xy)z
+                           "1Eg + 2Eg", # y(zx)z
+                           "1Eg + 2Eg"] # y(zy)z
+        rightComponents = [RTs[3][rDir[0]]+RTs[5][rDir[0]],\
+                           RTs[3][rDir[1]]+RTs[5][rDir[1]],\
+                           RTs[3][rDir[2]]+RTs[5][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[3][rDir[4]]+RTs[5][rDir[4]],\
+                           RTs[1][rDir[5]]+RTs[3][rDir[5]]+RTs[5][rDir[5]],\
+                           RTs[3][rDir[6]]+RTs[5][rDir[6]],\
+                           RTs[3][rDir[7]]+RTs[5][rDir[7]],\
+                           RTs[1][rDir[8]]+RTs[3][rDir[8]]+RTs[5][rDir[8]],\
+                           RTs[3][rDir[9]]+RTs[5][rDir[9]],\
+                           RTs[3][rDir[10]]+RTs[5][rDir[10]],\
+                           RTs[3][rDir[11]]+RTs[5][rDir[11]]]
+    
+    elif pointgroup == "32":
+        backscattering = ["A1 + E(LO)",
+                          "E(LO)",
+                          "A1",
+                          "A1 + E(TO)",
+                          "E(LO)",
+                          "A1",
+                          "A1 + E(TO)",
+                          "E(TO)",
+                          "A1 + E(TO)"]
+        backComponents = [RTs[1][bdDir[0]]+RTs[3][bdDir[0]]+RTs[5][bdDir[0]],\
+                          RTs[3][bdDir[1]]+RTs[5][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]]+RTs[3][bdDir[3]]+RTs[5][bdDir[3]],\
+                          RTs[3][bdDir[4]]+RTs[5][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]]+RTs[3][bdDir[6]]+RTs[5][bdDir[6]],\
+                          RTs[3][bdDir[7]]+RTs[5][bdDir[7]],\
+                          RTs[1][bdDir[8]]+RTs[3][bdDir[8]]+RTs[5][bdDir[8]]]
+        rightscattering = ["E(LO+TO)",  # x(yx)y
+                           "E(LO+TO)", # x(yz)y
+                           "E(LO+TO)",  # x(zx)y
+                           "A1",  # x(zz)y
+                           "E(TO)", # x(yx)z
+                           "A1 + E(LO+TO)",  # x(yy)z
+                           "E(TO)", # x(zx)z
+                           "E(LO+TO)", # x(zy)z
+                           "A1 + E(TO)", # y(xx)z
+                           "E(LO+TO)",  # y(xy)z
+                           "E(LO+TO)", # y(zx)z
+                           "E(TO)"] # y(zy)z
+        rightComponents = [RTs[3][rDir[0]]+RTs[5][rDir[0]],\
+                           RTs[3][rDir[1]]+RTs[5][rDir[1]],\
+                           RTs[3][rDir[2]]+RTs[5][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[3][rDir[4]]+RTs[5][rDir[4]],\
+                           RTs[1][rDir[5]]+RTs[3][rDir[5]]+RTs[5][rDir[5]],\
+                           RTs[3][rDir[6]]+RTs[5][rDir[6]],\
+                           RTs[3][rDir[7]]+RTs[5][rDir[7]],\
+                           RTs[1][rDir[8]]+RTs[3][rDir[8]]+RTs[5][rDir[8]],\
+                           RTs[3][rDir[9]]+RTs[5][rDir[9]],\
+                           RTs[3][rDir[10]]+RTs[5][rDir[10]],\
+                           RTs[3][rDir[11]]+RTs[5][rDir[11]]]
         
     elif pointgroup == "3m":
         backscattering = ["A1(TO) + E(TO)",
                           "E(TO)",
                           "A1(TO)",
                           "A1(TO) + E(LO)",
-                          "E(TO)", "A1(TO)",
+                          "E(TO)",
+                          "A1(TO)",
                           "A1(LO) + E(TO)",
                           "E(TO)",
                           "A1(LO) + E(TO)"]
@@ -1080,7 +1521,535 @@ def RamanSelectionRules(pointgroup, RTs):
                            RTs[3][rDir[9]]+RTs[5][rDir[9]],\
                            RTs[3][rDir[10]]+RTs[5][rDir[10]],\
                            RTs[3][rDir[11]]+RTs[5][rDir[11]]]
+
+    elif pointgroup == "-3m":
+        backscattering = ["A1g + Eg",
+                          "Eg",
+                          "A1g",
+                          "A1g + Eg",
+                          "Eg",
+                          "A1g",
+                          "A1g + Eg",
+                          "Eg",
+                          "A1g + Eg"]
+        backComponents = [RTs[1][bdDir[0]]+RTs[3][bdDir[0]]+RTs[5][bdDir[0]],\
+                          RTs[3][bdDir[1]]+RTs[5][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]]+RTs[3][bdDir[3]]+RTs[5][bdDir[3]],\
+                          RTs[3][bdDir[4]]+RTs[5][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]]+RTs[3][bdDir[6]]+RTs[5][bdDir[6]],\
+                          RTs[3][bdDir[7]]+RTs[5][bdDir[7]],\
+                          RTs[1][bdDir[8]]+RTs[3][bdDir[8]]+RTs[5][bdDir[8]]]
+        rightscattering = ["Eg",  # x(yx)y
+                           "Eg", # x(yz)y
+                           "Eg",  # x(zx)y
+                           "A1g",  # x(zz)y
+                           "Eg", # x(yx)z
+                           "A1g + Eg",  # x(yy)z
+                           "Eg", # x(zx)z
+                           "Eg", # x(zy)z
+                           "A1g + Eg", # y(xx)z
+                           "Eg",  # y(xy)z
+                           "Eg", # y(zx)z
+                           "Eg"] # y(zy)z
+        rightComponents = [RTs[3][rDir[0]]+RTs[5][rDir[0]],\
+                           RTs[3][rDir[1]]+RTs[5][rDir[1]],\
+                           RTs[3][rDir[2]]+RTs[5][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[3][rDir[4]]+RTs[5][rDir[4]],\
+                           RTs[1][rDir[5]]+RTs[3][rDir[5]]+RTs[5][rDir[5]],\
+                           RTs[3][rDir[6]]+RTs[5][rDir[6]],\
+                           RTs[3][rDir[7]]+RTs[5][rDir[7]],\
+                           RTs[1][rDir[8]]+RTs[3][rDir[8]]+RTs[5][rDir[8]],\
+                           RTs[3][rDir[9]]+RTs[5][rDir[9]],\
+                           RTs[3][rDir[10]]+RTs[5][rDir[10]],\
+                           RTs[3][rDir[11]]+RTs[5][rDir[11]]]
+    
+    elif pointgroup == "6":
+        backscattering = ["A(TO) + 1E2 + 2E2",
+                          "1E1(LO) + 2E1(TO)",
+                          "A(TO)",
+                          "A(TO) + 1E2 + 2E2",
+                          "1E1(TO) + 2E1(LO)",
+                          "A(TO)",
+                          "A(LO) + 1E2 + 2E2",
+                          "1E2 + 2E2",
+                          "A(LO) + 1E2 + 2E2"]
+        backComponents = [RTs[1][bdDir[0]]+RTs[7][bdDir[0]]+RTs[9][bdDir[0]],\
+                          RTs[3][bdDir[1]]+RTs[5][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]]+RTs[7][bdDir[3]]+RTs[9][bdDir[3]],\
+                          RTs[3][bdDir[4]]+RTs[5][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]]+RTs[7][bdDir[6]]+RTs[9][bdDir[6]],\
+                          RTs[7][bdDir[7]]+RTs[9][bdDir[7]],\
+                          RTs[1][bdDir[8]]+RTs[7][bdDir[8]]+RTs[9][bdDir[8]]]
+        rightscattering = ["1E2 + 2E2",  # x(yx)y
+                           "1E1(LO+TO) + 2E1(LO+TO)", # x(yz)y
+                           "1E1(LO+TO) + 2E1(LO+TO)",  # x(zx)y
+                           "A(TO)",  # x(zz)y
+                           "1E2 + 2E2", # x(yx)z
+                           "A(LO+TO) + 1E2 + 2E2",  # x(yy)z
+                           "1E1(LO+TO) + 2E1(TO)", # x(zx)z
+                           "1E1(LO+TO) + 2E1(TO)", # x(zy)z
+                           "A(LO+TO) + 1E2 + 2E2", # y(xx)z
+                           "1E2 + 2E2",  # y(xy)z
+                           "1E1(TO) + 2E1(LO+TO)", # y(zx)z
+                           "1E1(TO) + 2E1(LO+TO)"] # y(zy)z
+        rightComponents = [RTs[7][rDir[0]]+RTs[9][rDir[0]],\
+                           RTs[3][rDir[1]]+RTs[5][rDir[1]],\
+                           RTs[3][rDir[2]]+RTs[5][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[7][rDir[4]]+RTs[9][rDir[4]],\
+                           RTs[1][rDir[5]]+RTs[7][rDir[5]]+RTs[9][rDir[5]],\
+                           RTs[3][rDir[6]]+RTs[5][rDir[6]],\
+                           RTs[3][rDir[7]]+RTs[5][rDir[7]],\
+                           RTs[1][rDir[8]]+RTs[7][rDir[8]]+RTs[9][rDir[8]],\
+                           RTs[7][rDir[9]]+RTs[9][rDir[9]],\
+                           RTs[3][rDir[10]]+RTs[5][rDir[10]],\
+                           RTs[3][rDir[11]]+RTs[5][rDir[11]]]
+    
+    elif pointgroup == "-6":
+        backscattering = ["A' + 1E' + 2E'",
+                          "1E'' + 2E''",
+                          "A'",
+                          "A' + 1E' + 2E'",
+                          "1E'' + 2E''",
+                          "A'",
+                          "A' + 1E' + 2E'",
+                          "1E' + 2E'",
+                          "A' + 1E' + 2E'"]
+        backComponents = [RTs[1][bdDir[0]]+RTs[7][bdDir[0]]+RTs[9][bdDir[0]],\
+                          RTs[3][bdDir[1]]+RTs[5][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]]+RTs[7][bdDir[3]]+RTs[9][bdDir[3]],\
+                          RTs[3][bdDir[4]]+RTs[5][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]]+RTs[7][bdDir[6]]+RTs[9][bdDir[6]],\
+                          RTs[7][bdDir[7]]+RTs[9][bdDir[7]],\
+                          RTs[1][bdDir[8]]+RTs[7][bdDir[8]]+RTs[9][bdDir[8]]]
+        rightscattering = ["1E' + 2E'",  # x(yx)y
+                           "1E'' + 2E''", # x(yz)y
+                           "1E'' + 2E''",  # x(zx)y
+                           "A'",  # x(zz)y
+                           "1E' + 2E'", # x(yx)z
+                           "A' + 1E' + 2E'",  # x(yy)z
+                           "1E'' + 2E''", # x(zx)z
+                           "1E'' + 2E''", # x(zy)z
+                           "A' + 1E' + 2E'", # y(xx)z
+                           "1E' + 2E'",  # y(xy)z
+                           "1E'' + 2E''", # y(zx)z
+                           "1E'' + 2E''"] # y(zy)z
+        rightComponents = [RTs[7][rDir[0]]+RTs[9][rDir[0]],\
+                           RTs[3][rDir[1]]+RTs[5][rDir[1]],\
+                           RTs[3][rDir[2]]+RTs[5][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[7][rDir[4]]+RTs[9][rDir[4]],\
+                           RTs[1][rDir[5]]+RTs[7][rDir[5]]+RTs[9][rDir[5]],\
+                           RTs[3][rDir[6]]+RTs[5][rDir[6]],\
+                           RTs[3][rDir[7]]+RTs[5][rDir[7]],\
+                           RTs[1][rDir[8]]+RTs[7][rDir[8]]+RTs[9][rDir[8]],\
+                           RTs[7][rDir[9]]+RTs[9][rDir[9]],\
+                           RTs[3][rDir[10]]+RTs[5][rDir[10]],\
+                           RTs[3][rDir[11]]+RTs[5][rDir[11]]]
+    
+    elif pointgroup == "6/m":
+        backscattering = ["Ag + 1E2g + 2E2g",
+                          "1E1g + 2E1g",
+                          "Ag",
+                          "Ag + 1E2g + 2E2g",
+                          "1E1g + 2E1g",
+                          "Ag",
+                          "Ag + 1E2g + 2E2g",
+                          "1E2g + 2E2g",
+                          "Ag + 1E2g + 2E2g"]
+        backComponents = [RTs[1][bdDir[0]]+RTs[7][bdDir[0]]+RTs[9][bdDir[0]],\
+                          RTs[3][bdDir[1]]+RTs[5][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]]+RTs[7][bdDir[3]]+RTs[9][bdDir[3]],\
+                          RTs[3][bdDir[4]]+RTs[5][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]]+RTs[7][bdDir[6]]+RTs[9][bdDir[6]],\
+                          RTs[7][bdDir[7]]+RTs[9][bdDir[7]],\
+                          RTs[1][bdDir[8]]+RTs[7][bdDir[8]]+RTs[9][bdDir[8]]]
+        rightscattering = ["1E2g + 2E2g",  # x(yx)y
+                           "1E1g + 2E1g", # x(yz)y
+                           "1E1g + 2E1g",  # x(zx)y
+                           "Ag",  # x(zz)y
+                           "1E2g + 2E2g", # x(yx)z
+                           "Ag + 1E2g + 2E2g",  # x(yy)z
+                           "1E1g + 2E1g", # x(zx)z
+                           "1E1g + 2E1g", # x(zy)z
+                           "Ag + 1E2g + 2E2g", # y(xx)z
+                           "1E2g + 2E2g",  # y(xy)z
+                           "1E1g + 2E1g", # y(zx)z
+                           "1E1g + 2E1g"] # y(zy)z
+        rightComponents = [RTs[7][rDir[0]]+RTs[9][rDir[0]],\
+                           RTs[3][rDir[1]]+RTs[5][rDir[1]],\
+                           RTs[3][rDir[2]]+RTs[5][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[7][rDir[4]]+RTs[9][rDir[4]],\
+                           RTs[1][rDir[5]]+RTs[7][rDir[5]]+RTs[9][rDir[5]],\
+                           RTs[3][rDir[6]]+RTs[5][rDir[6]],\
+                           RTs[3][rDir[7]]+RTs[5][rDir[7]],\
+                           RTs[1][rDir[8]]+RTs[7][rDir[8]]+RTs[9][rDir[8]],\
+                           RTs[7][rDir[9]]+RTs[9][rDir[9]],\
+                           RTs[3][rDir[10]]+RTs[5][rDir[10]],\
+                           RTs[3][rDir[11]]+RTs[5][rDir[11]]]
         
+    elif pointgroup == "622":
+        backscattering = ["A1 + E2",
+                          "E1(LO)",
+                          "A1",
+                          "A1 + E2",
+                          "E1(LO)",
+                          "A1",
+                          "A1 + E2",
+                          "E2",
+                          "A1 + E2"]
+        backComponents = [RTs[1][bdDir[0]]+RTs[7][bdDir[0]]+RTs[9][bdDir[0]],\
+                          RTs[3][bdDir[1]]+RTs[5][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]]+RTs[7][bdDir[3]]+RTs[9][bdDir[3]],\
+                          RTs[3][bdDir[4]]+RTs[5][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]]+RTs[7][bdDir[6]]+RTs[9][bdDir[6]],\
+                          RTs[7][bdDir[7]]+RTs[9][bdDir[7]],\
+                          RTs[1][bdDir[8]]+RTs[7][bdDir[8]]+RTs[9][bdDir[8]]]
+        rightscattering = ["E2",  # x(yx)y
+                           "E1(LO+TO)", # x(yz)y
+                           "E1(LO+TO)",  # x(zx)y
+                           "A1",  # x(zz)y
+                           "E2", # x(yx)z
+                           "A1 + E2",  # x(yy)z
+                           "E1(TO)", # x(zx)z
+                           "E1(LO+TO)", # x(zy)z
+                           "A1 + E2", # y(xx)z
+                           "E2",  # y(xy)z
+                           "E1(LO+TO)", # y(zx)z
+                           "E1(TO)"] # y(zy)z
+        rightComponents = [RTs[7][rDir[0]]+RTs[9][rDir[0]],\
+                           RTs[3][rDir[1]]+RTs[5][rDir[1]],\
+                           RTs[3][rDir[2]]+RTs[5][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[7][rDir[4]]+RTs[9][rDir[4]],\
+                           RTs[1][rDir[5]]+RTs[7][rDir[5]]+RTs[9][rDir[5]],\
+                           RTs[3][rDir[6]]+RTs[5][rDir[6]],\
+                           RTs[3][rDir[7]]+RTs[5][rDir[7]],\
+                           RTs[1][rDir[8]]+RTs[7][rDir[8]]+RTs[9][rDir[8]],\
+                           RTs[7][rDir[9]]+RTs[9][rDir[9]],\
+                           RTs[3][rDir[10]]+RTs[5][rDir[10]],\
+                           RTs[3][rDir[11]]+RTs[5][rDir[11]]]
+    
+    elif pointgroup == "6mm":
+        backscattering = ["A1(TO) + E2",
+                          "E1(TO)",
+                          "A1(TO)",
+                          "A1(TO) + E2",
+                          "E1(TO)",
+                          "A1(TO)",
+                          "A1(LO) + E2",
+                          "E2",
+                          "A1(LO) + E2"]
+        backComponents = [RTs[1][bdDir[0]]+RTs[7][bdDir[0]]+RTs[9][bdDir[0]],\
+                          RTs[3][bdDir[1]]+RTs[5][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]]+RTs[7][bdDir[3]]+RTs[9][bdDir[3]],\
+                          RTs[3][bdDir[4]]+RTs[5][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]]+RTs[7][bdDir[6]]+RTs[9][bdDir[6]],\
+                          RTs[7][bdDir[7]]+RTs[9][bdDir[7]],\
+                          RTs[1][bdDir[8]]+RTs[7][bdDir[8]]+RTs[9][bdDir[8]]]
+        rightscattering = ["E2",  # x(yx)y
+                           "E1(LO+TO)", # x(yz)y
+                           "E1(LO+TO)",  # x(zx)y
+                           "A1(TO)",  # x(zz)y
+                           "E2", # x(yx)z
+                           "A1(LO+TO) + E2",  # x(yy)z
+                           "E1(LO+TO)", # x(zx)z
+                           "E1(TO)", # x(zy)z
+                           "A1(LO+TO) + E2", # y(xx)z
+                           "E2",  # y(xy)z
+                           "E1(TO)", # y(zx)z
+                           "E1(LO+TO)"] # y(zy)z
+        rightComponents = [RTs[7][rDir[0]]+RTs[9][rDir[0]],\
+                           RTs[3][rDir[1]]+RTs[5][rDir[1]],\
+                           RTs[3][rDir[2]]+RTs[5][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[7][rDir[4]]+RTs[9][rDir[4]],\
+                           RTs[1][rDir[5]]+RTs[7][rDir[5]]+RTs[9][rDir[5]],\
+                           RTs[3][rDir[6]]+RTs[5][rDir[6]],\
+                           RTs[3][rDir[7]]+RTs[5][rDir[7]],\
+                           RTs[1][rDir[8]]+RTs[7][rDir[8]]+RTs[9][rDir[8]],\
+                           RTs[7][rDir[9]]+RTs[9][rDir[9]],\
+                           RTs[3][rDir[10]]+RTs[5][rDir[10]],\
+                           RTs[3][rDir[11]]+RTs[5][rDir[11]]]
+    
+    elif pointgroup == "-62m":
+        backscattering = ["A1' + E'(LO)",
+                          "E''",
+                          "A1'",
+                          "A1' + E'(TO)",
+                          "E''",
+                          "A1'",
+                          "A1' + E'(TO)",
+                          "E'(TO)",
+                          "A1' + E'(TO)"]
+        backComponents = [RTs[1][bdDir[0]]+RTs[7][bdDir[0]]+RTs[9][bdDir[0]],\
+                          RTs[3][bdDir[1]]+RTs[5][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]]+RTs[7][bdDir[3]]+RTs[9][bdDir[3]],\
+                          RTs[3][bdDir[4]]+RTs[5][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]]+RTs[7][bdDir[6]]+RTs[9][bdDir[6]],\
+                          RTs[7][bdDir[7]]+RTs[9][bdDir[7]],\
+                          RTs[1][bdDir[8]]+RTs[7][bdDir[8]]+RTs[9][bdDir[8]]]
+        rightscattering = ["E'(LO+TO)",  # x(yx)y
+                           "E''", # x(yz)y
+                           "E''",  # x(zx)y
+                           "A1'",  # x(zz)y
+                           "E'(TO)", # x(yx)z
+                           "A1'' + E'(LO+TO)",  # x(yy)z
+                           "E''", # x(zx)z
+                           "E''", # x(zy)z
+                           "A1' + E'(TO)", # y(xx)z
+                           "E'(LO+TO)",  # y(xy)z
+                           "E''", # y(zx)z
+                           "E''"] # y(zy)z
+        rightComponents = [RTs[7][rDir[0]]+RTs[9][rDir[0]],\
+                           RTs[3][rDir[1]]+RTs[5][rDir[1]],\
+                           RTs[3][rDir[2]]+RTs[5][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[7][rDir[4]]+RTs[9][rDir[4]],\
+                           RTs[1][rDir[5]]+RTs[7][rDir[5]]+RTs[9][rDir[5]],\
+                           RTs[3][rDir[6]]+RTs[5][rDir[6]],\
+                           RTs[3][rDir[7]]+RTs[5][rDir[7]],\
+                           RTs[1][rDir[8]]+RTs[7][rDir[8]]+RTs[9][rDir[8]],\
+                           RTs[7][rDir[9]]+RTs[9][rDir[9]],\
+                           RTs[3][rDir[10]]+RTs[5][rDir[10]],\
+                           RTs[3][rDir[11]]+RTs[5][rDir[11]]]
+    
+    elif pointgroup == "6/mmm":
+        backscattering = ["A1g + E2g",
+                          "E1g",
+                          "A1g",
+                          "A1g + E2g",
+                          "E1g",
+                          "A1g",
+                          "A1g + E2g",
+                          "E2g",
+                          "A1g + E2g"]
+        backComponents = [RTs[1][bdDir[0]]+RTs[7][bdDir[0]]+RTs[9][bdDir[0]],\
+                          RTs[3][bdDir[1]]+RTs[5][bdDir[1]],\
+                          RTs[1][bdDir[2]],\
+                          RTs[1][bdDir[3]]+RTs[7][bdDir[3]]+RTs[9][bdDir[3]],\
+                          RTs[3][bdDir[4]]+RTs[5][bdDir[4]],\
+                          RTs[1][bdDir[5]],\
+                          RTs[1][bdDir[6]]+RTs[7][bdDir[6]]+RTs[9][bdDir[6]],\
+                          RTs[7][bdDir[7]]+RTs[9][bdDir[7]],\
+                          RTs[1][bdDir[8]]+RTs[7][bdDir[8]]+RTs[9][bdDir[8]]]
+        rightscattering = ["E2g",  # x(yx)y
+                           "E1g", # x(yz)y
+                           "E1g",  # x(zx)y
+                           "A1g",  # x(zz)y
+                           "E2g", # x(yx)z
+                           "A1g + E2g",  # x(yy)z
+                           "E1g", # x(zx)z
+                           "E1g", # x(zy)z
+                           "A1g + E2g", # y(xx)z
+                           "E2g",  # y(xy)z
+                           "E1g", # y(zx)z
+                           "E1g"] # y(zy)z
+        rightComponents = [RTs[7][rDir[0]]+RTs[9][rDir[0]],\
+                           RTs[3][rDir[1]]+RTs[5][rDir[1]],\
+                           RTs[3][rDir[2]]+RTs[5][rDir[2]],\
+                           RTs[1][rDir[3]],\
+                           RTs[7][rDir[4]]+RTs[9][rDir[4]],\
+                           RTs[1][rDir[5]]+RTs[7][rDir[5]]+RTs[9][rDir[5]],\
+                           RTs[3][rDir[6]]+RTs[5][rDir[6]],\
+                           RTs[3][rDir[7]]+RTs[5][rDir[7]],\
+                           RTs[1][rDir[8]]+RTs[7][rDir[8]]+RTs[9][rDir[8]],\
+                           RTs[7][rDir[9]]+RTs[9][rDir[9]],\
+                           RTs[3][rDir[10]]+RTs[5][rDir[10]],\
+                           RTs[3][rDir[11]]+RTs[5][rDir[11]]]
+    
+    elif pointgroup == "23":
+        backscattering = ["A + 1E + 2E",
+                          "T(LO)",
+                          "A + 1E",
+                          "A + 1E + 2E",
+                          "T(LO)",
+                          "A + 1E",
+                          "A + 1E + 2E",
+                          "T(LO)",
+                          "A + 1E + 2E"]
+        backComponents = [RTs[1][bdDir[0]]+RTs[3][bdDir[0]]+RTs[5][bdDir[0]],\
+                          RTs[7][bdDir[1]]+RTs[9][bdDir[1]]+RTs[11][bdDir[1]],\
+                          RTs[1][bdDir[2]]+RTs[3][bdDir[2]],\
+                          RTs[1][bdDir[3]]+RTs[3][bdDir[3]]+RTs[5][bdDir[3]],\
+                          RTs[7][bdDir[4]]+RTs[9][bdDir[4]]+RTs[11][bdDir[4]],\
+                          RTs[1][bdDir[5]]+RTs[3][bdDir[5]],\
+                          RTs[1][bdDir[6]]+RTs[3][bdDir[6]]+RTs[5][bdDir[6]],\
+                          RTs[7][bdDir[7]]+RTs[9][bdDir[7]]+RTs[11][bdDir[7]],
+                          RTs[1][bdDir[8]]+RTs[3][bdDir[8]]+RTs[5][bdDir[8]]]
+        rightscattering = ["T(TO)", # x(yx)y
+                           "T(LO+TO)",  # x(yz)y
+                           "T(LO+TO)", # x(zx)y
+                           "A + 1E", # x(zz)y
+                           "T(LO+TO)",  # x(yx)z
+                           "A + 1E + 2E", # x(yy)z
+                           "T(TO)", # x(zx)z
+                           "T(LO+TO)", # x(zy)z
+                           "A + 1E + 2E", # y(xx)z
+                           "T(LO+TO)",  # y(xy)z
+                           "T(LO+TO)", # y(xy)z
+                           "T(TO)"] # y(zy)z
+        rightComponents = [RTs[7][rDir[0]]+RTs[9][rDir[0]]+RTs[11][rDir[0]],\
+                           RTs[7][rDir[1]]+RTs[9][rDir[1]]+RTs[11][rDir[1]],\
+                           RTs[7][rDir[2]]+RTs[9][rDir[2]]+RTs[11][rDir[2]],\
+                           RTs[1][rDir[3]]+RTs[3][rDir[3]],\
+                           RTs[7][rDir[4]]+RTs[9][rDir[4]]+RTs[11][rDir[4]],\
+                           RTs[1][rDir[5]]+RTs[3][rDir[5]]+RTs[5][rDir[5]],\
+                           RTs[7][rDir[6]]+RTs[9][rDir[6]]+RTs[11][rDir[6]],\
+                           RTs[7][rDir[7]]+RTs[9][rDir[7]]+RTs[11][rDir[7]],\
+                           RTs[1][rDir[8]]+RTs[3][rDir[8]]+RTs[5][rDir[8]],\
+                           RTs[7][rDir[9]]+RTs[9][rDir[9]]+RTs[11][rDir[9]],\
+                           RTs[7][rDir[10]]+RTs[9][rDir[10]]+RTs[11][rDir[10]],\
+                           RTs[7][rDir[11]]+RTs[9][rDir[11]]+RTs[11][rDir[11]]]
+    
+    elif pointgroup == "m-3":
+        backscattering = ["Ag + 1Eg + 2Eg",
+                          "Tg",
+                          "Ag + 1Eg",
+                          "Ag + 1Eg + 2Eg",
+                          "Tg",
+                          "Ag + 1Eg",
+                          "Ag + 1Eg + 2Eg",
+                          "Tg",
+                          "Ag + 1Eg + 2Eg"]
+        backComponents = [RTs[1][bdDir[0]]+RTs[3][bdDir[0]]+RTs[5][bdDir[0]],\
+                          RTs[7][bdDir[1]]+RTs[9][bdDir[1]]+RTs[11][bdDir[1]],\
+                          RTs[1][bdDir[2]]+RTs[3][bdDir[2]],\
+                          RTs[1][bdDir[3]]+RTs[3][bdDir[3]]+RTs[5][bdDir[3]],\
+                          RTs[7][bdDir[4]]+RTs[9][bdDir[4]]+RTs[11][bdDir[4]],\
+                          RTs[1][bdDir[5]]+RTs[3][bdDir[5]],\
+                          RTs[1][bdDir[6]]+RTs[3][bdDir[6]]+RTs[5][bdDir[6]],\
+                          RTs[7][bdDir[7]]+RTs[9][bdDir[7]]+RTs[11][bdDir[7]],
+                          RTs[1][bdDir[8]]+RTs[3][bdDir[8]]+RTs[5][bdDir[8]]]
+        rightscattering = ["Tg", # x(yx)y
+                           "Tg",  # x(yz)y
+                           "Tg", # x(zx)y
+                           "Ag + 1Eg", # x(zz)y
+                           "Tg",  # x(yx)z
+                           "Ag + 1Eg + 2Eg", # x(yy)z
+                           "Tg", # x(zx)z
+                           "Tg", # x(zy)z
+                           "Ag + 1Eg + 2Eg", # y(xx)z
+                           "Tg",  # y(xy)z
+                           "Tg", # y(xy)z
+                           "Tg"] # y(zy)z
+        rightComponents = [RTs[7][rDir[0]]+RTs[9][rDir[0]]+RTs[11][rDir[0]],\
+                           RTs[7][rDir[1]]+RTs[9][rDir[1]]+RTs[11][rDir[1]],\
+                           RTs[7][rDir[2]]+RTs[9][rDir[2]]+RTs[11][rDir[2]],\
+                           RTs[1][rDir[3]]+RTs[3][rDir[3]],\
+                           RTs[7][rDir[4]]+RTs[9][rDir[4]]+RTs[11][rDir[4]],\
+                           RTs[1][rDir[5]]+RTs[3][rDir[5]]+RTs[5][rDir[5]],\
+                           RTs[7][rDir[6]]+RTs[9][rDir[6]]+RTs[11][rDir[6]],\
+                           RTs[7][rDir[7]]+RTs[9][rDir[7]]+RTs[11][rDir[7]],\
+                           RTs[1][rDir[8]]+RTs[3][rDir[8]]+RTs[5][rDir[8]],\
+                           RTs[7][rDir[9]]+RTs[9][rDir[9]]+RTs[11][rDir[9]],\
+                           RTs[7][rDir[10]]+RTs[9][rDir[10]]+RTs[11][rDir[10]],\
+                           RTs[7][rDir[11]]+RTs[9][rDir[11]]+RTs[11][rDir[11]]]
+    
+    elif pointgroup == "432":
+        backscattering = ["A1 + E",
+                          "T2",
+                          "A1 + E",
+                          "A1 + E",
+                          "T2",
+                          "A1 + E",
+                          "A1 + E",
+                          "T2",
+                          "A1 + E"]
+        backComponents = [RTs[1][bdDir[0]]+RTs[3][bdDir[0]]+RTs[5][bdDir[0]],\
+                          RTs[7][bdDir[1]]+RTs[9][bdDir[1]]+RTs[11][bdDir[1]],\
+                          RTs[1][bdDir[2]]+RTs[3][bdDir[2]]+RTs[5][bdDir[2]],\
+                          RTs[1][bdDir[3]]+RTs[3][bdDir[3]]+RTs[5][bdDir[3]],\
+                          RTs[7][bdDir[4]]+RTs[9][bdDir[4]]+RTs[11][bdDir[4]],\
+                          RTs[1][bdDir[5]]+RTs[3][bdDir[5]]+RTs[5][bdDir[5]],\
+                          RTs[1][bdDir[6]]+RTs[3][bdDir[6]]+RTs[5][bdDir[6]],\
+                          RTs[7][bdDir[7]]+RTs[9][bdDir[7]]+RTs[11][bdDir[7]],
+                          RTs[1][bdDir[8]]+RTs[3][bdDir[8]]+RTs[5][bdDir[8]]]
+        rightscattering = ["T2", # x(yx)y
+                           "T2",  # x(yz)y
+                           "T2", # x(zx)y
+                           "A1 + E", # x(zz)y
+                           "T2",  # x(yx)z
+                           "A1 + E", # x(yy)z
+                           "T2", # x(zx)z
+                           "T2", # x(zy)z
+                           "A1 + E", # y(xx)z
+                           "T2",  # y(xy)z
+                           "T2", # y(xy)z
+                           "T2"] # y(zy)z
+        rightComponents = [RTs[7][rDir[0]]+RTs[9][rDir[0]]+RTs[11][rDir[0]],\
+                           RTs[7][rDir[1]]+RTs[9][rDir[1]]+RTs[11][rDir[1]],\
+                           RTs[7][rDir[2]]+RTs[9][rDir[2]]+RTs[11][rDir[2]],\
+                           RTs[1][rDir[3]]+RTs[3][rDir[3]]+RTs[5][rDir[3]],\
+                           RTs[7][rDir[4]]+RTs[9][rDir[4]]+RTs[11][rDir[4]],\
+                           RTs[1][rDir[5]]+RTs[3][rDir[5]]+RTs[5][rDir[5]],\
+                           RTs[7][rDir[6]]+RTs[9][rDir[6]]+RTs[11][rDir[6]],\
+                           RTs[7][rDir[7]]+RTs[9][rDir[7]]+RTs[11][rDir[7]],\
+                           RTs[1][rDir[8]]+RTs[3][rDir[8]]+RTs[5][rDir[8]],\
+                           RTs[7][rDir[9]]+RTs[9][rDir[9]]+RTs[11][rDir[9]],\
+                           RTs[7][rDir[10]]+RTs[9][rDir[10]]+RTs[11][rDir[10]],\
+                           RTs[7][rDir[11]]+RTs[9][rDir[11]]+RTs[11][rDir[11]]]
+    
+    elif pointgroup == "-43m":
+        backscattering = ["A1 + E",
+                          "T2(LO)",
+                          "A1 + E",
+                          "A1 + E",
+                          "T2(LO)",
+                          "A1 + E",
+                          "A1 + E",
+                          "T2(LO)",
+                          "A1 + E"]
+        backComponents = [RTs[1][bdDir[0]]+RTs[3][bdDir[0]]+RTs[5][bdDir[0]],\
+                          RTs[7][bdDir[1]]+RTs[9][bdDir[1]]+RTs[11][bdDir[1]],\
+                          RTs[1][bdDir[2]]+RTs[3][bdDir[2]]+RTs[5][bdDir[2]],\
+                          RTs[1][bdDir[3]]+RTs[3][bdDir[3]]+RTs[5][bdDir[3]],\
+                          RTs[7][bdDir[4]]+RTs[9][bdDir[4]]+RTs[11][bdDir[4]],\
+                          RTs[1][bdDir[5]]+RTs[3][bdDir[5]]+RTs[5][bdDir[5]],\
+                          RTs[1][bdDir[6]]+RTs[3][bdDir[6]]+RTs[5][bdDir[6]],\
+                          RTs[7][bdDir[7]]+RTs[9][bdDir[7]]+RTs[11][bdDir[7]],
+                          RTs[1][bdDir[8]]+RTs[3][bdDir[8]]+RTs[5][bdDir[8]]]
+        rightscattering = ["T2(TO)", # x(yx)y
+                           "T2(LO+TO)",  # x(yz)y
+                           "T2(LO+TO)", # x(zx)y
+                           "A1 + E", # x(zz)y
+                           "T2(LO+TO)",  # x(yx)z
+                           "A1 + E", # x(yy)z
+                           "T2(TO)", # x(zx)z
+                           "T2(LO+TO)", # x(zy)z
+                           "A1 + E", # y(xx)z
+                           "T2(LO+TO)",  # y(xy)z
+                           "T2(LO+TO)", # y(xy)z
+                           "T2(TO)"] # y(zy)z
+        rightComponents = [RTs[7][rDir[0]]+RTs[9][rDir[0]]+RTs[11][rDir[0]],\
+                           RTs[7][rDir[1]]+RTs[9][rDir[1]]+RTs[11][rDir[1]],\
+                           RTs[7][rDir[2]]+RTs[9][rDir[2]]+RTs[11][rDir[2]],\
+                           RTs[1][rDir[3]]+RTs[3][rDir[3]]+RTs[5][rDir[3]],\
+                           RTs[7][rDir[4]]+RTs[9][rDir[4]]+RTs[11][rDir[4]],\
+                           RTs[1][rDir[5]]+RTs[3][rDir[5]]+RTs[5][rDir[5]],\
+                           RTs[7][rDir[6]]+RTs[9][rDir[6]]+RTs[11][rDir[6]],\
+                           RTs[7][rDir[7]]+RTs[9][rDir[7]]+RTs[11][rDir[7]],\
+                           RTs[1][rDir[8]]+RTs[3][rDir[8]]+RTs[5][rDir[8]],\
+                           RTs[7][rDir[9]]+RTs[9][rDir[9]]+RTs[11][rDir[9]],\
+                           RTs[7][rDir[10]]+RTs[9][rDir[10]]+RTs[11][rDir[10]],\
+                           RTs[7][rDir[11]]+RTs[9][rDir[11]]+RTs[11][rDir[11]]]
+
     elif pointgroup == "m-3m":
         backscattering = ["A1g + Eg",
                           "T2g",

@@ -64,7 +64,7 @@ class Phonon:
 
     def __init__(
         self,
-        path: str = "",
+        path: str = "./",
         file: str = "phonopy.yaml",
         code_out: str = "VASP",
         modelist: NDArray[int] = None,
