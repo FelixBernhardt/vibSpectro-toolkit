@@ -7,7 +7,7 @@ import os
 import numpy as np
 from numpy.typing import NDArray
 from spglib import get_symmetry_dataset
-from RamanLib import periodTable, getAcoustics, getRotations, getDegenerates, getRamanSilent, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols
+from RamanLib import periodTable, getAcoustics, getRotations, getDegenerates, getDecomposition, getRamanSilent, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols
 from IR import calcIR, calcReflectance
 from displace import calcdisplace
 from calcTensors import calcTensors
@@ -44,6 +44,7 @@ class Phonon:
     ramantensors -> general raman tensor associated with the point group
     dielectrictensor -> general dielectric tensor associated with the point group
     labels -> symetry labels of the phonon modes
+    decomposition -> phonon decomposition at Gamma point
 
     acoustic -> indices of acoustic phonon modes
     rotations -> indices of (almost) pure rotational modes, only relevant for isolated molecules
@@ -69,6 +70,7 @@ class Phonon:
         code_out: str = "VASP",
         modelist: NDArray[int] = None,
         nosym: bool = False,
+        molecule: bool = False,
         stepsize: float = 0.001,
         smearing: float = 5.0,
         temperature: float = 300,
@@ -105,7 +107,7 @@ class Phonon:
         self.cartesian = atoms.get_positions()
         self.direct = atoms.get_scaled_positions()
         self.basis = atoms.get_cell()
-        self._norms = np.array([np.linalg.norm(self.eigenvecs[i-1]) for i in modelist])
+        self._norms = np.array([np.linalg.norm(self.eigenvecs[i-1]) for i in range(len(self.eigenvecs))])
         self.masses = atoms.get_masses()
 
         # check the mode's ordering
@@ -118,7 +120,12 @@ class Phonon:
         #
 
         self.acoustics = getAcoustics(self.eigenvecs, self.eigenfreqs, self.masses)
-        self.rotations = getRotations(self.masses, self.cartesian, self.eigenvecs)
+        self.molecule = molecule
+        if self.molecule == True:
+            self.rotations = getRotations(self.masses, self.cartesian, self.eigenvecs)
+        else:
+            self.rotations = []
+        #
         self.modelist = [mode for mode in modelist if mode not in self.acoustics and mode not in self.rotations]
 
         if nosym == False and os.path.isfile(self.path+"FORCE_CONSTANTS"):
@@ -161,7 +168,8 @@ class Phonon:
     #
     def set_symmetries(self, modelist):
         self._dataset = get_symmetry_dataset((self.basis, self.direct, [periodTable[element] for element in self.elements]), symprec=1.e-5)
-        self.pointgroup = str(self._dataset.pointgroup)
+        #self.pointgroup = str(self._dataset.pointgroup)
+        self.pointgroup = str(self._dataset["pointgroup"])
         self.ramantensors = analyzeRamanTensors(self.pointgroup, varprint=False)
         self.dielectrictensor = analyzeDielectricTensor(self.pointgroup, varprint=False)
         self._labels_tmp = getIrrepsSymbols(self.path, self.basis, self.direct, self.elements, self.pointgroup)
@@ -173,10 +181,17 @@ class Phonon:
         #    
         self.degenerates = getDegenerates(self.eigenfreqs, self.labels, prec=1e0)
         self.silent = getRamanSilent(self._modelist, self.labels, self.pointgroup)
-        self.modelist = [mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations]
+        #self.modelist = [mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations]
         self.IRmodelist = [mode for mode in modelist if mode not in self.acoustics and mode not in self.rotations]
-        #self.modelist = [mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations and mode not in [x[1] for x in self.degenerates]]
-        
+        self.modelist = [mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations and mode not in [x[1] for x in self.degenerates]]
+        #
+    #
+    def print_decomposition(self):
+        if self.pointgroup == "":
+            print("[print_ramantensors]: ERROR, need pointgroup")
+        else:
+            labellist = [self.labels[i] for i in range(len(self.labels)) if self._modelist[i] not in self.acoustics and self._modelist[i] not in self.rotations]
+            getDecomposition(labellist)
         #
     #
     def print_ramantensors(self):

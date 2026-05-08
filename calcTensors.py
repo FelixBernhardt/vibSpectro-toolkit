@@ -81,22 +81,29 @@ def calc_raman(path, mode, eigval, w, Im1, Re1, Im2, Re2, stepsize, basis):
     f.close()
 #
 
+
 def calcDegenerates(path, modes, labels, ramantensors):
     # not used or tested !!
     # this might be mathematically impossible !!
     # get the corresponding ramantensors
     Rn = []
+    indx = []
     label = labels[modes[0]-1]
     for i in range(int(len(ramantensors)/2)):
         if ramantensors[2*i] == label:
-            Rn.append(ramantensors[2*i+1])
+            indx.append(i)
+        #        
+        Rn.append(ramantensors[2*i+1])
         #
     #
 
     Rb = []
+    Rb2 = []
     # decompose general tensors into their coefficients
     for letter in ["a", "b", "c", "d", "e", "f"]:
+        find = False
         Rnc = []
+        tmp_R2 = np.zeros((3,3))
         for R in Rn:
             foundOne = False
             tmp_R = np.zeros((3,3))
@@ -105,6 +112,7 @@ def calcDegenerates(path, modes, labels, ramantensors):
                     tmp = re.findall(letter, R[i,j])
                     if tmp != []:
                         foundOne = True
+                        find = True
                         tmp = re.split(letter, R[i,j])
                     
                         if tmp[0] == "":
@@ -129,17 +137,26 @@ def calcDegenerates(path, modes, labels, ramantensors):
             if foundOne == True:
                 Rnc.append(tmp_R)
                 Rb.append(np.array(tmp_R))
+                tmp_R2 = np.add(tmp_R2, Rb[-1])
             #
         #
+        if find == True:
+            Rb2.append(np.array(tmp_R2))
     #
 
-    # orthonormalization, E holds the basis matrizes that the calculated Ramantensor decomposes into
+    #print(Rb2)
+    #print(Rb)
+
+    # orthonormalization, E holds the basis matrizes that the calculated Ramantensor decomposes into, includes possible mode-mixing
     M = np.column_stack([R.reshape(-1) for R in Rb])
     U = np.linalg.svd( M, full_matrices=False)[0]
     E = []
     for i in range(len(U[0])):
         E.append(U[:, i].reshape(3,3))
     #
+
+    # reorder E, here manually
+    E = [E[-3], E[0], E[1], E[-2], E[2], E[-1]]
 
     # get the calculated, degenerate raman tensor
     data = np.genfromtxt(path+"Ramantensors/alpha_"+str(modes[0])+".dat", dtype=complex)
@@ -150,7 +167,7 @@ def calcDegenerates(path, modes, labels, ramantensors):
 
     w = []
     I = []
-    #for i in [100]:
+    #for i in [10]:
     for i in range(len(data)):
         w.append(np.real(data[i,0]))
         Atest = np.zeros((3,3), dtype=complex)
@@ -164,12 +181,16 @@ def calcDegenerates(path, modes, labels, ramantensors):
         Atest[2,1] = Atest[1,2]
         Atest[2,0] = Atest[0,2]
 
-        
-        # decompose calculated tensor into its general tensor components
+        #print(Atest)
+        #for i in range(len(E)):
+        #    print(E[i])
+
+        # decompose calculated tensor into its general tensor components, all possible Tensors
         x = np.array( np.linalg.lstsq( np.column_stack([tmp.reshape(-1) for tmp in E]), Atest.reshape(-1), rcond=1.e-12)[0] )
 
-        # 1. Normalize the first vector
-        norm = np.linalg.norm(x)
+        # 1. Normalize the first vector, only degenerate contributions
+        n = len(E)-len(indx)
+        norm = np.linalg.norm(x[:n])
 
         if norm < 1e-18:
             # pick an arbitrary unit vector as v1
@@ -181,20 +202,22 @@ def calcDegenerates(path, modes, labels, ramantensors):
 
         # 2. Build an orthonormal basis with v1 as first vector
         # Start with random matrix and insert v1
-        n = len(x)
         M = np.random.randn(n, n) + 1j * np.random.randn(n, n)
-        M[0] = v1
+        M[0] = v1[:n]
 
         # QR gives orthonormal rows if we transpose
         Q = np.linalg.qr(M.T)[0]
         V = Q.T   # rows are orthonormal vectors in coefficient space
 
-        # 3. Construct degenerate Raman tensors and reconstruct original tensor
-        degenerates = np.zeros((len(Rn),6,1), dtype=complex)
-        for j in range(len(Rn)):
-            coeffs = V[j]  # vector of length n
-            print(coeffs)
-            R_degen = sum(coeffs[k] * E[k] for k in range(n))
+        # 3. Construct degenerate Raman tensors and reconstruct original tensor, add all contributions back in
+        degenerates = np.zeros((len(E),6,1), dtype=complex)
+        for j in range(len(indx)):
+            #if j == 0:
+            coeffs = np.concatenate([V[j], v1[n:]])*norm  # vector of length n
+            #else:
+            #    coeffs = np.concatenate([V[j], np.zeros(len(x)-n)])*norm
+            R_degen = sum(coeffs[k] * E[k] for k in range(len(E)))
+            #print(R_degen)
             degenerates[j] = [[R_degen[0,0]], [R_degen[1,1]], [R_degen[2,2]], [R_degen[0,1]], [R_degen[1,2]], [R_degen[0,2]]]
         #
 
@@ -219,7 +242,7 @@ def calcDegenerates(path, modes, labels, ramantensors):
         f.close()
     #
 #
-
+        
 def calcTensors(path, modelist, program, eigvals, norms, basis, degenerates, labels, ramantensors, stepsize):
     disps = [-1, 1]
 
@@ -267,7 +290,6 @@ def calcTensors(path, modelist, program, eigvals, norms, basis, degenerates, lab
         print("[calcTensors]: Format not implemented, exiting...")
     #
 
-    """
     # calculate degenerate raman tensors
     if degenerates != []:
         print("[calcTensors]: Calculating degenerate tensors...")
@@ -279,6 +301,4 @@ def calcTensors(path, modelist, program, eigvals, norms, basis, degenerates, lab
         #
         print("[calcTensors]: Done.")
     #
-    """
-
 #

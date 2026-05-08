@@ -2616,3 +2616,21 @@ def IRSelection(pointgroup):
     #
     print("")
 #
+
+def getDecomposition(labels):
+    decomposition = {}
+    for i in set(labels):
+       decomposition[i] = labels.count(i)
+    #
+    printstr = ""
+    for label, number in decomposition.items():
+        if printstr == "":
+            printstr += "Γ = {}({})".format(number, label)
+        else:
+            printstr += " + {}({})".format(number, label)
+        #
+    #
+    print("Mode decomposition at Γ")
+    print(printstr)
+    print("")
+#
