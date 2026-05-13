@@ -167,8 +167,8 @@ def calcDegenerates(path, modes, labels, ramantensors):
 
     w = []
     I = []
-    #for i in [10]:
-    for i in range(len(data)):
+    for i in [10]:
+    #for i in range(len(data)):
         w.append(np.real(data[i,0]))
         Atest = np.zeros((3,3), dtype=complex)
         Atest[0,0] = data[i,1]
@@ -181,29 +181,35 @@ def calcDegenerates(path, modes, labels, ramantensors):
         Atest[2,1] = Atest[1,2]
         Atest[2,0] = Atest[0,2]
 
-        #print(Atest)
+        print(Atest)
         #for i in range(len(E)):
         #    print(E[i])
 
         # decompose calculated tensor into its general tensor components, all possible Tensors
-        x = np.array( np.linalg.lstsq( np.column_stack([tmp.reshape(-1) for tmp in E]), Atest.reshape(-1), rcond=1.e-12)[0] )
+        x = np.real(np.array( np.linalg.lstsq( np.column_stack([tmp.reshape(-1) for tmp in E]), Atest.reshape(-1), rcond=1.e-12)[0] ))
+        norm = np.linalg.norm(x)
 
-        # 1. Normalize the first vector, only degenerate contributions
-        n = len(E)-len(indx)
-        norm = np.linalg.norm(x[:n])
+        # extract the mixing ratios and tensor elements
+        v1 = np.linalg.svd(np.array([[x[0], x[1]], [x[2], x[3]]]))[0][:,0]
+        vw = np.abs(np.sqrt(x[0]*x[1]))
+        xy = np.abs(np.sqrt(x[2]*x[3]))
 
-        if norm < 1e-18:
-            # pick an arbitrary unit vector as v1
-            v1 = np.zeros_like(x)
-            v1[0] = 1.0
-        else:
-            v1 = x / norm
-        #
+        print(x[0]*x[3], x[1]*x[2])
+        print(x[2], x[3])
+
+        print(x)
+        print(v1)
+        print(vw)
+        print(xy)
+        print(vw*v1[0], xy*v1[1])
+
+        #print(x)
 
         # 2. Build an orthonormal basis with v1 as first vector
         # Start with random matrix and insert v1
+        n = len(v1)
         M = np.random.randn(n, n) + 1j * np.random.randn(n, n)
-        M[0] = v1[:n]
+        M[0] = v1
 
         # QR gives orthonormal rows if we transpose
         Q = np.linalg.qr(M.T)[0]
@@ -211,13 +217,14 @@ def calcDegenerates(path, modes, labels, ramantensors):
 
         # 3. Construct degenerate Raman tensors and reconstruct original tensor, add all contributions back in
         degenerates = np.zeros((len(E),6,1), dtype=complex)
-        for j in range(len(indx)):
+        for j in range(len(modes)):
+            coeffs = np.array([V[j,0]*vw, V[j,0]*vw, V[j,1]*xy, V[j,1]*xy, x[-2], x[-1]])
             #if j == 0:
-            coeffs = np.concatenate([V[j], v1[n:]])*norm  # vector of length n
+            #coeffs = np.concatenate([V[j], v1])*norm  # vector of length n
             #else:
             #    coeffs = np.concatenate([V[j], np.zeros(len(x)-n)])*norm
             R_degen = sum(coeffs[k] * E[k] for k in range(len(E)))
-            #print(R_degen)
+            print(R_degen)
             degenerates[j] = [[R_degen[0,0]], [R_degen[1,1]], [R_degen[2,2]], [R_degen[0,1]], [R_degen[1,2]], [R_degen[0,2]]]
         #
 
