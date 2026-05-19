@@ -8,10 +8,10 @@ import numpy as np
 from numpy.typing import NDArray
 from spglib import get_symmetry_dataset
 from RamanLib import periodTable, getAcoustics, getRotations, getDegenerates, getDecomposition, getRamanSilent, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols
-from IR import calcIR, calcReflectance
+from IR import calcIR, writeIR, calcReflectance, writeReflectance
 from displace import calcdisplace
-from calcTensors import calcTensors
-from calcSpectrum import calcSpectrum
+from calcTensors import calcTensors, writeRaman
+from calcSpectrum import calcSpectrum, writeSpectrum, writeConstantRaman
 from plotSpectrum import plotSpectrum, plotIRspectrum, plotRspectrum
 from parserASE import ASEParser
 
@@ -82,6 +82,10 @@ class Phonon:
     ) -> None:
 
         self.version = "0.0.1"
+
+        ###############
+        # general setup
+        ###############
         if path.endswith("/"):
             self.path = path
         else:
@@ -90,7 +94,7 @@ class Phonon:
         self.file = file
 
         # just in case
-        modelist = np.array(modelist)
+        modelist = np.array(modelist, dtype=int)
 
         parser = ASEParser(self.path+self.file, modelist=modelist)
 
@@ -126,7 +130,7 @@ class Phonon:
         else:
             self.rotations = []
         #
-        self.modelist = [mode for mode in modelist if mode not in self.acoustics and mode not in self.rotations]
+        self.modelist = np.array([mode for mode in modelist if mode not in self.acoustics and mode not in self.rotations], dtype=int)
 
         if nosym == False and os.path.isfile(self.path+"FORCE_CONSTANTS"):
             self.set_symmetries(modelist)
@@ -166,6 +170,10 @@ class Phonon:
             print("[__init__]: LO correction not implemented, please switch off! Results may be unreliable")
         #
     #
+
+    ###########################
+    # Symmetry related fuctions
+    ###########################
     def set_symmetries(self, modelist):
         self._dataset = get_symmetry_dataset((self.basis, self.direct, [periodTable[element] for element in self.elements]), symprec=1.e-5)
         #self.pointgroup = str(self._dataset.pointgroup)
@@ -182,8 +190,8 @@ class Phonon:
         self.degenerates = getDegenerates(self.eigenfreqs, self.labels, prec=1e0)
         self.silent = getRamanSilent(self._modelist, self.labels, self.pointgroup)
         #self.modelist = [mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations]
-        self.IRmodelist = [mode for mode in modelist if mode not in self.acoustics and mode not in self.rotations]
-        self.modelist = [mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations and mode not in [x[1] for x in self.degenerates]]
+        self.IRmodelist = np.array([mode for mode in modelist if mode not in self.acoustics and mode not in self.rotations], dtype=int)
+        self.modelist = np.array([mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations and mode not in [x[1] for x in self.degenerates]], dtype=int)
         #
     #
     def print_decomposition(self):
@@ -222,32 +230,54 @@ class Phonon:
             IRSelection(self.pointgroup)
         #
     #
+
+    ########################
+    # Infrared spectroscopy
+    ########################
     def IR(self):
         parser = ASEParser(self.path+self.file, modelist=self.modelist)
         self.born = parser.get_born_charges()
         if np.all(self.born == 0):
             print("[IR]: ERROR, need effective charges")
         else:
-            calcIR(self.path, self.IRmodelist, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.masses, self.born, self.smearing)
+            self.IR_data = calcIR(self.path, self.IRmodelist, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.masses, self.born, self.smearing)
         #
+    #
+    def write_IR(self):
+        writeIR(self.path, self.IR_data)
     #
     def plot_IR(self, lualatex=False):
         plotIRspectrum(self.path, "IR.dat", lualatex)
     #
     def reflectance(self):
-        calcReflectance(self.path, "IR.dat")
+        self.reflectance_data = calcReflectance(self.IR_data)
+    #
+    def write_Reflectance(self):
+        writeReflectance(self.path, self.reflectance_data)
     #
     def plot_reflectance(self, lualatex=False):
         plotRspectrum(self.path, "Reflectance.dat", lualatex)
     #
+
+    ####################
+    # Raman spectroscopy
+    ####################
     def displace(self, scffile="scf.in"):
         calcdisplace(self.path, self.modelist, self.stepsize, self.code_out, self.eigenvecs, self._norms, self.basis, self._nat, self.elements, self.cartesian, scffile)
     #
     def tensors(self):
-        calcTensors(self.path, self.modelist, self.code_out, self.eigenfreqs, self._norms, self.basis, self.degenerates, self.labels, self.ramantensors, self.stepsize)
+        # format [mode_index][[w, xx, yy, zz, xy, yz, xz, perp, back]]
+        self.ramantensors_data = calcTensors(self.path, self.modelist, self.code_out, self.eigenfreqs, self._norms, self.basis, self.degenerates, self.labels, self.ramantensors, self.stepsize)
     #
+    def write_tensors(self):
+        writeRaman(self.path, self.modelist, self.eigenfreqs, self.ramantensors_data)
+
     def spectrum(self):
-        calcSpectrum(self.path, self.modelist, self.degenerates, self.acoustics, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.born, self.eps_inf, self.photon_freq, self.temperature, self.smearing, self.stokes, self.qdir, self.LOcorr)        
+        self.constantraman_data, self.ramanspectrum_data = calcSpectrum(self.path, self.modelist, self.degenerates, self.acoustics, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.born, self.eps_inf, self.photon_freq, self.temperature, self.smearing, self.stokes, self.qdir, self.LOcorr)        
+    #
+    def write_spectrum(self):
+        writeConstantRaman(self.path, self.constantraman_data, self.photon_freq, self.qdir)
+        writeSpectrum(self.path, self.photon_freq, self.ramanspectrum_data)
     #
     def plot_Raman(self, porto=["xx", "yy", "zz", "xy", "yz", "xz", "perp", "back"], lualatex=False):
         print("[plot_Raman]: Plotting Raman spectrum")

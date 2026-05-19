@@ -8,7 +8,7 @@
 import numpy as np
 from parserPhonopy import parsePhonopy
 from RamanLib import flatten, e_charge
-from calcTensors import placzeck_invs
+from calcTensors import placzeckInvs
 
 def LOTOassign(eigvecs1, eigvecs2):
     nat = int(len(eigvecs1)/3)

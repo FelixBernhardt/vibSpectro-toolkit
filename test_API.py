@@ -12,8 +12,8 @@ from RamanLib import analyzeDielectricTensor, analyzeRamanTensors
 path = "/home/felix/Forschung/sqs_00"
 #path = "/home/felixbernhardt/Forschung/sqs_00_allVASP/"
 #path = "/home/felixbernhardt/Forschung/Yassine/"
-test = Phonon(file="phonopy.yaml", path=path, born=False, qdir=(0,1,0), nosym=False, modelist=[7,8], smearing=5)
-#test = Phonon(file="OUTCAR", path=path, born=False, qdir=(0,1,0), nosym=False, modelist=range(1,31), smearing=5)
+#test = Phonon(file="phonopy.yaml", path=path, born=False, qdir=(0,1,0), nosym=False, modelist=[7,8], smearing=5)
+test = Phonon(file="OUTCAR", path=path, born=False, qdir=(0,1,0), nosym=False, modelist=range(1,31), smearing=5)
 #test = Phonon(file="OUTCAR", path=path, born=False, qdir=(1,0,0), nosym=True, modelist=[2,3,4,5,6,8,9,11,12,13,14,15,16,17,19,20,21,22,23,24,26,27], smearing=5)
 
 #print(test.ordering)
@@ -35,7 +35,12 @@ test = Phonon(file="phonopy.yaml", path=path, born=False, qdir=(0,1,0), nosym=Fa
 #test.IR()
 #test.plotIR(lualatex=False)
 #test.reflectance()
+#test.write_Reflectance()
 #test.plotReflectance()
 test.tensors()
-#test.spectrum()
-#test.plot_Raman(lualatex=False)
+test.write_tensors()
+#print(test.ramantensors_data)
+test.spectrum()
+#print(test.ramanspectrum_data[0])
+test.write_spectrum()
+test.plot_Raman(lualatex=False)

@@ -103,11 +103,13 @@ if __name__ == '__main__':
         ph.print_irselection()
         sys.exit(1)
 
-    #########
-    # IR
+    #######################
+    # Infrared spectroscopy
+    #######################
     if args.infrared == True:
         print("[__main__]: Calculating IR spectrum")
         ph.IR()
+        ph.write_IR()
 
     if args.plotIR == True:
         print("[__main__]: Plotting IR spectrum")
@@ -117,6 +119,7 @@ if __name__ == '__main__':
     if args.reflectance == True:
         print("[__main__]: Calculating Reflectance")
         ph.reflectance()
+        ph.write_Reflectance()
 
     if args.plotReflectance == True:
         print("[__main__]: Plotting Reflectance")
@@ -133,8 +136,9 @@ if __name__ == '__main__':
         print("[__main__]: LO correction not implemented, please switch off, exiting...")
         sys.exit(1)
 
-    ###########
-    # Raman
+    ####################
+    # Raman spectroscopy
+    ####################
     print("[__main__]: Calculating Raman modes "+str(ph.modelist))
 
     if args.displace == True:
@@ -145,6 +149,7 @@ if __name__ == '__main__':
     if args.tensors == True:
         print("[__main__]: Calculating Raman tensors")
         ph.tensors()
+        ph.write_tensors()
 
     if args.spectrum == True:
         print("[__main__]: Calculating Raman spectrum")
@@ -157,6 +162,5 @@ if __name__ == '__main__':
         else:
             ph.plot_Raman(porto=args.porto, lualatex=args.lualatex)
         #
-        
-    sys.exit(1)
+    #
 #

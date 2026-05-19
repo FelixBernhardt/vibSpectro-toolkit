@@ -17,7 +17,9 @@ def Lorentz_IR(hw, ab, gam=0.001):
     return erange, spectrum
 #
 
-def calcReflectance(path, file):
+def calcReflectance(IRdata):
+    """
+    parser for IR.dat file
     data = np.genfromtxt(path+file)
     w = np.array([x[0] for x in data])
     col = []
@@ -26,7 +28,14 @@ def calcReflectance(path, file):
         epsr = np.array([x[j+1] for x in data])
         tmp = []
         for i in range(len(w)):
-
+    """
+    w = np.array([x[0].real for x in IRdata])
+    col = []
+    for j in range(1,5):
+        epsi = np.array([x[j].imag for x in IRdata])
+        epsr = np.array([x[j].real for x in IRdata])
+        tmp = []
+        for i in range(len(w)):
             """
             omega   : array of angular frequencies [rad/s] (or use 2*pi*c / lambda)
             eps_ion : array of ionic dielectric contribution (scalar for chosen polarization)
@@ -46,16 +55,21 @@ def calcReflectance(path, file):
         col.append(tmp)
     #
 
+    print("[calcReflectance]: Done.")
+    return np.array([w, col[0], col[1], col[2], col[3]])
+#
+
+def writeReflectance(path, Rdata):
     # write dielectric function to file
     output_fh = open(path+"Reflectance.dat", "w")
     output_fh.write("# freq(cm-1)   E||x             E||y            E||z            avg\n")
-    for i in range(len(w)):
+    for i in range(len(Rdata[0])):
         output_fh.write("{:4.3f}         {:+4.3f}           {:+4.3f}           {:+4.3f}           {:+4.3f}\n".format(\
-            w[i], col[0][i], col[1][i], col[2][i], col[3][i]))
+            Rdata[0][i], Rdata[1][i], Rdata[2][i], Rdata[3][i], Rdata[4][i]))
     #
     output_fh.close()
     
-    print("[calcReflectance]: Done.")
+    print("[writeReflectance]: Done.")
 #
 
 
@@ -103,16 +117,25 @@ def calcIR(path, modelist, eigvals, eigvecs, basis, nat, masses, born, smearing)
     #
     #IR_Re = IR_Re/( 2 * np.pi * c_cm )**2
 
+    # write output
+    IRdata = np.array([w, [complex(IR_Re[0][i], IR_Im[0][i]) for i in range(len(w))],
+                          [complex(IR_Re[1][i], IR_Im[1][i]) for i in range(len(w))], 
+                          [complex(IR_Re[2][i], IR_Im[2][i]) for i in range(len(w))]])
+        
+    print("[calcIR]: Done.")
+    return IRdata
+#
+
+def writeIR(path, IRdata): 
     # write dielectric function to file
     output_fh = open(path+"IR.dat", "w")
     output_fh.write("# freq(cm-1)   E||x             E||y            E||z            avg\n")
     output_fh.write("#            Im    Re         Im    Re        Im    Re        Im    Re\n")
-    for i in range(len(w)):
+    for i in range(len(IRdata[0])):
         output_fh.write("{:4.3f}     {:+4.3f}  {:+4.3f}    {:+4.3f}  {:+4.3f}    {:+4.3f}  {:+4.3f}    {:+4.3f}  {:+4.3f}\n".format(\
-            w[i], IR_Im[0][i], IR_Re[0][i], IR_Im[1][i], IR_Re[1][i], IR_Im[2][i], IR_Re[2][i], 
-            1/3*(IR_Im[0][i]+IR_Im[1][i]+IR_Im[2][i]), 1/3*(IR_Re[0][i]+IR_Re[1][i]+IR_Re[2][i])))
+            IRdata[0][i].real, IRdata[1][i].imag, IRdata[1][i].real, IRdata[2][i].imag, IRdata[2][i].real, IRdata[3][i].imag, IRdata[3][i].real, 
+            1/3*(IRdata[1][i].imag+IRdata[2][i].imag+IRdata[2][i].imag), 1/3*(IRdata[1][i].real+IRdata[2][i].real+IRdata[2][i].real)))
     #
     output_fh.close()
-    
-    print("[calcIR]: Done.")
+    print("[writeIR]: Done.")
 #
