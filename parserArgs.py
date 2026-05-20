@@ -26,7 +26,7 @@ parser.add_argument("--temperature", type=float, default=300.0,\
                     help="The temperature used for calculating the spectrum (K).")
 parser.add_argument("--smearing", type=float, default=5.0,\
                     help="The smearing used for calculating the spectrum (cm^-1).")
-parser.add_argument("--stepsize", type=float, default=0.001,\
+parser.add_argument("--stepsize", type=float, default=0.01,\
                     help="The prefactor for the displacements used for generating the input files")
 parser.add_argument("--porto", type=str, default="",\
                     help="The polarization used when plotting the spectrum using porto's notation\

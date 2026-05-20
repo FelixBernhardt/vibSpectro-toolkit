@@ -95,7 +95,7 @@ if __name__ == '__main__':
         qdir = args.qdir,
         LOcorr = args.LOcorr )
 
-    if args.analysis == True and args.symmetry == True:
+    if args.analysis == True and args.no_symmetry == False:
         print("[__main__]: Analyzing symmetries")
         ph.print_ramantensors()
         ph.print_dielectrictensor()

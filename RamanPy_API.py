@@ -71,7 +71,7 @@ class Phonon:
         modelist: NDArray[int] = None,
         nosym: bool = False,
         molecule: bool = False,
-        stepsize: float = 0.001,
+        stepsize: float = 0.01,
         smearing: float = 5.0,
         temperature: float = 300,
         stokes: str = "stokes",
@@ -94,7 +94,7 @@ class Phonon:
         self.file = file
 
         # just in case
-        modelist = np.array(modelist, dtype=int)
+        modelist = np.array(modelist)
 
         parser = ASEParser(self.path+self.file, modelist=modelist)
 
@@ -111,7 +111,7 @@ class Phonon:
         self.cartesian = atoms.get_positions()
         self.direct = atoms.get_scaled_positions()
         self.basis = atoms.get_cell()
-        self._norms = np.array([np.linalg.norm(self.eigenvecs[i-1]) for i in range(len(self.eigenvecs))])
+        self._norms = np.array([np.linalg.norm(self.eigenvecs[mode-1]) for mode in modelist])
         self.masses = atoms.get_masses()
 
         # check the mode's ordering
@@ -136,7 +136,7 @@ class Phonon:
             self.set_symmetries(modelist)
         else:
             if nosym == False:
-                print("[__init__]: Could not find FORCE_CONSTANTS in"+self.path+". Symmetry analysis is disabled.")
+                print("[__init__]: Could not find FORCE_CONSTANTS in "+self.path+". Symmetry analysis is disabled.")
             #
             self._dataset = []
             self.pointgroup = "",
