@@ -8,10 +8,11 @@ import numpy as np
 from numpy.typing import NDArray
 from spglib import get_symmetry_dataset
 from RamanLib import periodTable, getAcoustics, getRotations, getDegenerates, getDecomposition, getRamanSilent, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols
+from Datastruct import writeRaman, writeSpectrum, writeConstantRaman
 from IR import calcIR, writeIR, calcReflectance, writeReflectance
 from displace import calcdisplace
-from calcTensors import calcTensors, writeRaman
-from calcSpectrum import calcSpectrum, writeSpectrum, writeConstantRaman
+from calcTensors import calcTensors
+from calcSpectrum import calcSpectrum
 from plotSpectrum import plotSpectrum, plotIRspectrum, plotRspectrum
 from parserASE import ASEParser
 
@@ -65,6 +66,7 @@ class Phonon:
 
     def __init__(
         self,
+        name: str = "MySystem",
         path: str = "./",
         file: str = "phonopy.yaml",
         code_out: str = "VASP",
@@ -86,6 +88,7 @@ class Phonon:
         ###############
         # general setup
         ###############
+        self.name = name
         if path.endswith("/"):
             self.path = path
         else:
@@ -139,11 +142,11 @@ class Phonon:
                 print("[__init__]: Could not find FORCE_CONSTANTS in "+self.path+". Symmetry analysis is disabled.")
             #
             self._dataset = []
-            self.pointgroup = "",
-            self.ramantensors = [],
-            self.dielectrictensor = [],
+            self.pointgroup = ""
+            self.ramantensors = []
+            self.dielectrictensor = []
             self._labels_tmp = []
-            self.labels = []
+            self.labels = ["A1" for x in range(len(modelist))]
             self.degenerates = []
             self.silent = []
             self.IRmodelist = self.modelist
@@ -273,7 +276,7 @@ class Phonon:
         writeRaman(self.path, self.modelist, self.eigenfreqs, self.ramantensors_data)
 
     def spectrum(self):
-        self.constantraman_data, self.ramanspectrum_data = calcSpectrum(self.path, self.modelist, self.degenerates, self.acoustics, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.born, self.eps_inf, self.photon_freq, self.temperature, self.smearing, self.stokes, self.qdir, self.LOcorr)        
+        self.constantraman_data, self.ramanspectrum_data = calcSpectrum(self.path, self.ramantensors_data, self.modelist, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.born, self.eps_inf, self.photon_freq, self.temperature, self.smearing, self.stokes, self.qdir, self.LOcorr)        
     #
     def write_spectrum(self):
         writeConstantRaman(self.path, self.constantraman_data, self.photon_freq, self.qdir)

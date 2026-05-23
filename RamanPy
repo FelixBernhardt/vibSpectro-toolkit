@@ -144,7 +144,7 @@ if __name__ == '__main__':
     if args.displace == True:
         print("[__main__]: Displacing modes")
         ph.displace(args.QEinputfile)
-        sys.exit(1)
+        sys.exit(0)
     
     if args.tensors == True:
         print("[__main__]: Calculating Raman tensors")
@@ -153,7 +153,8 @@ if __name__ == '__main__':
 
     if args.spectrum == True:
         print("[__main__]: Calculating Raman spectrum")
-        ph.spectrum() 
+        ph.spectrum()
+        ph.write_spectrum() 
     
     if args.plotRaman == True:
         print("[__main__]: Plotting Raman spectrum", args.porto)

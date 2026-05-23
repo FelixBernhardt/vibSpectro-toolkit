@@ -75,24 +75,6 @@ def calcRaman(w, Im1, Re1, Im2, Re2, stepsize, basis):
     return np.array(ramantensor)
 #
 
-def writeRaman(path, modes, eigvals, ramantensors):
-    for j in range(len(modes)):
-        mode = modes[j]
-        eigval = eigvals[j]
-        ramantensor = ramantensors[j]
-        outfile = path+"Ramantensors/alpha_"+str(mode)+".dat"
-        f = open(outfile, "w")
-        f.write("# Raman tensor in 10^(-30) Cm^2/V\n")
-        f.write("# mode: " +str(mode)+"   phonon freq: "+str(eigval)+"\n")
-        f.write("# omega(eV)    xx        yy        zz        xy        yz        xz      perp      back\n")
-        for i in range(len(ramantensor)):
-            f.write("{:5.5f} {:.3e} {:.3e} {:.3e} {:.3e} {:.3e} {:.3e} {:.3e} {:.3e}\n"\
-                    .format(ramantensor[i][0], ramantensor[i][1], ramantensor[i][2], ramantensor[i][3], ramantensor[i][4], ramantensor[i][5], ramantensor[i][6], ramantensor[i][7], ramantensor[i][8]))
-        #
-        f.close()
-    #
-#
-
 def calcDegenerates(path, modes, labels, ramantensors, ramandata, eigval):
     # not used or tested !!
     # this might be mathematically impossible !!

@@ -40,7 +40,7 @@ def broadenData(raman, w0, col, temp, smear, stokes):
     return np.array([w, prefactor*Spectrum])
 #
 
-def getConstantRaman(path, filelist, modelist, eigvals, eigvecs, w0, basis, nat, born, eps_inf, qdir, LOcorr):
+def getConstantRaman(path, ramantensors, modelist, eigvals, eigvecs, w0, basis, nat, born, eps_inf, qdir, LOcorr):
     # apply LO correction if needed
     if LOcorr == True:
         eigvalsLO_all = getLOFreqs(path, eigvecs, eigvals, qdir)
@@ -56,9 +56,19 @@ def getConstantRaman(path, filelist, modelist, eigvals, eigvecs, w0, basis, nat,
         LOTerm = np.zeros(8)
     #
     
-    # read "alpha_X.dat" and collect raman-shift at laser-wavelength w0
+    # read ramantensors and collect raman-shift at laser-wavelength w0
     Raman = []
-    eigvals = []
+    counter = 0
+    for mode in modelist:
+        w_list = np.real(ramantensors[counter][:,0])
+        alpha = []
+
+        for i in range(1, 9):
+            alpha.append(np.abs(np.interp([w0], w_list, ramantensors[counter][:,i]))[0] + LOTerm[i-1])
+        #
+        Raman.append(alpha)
+        counter += 1
+    """
     for file in filelist:
         data = np.genfromtxt(file, dtype=complex)
         with open(file) as f:
@@ -74,62 +84,24 @@ def getConstantRaman(path, filelist, modelist, eigvals, eigvecs, w0, basis, nat,
         #
         Raman.append(alpha)
     #
+    """
 
     if LOcorr == True:
         eigvals = np.real(eigvalsLO)
     #
     tmp = np.array(Raman)
-    raman = np.insert(tmp, 0, eigvals, axis=1)
+    raman = np.insert(tmp, 0, [eigvals[mode-1] for mode in modelist], axis=1)
 
     return np.array(raman)
 #
 
-def writeConstantRaman(path, raman, w0, qdir):
-    print("[writeConstantRaman]: Writing Raman_"+portoq[qdir]+"_"+str(w0)+"eV.dat")
-    f = open(path+"Raman_"+portoq[qdir]+"_"+str(w0)+"eV.dat",'w')
-    f.write("# Raman tensors (10^(-30) Cm^2/V) at "+str(w0)+"eV laser-wavelength and q-direction "+str(qdir)+"\n")
-    f.write("# freq/cm-1        xx         yy          zz        xy        yz        xz        perp        back\n")
-    np.savetxt(f, raman, fmt='%4.8f')
-    f.close()
-    print("[writeConstantRaman]: Done.")
-#
-
-def writeSpectrum(path, w0, spectrum):
-    print("[writeSpectrum]: Writing Raman spectrum.")
-    f = open(path+"Intensity_"+str(w0)+"eV.dat",'w')
-    f.write("# Raman intensity at "+str(w0)+"eV laser-wavelength\n")
-    f.write("# freq/cm-1        xx         yy          zz        xy        yz        xz       perp       back\n")
-    for i in range(len(spectrum[0][0])):
-        f.write("{:5.5f} {:.3e} {:.3e} {:.3e} {:.3e} {:.3e} {:.3e} {:.3e} {:.3e}\n"\
-        .format(spectrum[0][0][i], spectrum[0][1][i], spectrum[1][1][i], spectrum[2][1][i], spectrum[3][1][i], spectrum[4][1][i], spectrum[5][1][i], spectrum[6][1][i], spectrum[7][1][i]))
-    f.close()
-    print("[writeSpectrum]: Done.")
-#
-
-
-def calcSpectrum(path, modelist_reduced, degenerates, acoustics, eigvals, eigvecs, basis, nat, born, eps_inf, w0, temp, smear, stokes, qdir, LOcorr):
-    # add the degenerate modes back in
-    modelist = []
-    for mode in modelist_reduced:
-        if mode not in modelist and mode not in acoustics:
-            modelist.append(mode)
-        #
-    for mode in flatten(degenerates):
-        if mode not in modelist and mode not in acoustics:
-            modelist.append(mode)
-        #
-    #
-    modelist = np.sort(np.array(modelist))
-    filelist = []
-    for mode in modelist:
-        filelist.append(path+"Ramantensors/alpha_"+str(mode)+".dat")
-
+def calcSpectrum(path, ramantensors, modelist, eigvals, eigvecs, basis, nat, born, eps_inf, w0, temp, smear, stokes, qdir, LOcorr):
     print("[calcSpectrum]: Calculating Raman spectrum of modes "+str(modelist))
     #print("[calcSpectrum]: Note: check e.g. https://www.cryst.ehu.es/cryst/polarizationselrules.html for selection rules")
     print("[calcSpectrum]: Laser frequency set to "+str(w0)+"eV")
     print("[calcSpectrum]: Temperature set to "+str(temp)+"K")
     print("[calcSpectrum]: Smearing width set to "+str(smear)+"cm^-1")
-    raman = getConstantRaman(path, filelist, modelist, eigvals, eigvecs, w0, basis, nat, born, eps_inf, qdir, LOcorr)
+    raman = getConstantRaman(path, ramantensors, modelist, eigvals, eigvecs, w0, basis, nat, born, eps_inf, qdir, LOcorr)
     spectrum = []
     for col in range(8):
         spectrum.append(broadenData(raman, w0, col, temp, smear, stokes))
