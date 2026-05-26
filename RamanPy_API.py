@@ -7,9 +7,9 @@ import os
 import numpy as np
 from numpy.typing import NDArray
 from spglib import get_symmetry_dataset
-from RamanLib import periodTable, getAcoustics, getRotations, getDegenerates, getDecomposition, getRamanSilent, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols
-from Datastruct import writeRaman, writeSpectrum, writeConstantRaman
-from IR import calcIR, writeIR, calcReflectance, writeReflectance
+from Symmetries import periodTable, getAcoustics, getRotations, getDegenerates, getDecomposition, getRamanSilent, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols
+from Datastruct import writeRaman, writeRamanSpectrum, writeConstantRaman, writeIRSpectrum, writeReflectanceSpectrum
+from IR import calcIR, calcReflectance
 from displace import calcdisplace
 from calcTensors import calcTensors
 from calcSpectrum import calcSpectrum
@@ -109,27 +109,29 @@ class Phonon:
         elif np.any(modelist > 3*self._nat):
             print("[__init__]: invalid mode specified, resorting to default modelist")
             modelist = self._modelist
-        self.eigenfreqs, self.eigenvecs = parser.get_vibrations()
+        eigenfreqs, eigenvecs = parser.get_vibrations()
         self.elements = atoms.get_chemical_symbols()
         self.cartesian = atoms.get_positions()
         self.direct = atoms.get_scaled_positions()
         self.basis = atoms.get_cell()
-        self._norms = np.array([np.linalg.norm(self.eigenvecs[mode-1]) for mode in modelist])
         self.masses = atoms.get_masses()
 
         # check the mode's ordering
-        if np.all(np.diff(self.eigenfreqs) >= 0):
+        if np.all(np.diff(eigenfreqs) >= 0):
             self.ordering = "ascending"
-        elif np.all(np.diff(self.eigenfreqs) <= 0):
+        elif np.all(np.diff(eigenfreqs) <= 0):
             self.ordering = "descending"
         else:
             print("[__init__]: Could not detect ordering of frequencies !?")
         #
+        self.eigenvecs = dict(enumerate(eigenvecs, start=1))
+        self.eigenfreqs = dict(enumerate(eigenfreqs, start=1))
+        self._norms = dict(zip(modelist, np.array([np.linalg.norm(self.eigenvecs[mode]) for mode in modelist])))
 
-        self.acoustics = getAcoustics(self.eigenvecs, self.eigenfreqs, self.masses)
+        self.acoustics = getAcoustics(modelist, self.eigenvecs, self.eigenfreqs, self.masses)
         self.molecule = molecule
         if self.molecule == True:
-            self.rotations = getRotations(self.masses, self.cartesian, self.eigenvecs)
+            self.rotations = getRotations(modelist, self.masses, self.cartesian, self.eigenvecs)
         else:
             self.rotations = []
         #
@@ -146,10 +148,11 @@ class Phonon:
             self.ramantensors = []
             self.dielectrictensor = []
             self._labels_tmp = []
-            self.labels = ["A1" for x in range(len(modelist))]
+            self.labels = dict(enumerate(["A1" for x in range(len(modelist))], start=1))
             self.degenerates = []
             self.silent = []
             self.IRmodelist = self.modelist
+            self.Ramanmodelist = self.modelist
         #
         if LOcorr == True or born == True:
             self.born = parser.get_born_charges()
@@ -186,14 +189,15 @@ class Phonon:
         self._labels_tmp = getIrrepsSymbols(self.path, self.basis, self.direct, self.elements, self.pointgroup)
         #
         if self.ordering == "ascending":
-            self.labels = [self._labels_tmp[i-1] for i in self._modelist]
+            self.labels = dict(enumerate([self._labels_tmp[i-1] for i in self._modelist], start=1))
         elif self.ordering == "descending":
-            self.labels = [self._labels_tmp[3*self._nat-i] for i in self._modelist]
+            self.labels = dict(enumerate([self._labels_tmp[3*self._nat-i] for i in self._modelist], start=1))
         #    
-        self.degenerates = getDegenerates(self.eigenfreqs, self.labels, prec=1e0)
+        self.degenerates = getDegenerates(self.modelist, self.eigenfreqs, self.labels, prec=1e0)
         self.silent = getRamanSilent(self._modelist, self.labels, self.pointgroup)
         #self.modelist = [mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations]
         self.IRmodelist = np.array([mode for mode in modelist if mode not in self.acoustics and mode not in self.rotations], dtype=int)
+        self.Ramanmodelist = np.array([mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations], dtype=int)
         self.modelist = np.array([mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations and mode not in [x[1] for x in self.degenerates]], dtype=int)
         #
     #
@@ -201,7 +205,7 @@ class Phonon:
         if self.pointgroup == "":
             print("[print_ramantensors]: ERROR, need pointgroup")
         else:
-            labellist = [self.labels[i] for i in range(len(self.labels)) if self._modelist[i] not in self.acoustics and self._modelist[i] not in self.rotations]
+            labellist = [self.labels[mode] for mode in self.modelist if mode not in self.acoustics and mode not in self.rotations]
             getDecomposition(labellist)
         #
     #
@@ -243,23 +247,23 @@ class Phonon:
         if np.all(self.born == 0):
             print("[IR]: ERROR, need effective charges")
         else:
-            self.IR_data = calcIR(self.path, self.IRmodelist, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.masses, self.born, self.smearing)
+            self.IR_data = calcIR(self.IRmodelist, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.masses, self.born, self.smearing)
         #
     #
     def write_IR(self):
-        writeIR(self.path, self.IR_data)
+        writeIRSpectrum(self)
     #
     def plot_IR(self, lualatex=False):
-        plotIRspectrum(self.path, "IR.dat", lualatex)
+        plotIRspectrum(self.IR_data, self.path, lualatex)
     #
     def reflectance(self):
         self.reflectance_data = calcReflectance(self.IR_data)
     #
     def write_Reflectance(self):
-        writeReflectance(self.path, self.reflectance_data)
+        writeReflectanceSpectrum(self)
     #
     def plot_reflectance(self, lualatex=False):
-        plotRspectrum(self.path, "Reflectance.dat", lualatex)
+        plotRspectrum(self.reflectance_data, self.path, lualatex)
     #
 
     ####################
@@ -276,16 +280,16 @@ class Phonon:
         writeRaman(self.path, self.modelist, self.eigenfreqs, self.ramantensors_data)
 
     def spectrum(self):
-        self.constantraman_data, self.ramanspectrum_data = calcSpectrum(self.path, self.ramantensors_data, self.modelist, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.born, self.eps_inf, self.photon_freq, self.temperature, self.smearing, self.stokes, self.qdir, self.LOcorr)        
+        self.constantraman_data, self.ramanspectrum_data = calcSpectrum(self.path, self.ramantensors_data, self.modelist, self.Ramanmodelist, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.born, self.eps_inf, self.photon_freq, self.temperature, self.smearing, self.stokes, self.qdir, self.LOcorr)        
     #
     def write_spectrum(self):
         writeConstantRaman(self.path, self.constantraman_data, self.photon_freq, self.qdir)
-        writeSpectrum(self.path, self.photon_freq, self.ramanspectrum_data)
+        writeRamanSpectrum(self)
     #
     def plot_Raman(self, porto=["xx", "yy", "zz", "xy", "yz", "xz", "perp", "back"], lualatex=False):
         print("[plot_Raman]: Plotting Raman spectrum")
         for pt in porto:
-            plotSpectrum(self.path, self.photon_freq, pt, self.qdir, lualatex)
+            plotSpectrum(self.ramanspectrum_data, self.path, self.photon_freq, pt, self.qdir, lualatex)
         #
         print("[plot_Raman]: Done.") 
     #

@@ -6,7 +6,7 @@
 
 import os, re
 import numpy as np
-from RamanLib import eps0
+from Symmetries import eps0
 
 # Print iterations progress
 def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
@@ -142,14 +142,20 @@ def calcDegenerates(path, modes, labels, ramantensors, ramandata, eigval):
 
     # orthonormalization, E holds the basis matrizes that the calculated Ramantensor decomposes into, includes possible mode-mixing
     M = np.column_stack([R.reshape(-1) for R in Rb])
+    normsE = [np.linalg.norm(x) for x in Rb]
     U = np.linalg.svd( M, full_matrices=False)[0]
     E = []
     for i in range(len(U[0])):
         E.append(U[:, i].reshape(3,3))
     #
 
+    #print(Rb)
+    #print(E)
+
+
     # reorder E, here manually
-    E = [E[-3], E[0], E[1], E[-2], E[2], E[-1]]
+    #E = [E[-3], E[0], E[1], E[-2], E[2], E[-1]]
+    E = [Rb[2], Rb[4], Rb[3], Rb[5], Rb[0], Rb[1]]
 
     # get the calculated, degenerate raman tensor
     data = ramandata
@@ -161,8 +167,8 @@ def calcDegenerates(path, modes, labels, ramantensors, ramandata, eigval):
 
     w = []
     I = []
-    for i in [10]:
-    #for i in range(len(data)):
+    #for i in [10]:
+    for i in range(len(data)):
         w.append(np.real(data[i,0]))
         Atest = np.zeros((3,3), dtype=complex)
         Atest[0,0] = data[i,1]
@@ -174,35 +180,38 @@ def calcDegenerates(path, modes, labels, ramantensors, ramandata, eigval):
         Atest[1,0] = Atest[0,1]
         Atest[2,1] = Atest[1,2]
         Atest[2,0] = Atest[0,2]
+        Atest = np.nan_to_num(Atest, nan=0.0)
 
         #print(Atest)
         #for i in range(len(E)):
         #    print(E[i])
 
+        #print(Atest)
         # decompose calculated tensor into its general tensor components, all possible Tensors
-        x = np.real(np.array( np.linalg.lstsq( np.column_stack([tmp.reshape(-1) for tmp in E]), Atest.reshape(-1), rcond=1.e-12)[0] ))
-        norm = np.linalg.norm(x)
-
-        # extract the mixing ratios and tensor elements
-        v1 = np.linalg.svd(np.array([[x[0], x[1]], [x[2], x[3]]]))[0][:,0]
-        vw = np.abs(np.sqrt(x[0]*x[1]))
-        xy = np.abs(np.sqrt(x[2]*x[3]))
-
-        #print(x[0]*x[3], x[1]*x[2])
-        #print(x[2], x[3])
-
+        x = np.real(np.array( np.linalg.lstsq( np.column_stack([tmp.reshape(-1) for tmp in E]), Atest.reshape(-1), rcond=1.e-5)[0] ))
         #print(x)
+        normx = np.linalg.norm(x[:4])
+        #print(x[:4])
+        
+        # normalization of decomposition components
+        r = np.sqrt(x[0]**2+x[1]**2)
+        v1 = np.array([x[0]/r * normx, x[1]/r * normx])
         #print(v1)
-        #print(vw)
-        #print(xy)
-        #print(vw*v1[0], xy*v1[1])
 
-        #print(x)
+        # construct Raman tensors in high symmetry form
+        #print(E)
+        degenerates = np.zeros((len(modes),9,1), dtype=complex)
+        for j in range(len(modes)):
+            R_degen = v1[0]*E[j*2] + v1[1]*E[j*2+1]
+            degenerates[j] = [[data[i,0]], [R_degen[0,0]], [R_degen[1,1]], [R_degen[2,2]], [R_degen[0,1]], [R_degen[1,2]], [R_degen[0,2]], [data[i,7]], [data[i,8]]]
+        #
 
+
+        """
         # 2. Build an orthonormal basis with v1 as first vector
         # Start with random matrix and insert v1
         n = len(v1)
-        M = np.random.randn(n, n) + 1j * np.random.randn(n, n)
+        M = np.random.randn(n, n)
         M[0] = v1
 
         # QR gives orthonormal rows if we transpose
@@ -210,43 +219,32 @@ def calcDegenerates(path, modes, labels, ramantensors, ramandata, eigval):
         V = Q.T   # rows are orthonormal vectors in coefficient space
 
         # 3. Construct degenerate Raman tensors and reconstruct original tensor, add all contributions back in
-        degenerates = np.zeros((len(E),6,1), dtype=complex)
+        degenerates = np.zeros((len(modes),9,1), dtype=complex)
         for j in range(len(modes)):
-            coeffs = np.array([V[j,0]*vw, V[j,0]*vw, V[j,1]*xy, V[j,1]*xy, x[-2], x[-1]])
+            coeffs = np.array([V[j,0]*x[0], V[j,0]*x[1], V[j,1]*x[2], V[j,1]*x[3], x[-2], x[-1]])
             #if j == 0:
             #coeffs = np.concatenate([V[j], v1])*norm  # vector of length n
             #else:
             #    coeffs = np.concatenate([V[j], np.zeros(len(x)-n)])*norm
             R_degen = sum(coeffs[k] * E[k] for k in range(len(E)))
             #print(R_degen)
-            degenerates[j] = [[R_degen[0,0]], [R_degen[1,1]], [R_degen[2,2]], [R_degen[0,1]], [R_degen[1,2]], [R_degen[0,2]]]
+            degenerates[j] = [[data[i,0]], [R_degen[0,0]], [R_degen[1,1]], [R_degen[2,2]], [R_degen[0,1]], [R_degen[1,2]], [R_degen[0,2]], [data[i,7]], [data[i,8]]]
         #
+        """
 
         I.append(degenerates)
     #
-    I = np.array(I, dtype=complex)
+    #print(np.shape(I))
+    I = np.swapaxes(np.array(I, dtype=complex), 1, 3)
+    I = np.swapaxes(np.array(I, dtype=complex), 0, 1)
+    #print(np.shape(I))
 
-    # write to file
-    for j in range(0,len(modes)):
-        outfile = path+"Ramantensors/alpha_"+str(modes[j])+"_degen.dat"
-        f = open(outfile, "w")
-        f.write("# Raman tensor in 10^(-30) Cm^2/V\n")
-        f.write("# mode: " +str(modes[j])+"   phonon freq: "+str(eigval)+"\n")
-        f.write("# omega(eV)    xx        yy        zz        xy        yz        xz      perp      back\n")
-
-        for i in range(len(w)):
-            perp, back = placzeckInvs( I[i][j], 1)
-            f.write("{:5.5f} {:.3e} {:.3e} {:.3e} {:.3e} {:.3e} {:.3e} {:.3f} {:.3f}\n"\
-                .format(w[i], I[i][j][0][0], I[i][j][1][0], I[i][j][2][0], I[i][j][3][0], I[i][j][4][0], I[i][j][5][0], perp, back))
-            #
-        #
-        f.close()
-    #
+    return I[0,:,:,:]
 #
         
 def calcTensors(path, modelist, program, eigvals, norms, basis, degenerates, labels, ramantensors, stepsize):
     disps = [-1, 1]
-    ramantensor = []
+    ramantensor = {}
 
     print("[calcTensors]: Calculating Raman tensors of modes " + str(modelist))
     if os.path.isdir(path+"Ramantensors") == False:
@@ -254,47 +252,38 @@ def calcTensors(path, modelist, program, eigvals, norms, basis, degenerates, lab
     #
     if program == "VASP":
         from parserVASP import getOpticsVASP
-        iteration = 0
         for mode in modelist:
-            #if len(modelist) > 10:
-            #    printProgressBar(iteration, len(modelist)-1)
-            #
-
-            eigval = eigvals[mode-1]
-            norm = norms[mode-1]
+            eigval = eigvals[mode]
             w1, Im1, Re1 = getOpticsVASP(path+"displacements/mode"+str(mode)+"_"+str(disps[0])+"/vasprun.xml")
             w2, Im2, Re2 = getOpticsVASP(path+"displacements/mode"+str(mode)+"_"+str(disps[1])+"/vasprun.xml")
 
-            #print("[calcTensors]: Calculating mode "+str(mode))
             w, Im1, Re1, Im2, Re2 = alignOmega(w1, w2, Im1, Re1, Im2, Re2)
-            ramantensor.append(calcRaman(w, Im1, Re1, Im2, Re2, stepsize, basis))
-            iteration += 1
+            ramantensor[mode] = calcRaman(w, Im1, Re1, Im2, Re2, stepsize, basis)
 
             if mode in [x[0] for x in degenerates]:
-                calcDegenerates(path, [mode, mode+1], labels, ramantensors, ramantensor[-1], eigval)
+                degeneratetensors = calcDegenerates(path, [mode, mode+1], labels, ramantensors, ramantensor[mode], eigval)
+                counter = 0
+                for degen in [mode, mode+1]:
+                    ramantensor[degen] = degeneratetensors[:,:,counter]
+                    counter += 1
             #
         #
         print("[calcTensors]: Done.")
-        return np.array(ramantensor)
+        return ramantensor
     elif program == "QE":
         from parserQE import getOpticsQE
         iteration = 0
         for mode in modelist:
-            if len(modelist) > 10:
-                printProgressBar(iteration, len(modelist)-1)
-            #
-            eigval = eigvals[mode-1]
-            norm = norms[mode-1]
+            eigval = eigvals[mode]
             w1, Im1, Re1 = getOpticsQE(path+"displacements/mode"+str(mode)+"_"+str(disps[0]))
             w2, Im2, Re2 = getOpticsQE(path+"displacements/mode"+str(mode)+"_"+str(disps[1]))
 
-            #print("[calcTensors]: Calculating mode "+str(mode))
             w, Im1, Re1, Im2, Re2 = alignOmega(w1, w2, Im1, Re1, Im2, Re2)
             ramantensor.append(calcRaman(path, mode, eigval, w, Im1, Re1, Im2, Re2, stepsize, basis))
             iteration += 1
         #
         print("[calcTensors]: Done.")
-        return np.array(ramantensor)
+        return ramantensor
     else:
         print("[calcTensors]: Format not implemented.")
     #

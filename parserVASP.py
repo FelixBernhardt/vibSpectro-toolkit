@@ -8,7 +8,7 @@ import re
 import numpy as np
 import xml.etree.ElementTree as ET
 from typing import List, Dict
-from RamanLib import flatten
+from Symmetries import flatten
 
 def T(m):
     p = [[ m[i][j] for i in range(len( m[j] )) ] for j in range(len( m )) ]

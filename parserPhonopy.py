@@ -7,7 +7,7 @@
 import os
 import numpy as np
 import yaml
-from RamanLib import portoq
+from Symmetries import portoq
 
 """
 unit conventions exported from phonopy documentation at https://phonopy.github.io/phonopy/interfaces.html

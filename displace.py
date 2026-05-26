@@ -22,9 +22,9 @@ def calcdisplace(path, modelist, stepsize, program, eigvecs, norms, basis, nat, 
     #
     for mode in modelist:
         
-        eigvec = np.real(eigvecs[mode-1])
+        eigvec = np.real(eigvecs[mode])
         
-        norm = norms[mode-1]
+        norm = norms[mode]
         for disp in disps:
             file=path+"displacements/mode"+str(mode)+"_"+str(disp)
             if os.path.isdir(file) == False:

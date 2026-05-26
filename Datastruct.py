@@ -1,22 +1,20 @@
 import numpy as np
+from Symmetries import portoq
 
 ####################
 # write data in yaml-style format
 ####################
-def data(Phonon):
-    yamlData = {"System": Phonon.name,
-        "Pointgroup": Phonon.pointgroup,
-        "Lattice": Phonon.basis.tolist(),
-        "Points": [Phonon.elements, Phonon.cartesian],
-        #"Born": [self.elements, self.born]
-    }
-
-    return yamlData
-#
-
 def writeData(Phonon):
     lines = []
     lines.append("System: " + Phonon.name)
+    lines.append("Units:")
+    lines.append("- Length: angstrom")
+    lines.append("- Coordinates: direct")
+    lines.append("- Mass: a.m.u")
+    lines.append("- Frequency: cm⁻1")
+    lines.append("- Phonon_Eigenvectors: cartesian")
+    lines.append("- Charges: e")
+
     lines.append("Source: " +Phonon.path+Phonon.file)
     if Phonon.file == "phonopy.yaml":
         lines.append("        "+Phonon.path+"qpoints.yaml")
@@ -30,7 +28,7 @@ def writeData(Phonon):
     
     lines.append("Lattice:") 
     for j in range(3):
-        lines.append("- [ {: .6f},  {: .6f},  {: .6f}]".format(Phonon.basis[j][0], Phonon.basis[j][1], Phonon.basis[j][2]))
+        lines.append("- [ {: .6f},  {: .6f},  {: .6f} ]".format(Phonon.basis[j][0], Phonon.basis[j][1], Phonon.basis[j][2]))
     lines.append("Points:")
     for atom in range(Phonon._nat):
         lines.append("- Symbol: "+Phonon.elements[atom]+" # "+str(atom+1))
@@ -39,11 +37,11 @@ def writeData(Phonon):
     
     lines.append("Modes:")
     for mode in Phonon.modelist:
-        lines.append("- # "+str(mode)+" ("+Phonon.labels[mode-1] +"):")
-        lines.append("- Frequency: {: .6f}".format(Phonon.eigenfreqs[mode-1]))
+        lines.append("- # "+str(mode)+" ("+Phonon.labels[mode] +"):")
+        lines.append("- Frequency: {: .6f}".format(Phonon.eigenfreqs[mode]))
         for atom in range(Phonon._nat):
-            lines.append("  - [{: .6f},  {: .6f},  {: .6f} ]".format(Phonon.eigenvecs[mode-1][atom][0], Phonon.eigenvecs[mode-1][atom][1], Phonon.eigenvecs[mode-1][atom][2]))
-    
+            lines.append("  - [ {: .6f},  {: .6f},  {: .6f} ]".format(Phonon.eigenvecs[mode][atom][0], Phonon.eigenvecs[mode][atom][1], Phonon.eigenvecs[mode][atom][2]))
+
     if np.any(Phonon.born != 0):
         lines.append("Born:")
         for atom in range(Phonon._nat):
@@ -59,32 +57,37 @@ def writeData(Phonon):
     #
 #
 
+#######
+# Raman
+#######
+
 def writeRaman(Phonon):
-    counter = 0
     if Phonon.code_out == "VASP":
         outfile = "vasprun.xml"
     elif Phonon.code_out == "QE":
         outfile = "epsilon.out"
     #
 
-    for mode in Phonon.modelist:
+    for mode in Phonon.Ramanmodelist:
         lines = []
         lines.append("System: " + Phonon.name)
         lines.append("Source: " + Phonon.path +"displacements/mode" + str(mode) + "_1/" + outfile)
         lines.append("        " + Phonon.path +"displacements/mode" + str(mode) + "_-1/" + outfile)
-        lines.append("Mode: " + str(mode) + "(" + Phonon.labels[mode-1] + ")")
+        lines.append("Units:")
+        lines.append("- Frequency: cm⁻1")
+        lines.append("- Laser_Frequency: eV")
+        lines.append("- Raman_Tensor: 10⁻30 Cm^2/V")
+        lines.append("Mode: " + str(mode) + "(" + Phonon.labels[mode] + ")")
         lines.append("- Frequency: {: .6f}".format(Phonon.eigenfreqs[mode-1]))
-        lines.append("- Raman_tensor:")
+        lines.append("- Raman_Tensor:")
         
-        for i in range(len(Phonon.ramantensors_data[counter])):
-            lines.append("  - Laser_frequency: {: .6f}".format(Phonon.ramantensors_data[counter][i][0].real))
-            lines.append("    - [ {: .6f},  {: .6f},  {: .6f} ]".format(Phonon.ramantensors_data[counter][i][1], Phonon.ramantensors_data[counter][i][4], Phonon.ramantensors_data[counter][i][6]))
-            lines.append("    - [ {: .6f},  {: .6f},  {: .6f} ]".format(Phonon.ramantensors_data[counter][i][4], Phonon.ramantensors_data[counter][i][2], Phonon.ramantensors_data[counter][i][5]))
-            lines.append("    - [ {: .6f},  {: .6f},  {: .6f} ]".format(Phonon.ramantensors_data[counter][i][6], Phonon.ramantensors_data[counter][i][5], Phonon.ramantensors_data[counter][i][3]))
-            lines.append("    - perpendicular : {: .6f}".format(Phonon.ramantensors_data[counter][i][7].real))
-            lines.append("    - backscattering: {: .6f}".format(Phonon.ramantensors_data[counter][i][8].real))
-
-        counter += 1
+        for i in range(len(Phonon.ramantensors_data[mode])):
+            lines.append("  - Laser_Frequency: {: .6f}".format(Phonon.ramantensors_data[mode][i][0].real))
+            lines.append("    - [ {: .6f},  {: .6f},  {: .6f} ]".format(Phonon.ramantensors_data[mode][i][1], Phonon.ramantensors_data[mode][i][4], Phonon.ramantensors_data[mode][i][6]))
+            lines.append("    - [ {: .6f},  {: .6f},  {: .6f} ]".format(Phonon.ramantensors_data[mode][i][4], Phonon.ramantensors_data[mode][i][2], Phonon.ramantensors_data[mode][i][5]))
+            lines.append("    - [ {: .6f},  {: .6f},  {: .6f} ]".format(Phonon.ramantensors_data[mode][i][6], Phonon.ramantensors_data[mode][i][5], Phonon.ramantensors_data[mode][i][3]))
+            lines.append("    - perpendicular : {: .6f}".format(Phonon.ramantensors_data[mode][i][7].real))
+            lines.append("    - backscattering: {: .6f}".format(Phonon.ramantensors_data[mode][i][8].real))
         
         with open(Phonon.path+"Ramantensors/alpha"+str(mode)+".yaml", "w") as w:
             w.write("\n".join(lines))
@@ -93,39 +96,115 @@ def writeRaman(Phonon):
 #
 
 def writeConstantRaman(Phonon):
-    counter = 0
     lines = []
     lines.append("System: " + Phonon.name)
     lines.append("Source: " + Phonon.path+"Ramantensors/alpha*.yaml")
+    lines.append("Units:")
+    lines.append("- Frequency: cm⁻1")
+    lines.append("- Laser_Frequency: eV")
+    lines.append("- Raman_Tensor: 10⁻30 Cm^2/V")
     lines.append("Laser_frequency: {: .6f}".format(Phonon.photon_freq))
-    for mode in Phonon.modelist:
-        lines.append("Mode: " + str(mode) + " (" + Phonon.labels[mode-1] + ")")
-        lines.append("- Frequency: {: .6f}".format(Phonon.eigenfreqs[mode-1]))
-        lines.append("    - [ {: .6f},  {: .6f},  {: .6f} ]".format(Phonon.constantraman_data[counter][1], Phonon.constantraman_data[counter][4], Phonon.constantraman_data[counter][6]))
-        lines.append("    - [ {: .6f},  {: .6f},  {: .6f} ]".format(Phonon.constantraman_data[counter][4], Phonon.constantraman_data[counter][2], Phonon.constantraman_data[counter][5]))
-        lines.append("    - [ {: .6f},  {: .6f},  {: .6f} ]".format(Phonon.constantraman_data[counter][6], Phonon.constantraman_data[counter][5], Phonon.constantraman_data[counter][3]))
-        lines.append("    - perpendicular : {: .6f}".format(Phonon.constantraman_data[counter][7].real))
-        lines.append("    - backscattering: {: .6f}".format(Phonon.constantraman_data[counter][8].real))
-        counter += 1
+    for mode in Phonon.Ramanmodelist:
+        lines.append("Mode: " + str(mode) + " (" + Phonon.labels[mode] + ")")
+        lines.append("- Frequency: {: .6f}".format(Phonon.eigenfreqs[mode]))
+        lines.append("    - [ {: .6f},  {: .6f},  {: .6f} ]".format(Phonon.constantraman_data[mode][0], Phonon.constantraman_data[mode][3], Phonon.constantraman_data[mode][5]))
+        lines.append("    - [ {: .6f},  {: .6f},  {: .6f} ]".format(Phonon.constantraman_data[mode][3], Phonon.constantraman_data[mode][1], Phonon.constantraman_data[mode][4]))
+        lines.append("    - [ {: .6f},  {: .6f},  {: .6f} ]".format(Phonon.constantraman_data[mode][5], Phonon.constantraman_data[mode][4], Phonon.constantraman_data[mode][2]))
+        lines.append("    - perpendicular : {: .6f}".format(Phonon.constantraman_data[mode][6].real))
+        lines.append("    - backscattering: {: .6f}".format(Phonon.constantraman_data[mode][7].real))
     
     with open(Phonon.path+"Raman.yaml", "w") as w:
         w.write("\n".join(lines))
     #
 #
 
-def writeSpectrum(Phonon):
-    counter = 0
+def writeRamanSpectrum(Phonon):
+    if Phonon.qdir == (1,0,0):
+        ki = "x"
+        ko = "-x"
+    elif Phonon.qdir == (0,1,0):
+        ki = "y"
+        ko = "-y"
+    elif Phonon.qdir == (0,0,1):
+        ki = "z"
+        ko = "-z"
+    elif Phonon.qdir == (1,1,0):
+        ki = "x"
+        ko = "y"
+    elif Phonon.qdir == (0,1,1):
+        ki = "y"
+        ko = "z"
+    elif Phonon.qdir == (1,0,1):
+        ki = "x"
+        ko = "z"
+
+    dict = {"xx": 0, "yy": 1, "zz": 2, "xy": 3, "yx": 3, "yz": 4, "zy": 4, "xz": 5, "zx": 5, "perpendicular": 6, "backscattering": 7}
+
     lines = []
     lines.append("System: " + Phonon.name)
-    lines.append("Source: " + Phonon.path+"Raman.yaml")
+    lines.append("Source: " + Phonon.path + "Raman.yaml")
+    if Phonon.LOcorr == True:
+        lines.append("        " + Phonon.path + "qpoints_"+portoq[Phonon.qdir] + ".yaml")
+        lines.append("        " + Phonon.path + "whateverFile")
+    lines.append("Units:")
+    lines.append("- Frequency: cm⁻1")
+    lines.append("- Laser_Frequency: eV")
+    lines.append("- Raman_Intensity: m²/sr")
     lines.append("Laser_frequency: {: .6f}".format(Phonon.photon_freq))
-    for polarization in ["xx", "yy", "zz", "xy", "yz", "xz", "perpendickular", "backscattering"]:
-        lines.append("polarization: " + polarization)
+    for polarization in ["xx", "yy", "zz", "xy", "yx", "yz", "zy", "xz", "zx", "perpendicular", "backscattering"]:
+        lines.append("Polarization: " + ki + "(" + polarization + ")" + ko )
         for j in range(len(Phonon.ramanspectrum_data[0][0])):
-            lines.append("- [ {: .6f},  {: .6f} ]".format(Phonon.ramanspectrum_data[0][0][j], 1e30*Phonon.ramanspectrum_data[counter][1][j]))
-        counter += 1
+            lines.append("- [ {: .6f},  {: .6f} ]".format(Phonon.ramanspectrum_data[0][0][j], 1e30*Phonon.ramanspectrum_data[dict[polarization]][1][j]))
     
     with open(Phonon.path+"Intensity.yaml", "w") as w:
+        w.write("\n".join(lines))
+    #
+#
+
+####
+# IR
+####
+
+def writeIRSpectrum(Phonon):
+    dict = {"x": 1, "y": 2, "z": 3}
+    lines = []
+    lines.append("System: " + Phonon.name)
+    lines.append("Units:")
+    lines.append("- Frequency: cm⁻1")
+
+    lines.append("Source: " +Phonon.path+Phonon.file)
+    if Phonon.file == "phonopy.yaml":
+        lines.append("        "+Phonon.path+"qpoints.yaml")
+        lines.append("        "+Phonon.path+"BORN")
+
+    for polarization in ["x", "y", "z"]:
+        lines.append("Polarization: E || "  + polarization )
+        for j in range(len(Phonon.IR_data[0])):
+            lines.append("- [ {: .6f},  {: .6f} ]".format(Phonon.IR_data[0][j].real, Phonon.IR_data[dict[polarization]][j]))
+    
+    with open(Phonon.path+"IR.yaml", "w") as w:
+        w.write("\n".join(lines))
+    #
+#
+
+def writeReflectanceSpectrum(Phonon):
+    dict = {"x": 1, "y": 2, "z": 3}
+    lines = []
+    lines.append("System: " + Phonon.name)
+    lines.append("Units:")
+    lines.append("- Frequency: cm⁻1")
+
+    lines.append("Source: " +Phonon.path+Phonon.file)
+    if Phonon.file == "phonopy.yaml":
+        lines.append("        "+Phonon.path+"qpoints.yaml")
+        lines.append("        "+Phonon.path+"BORN")
+
+    for polarization in ["x", "y", "z"]:
+        lines.append("Polarization: E || "  + polarization )
+        for j in range(len(Phonon.reflectance_data[0])):
+            lines.append("- [ {: .6f},  {: .6f} ]".format(Phonon.reflectance_data[0][j], Phonon.reflectance_data[dict[polarization]][j]))
+    
+    with open(Phonon.path+"Reflectance.yaml", "w") as w:
         w.write("\n".join(lines))
     #
 #

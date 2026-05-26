@@ -6,6 +6,7 @@
 
 import sys
 import numpy as np
+import heapq
 import phonopy
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.phonon.irreps import IrReps
@@ -2434,34 +2435,42 @@ def getIrrepsSymbols(path, basis, coord, elements, pointgroup):
 # phonon analysis for Raman
 ###########
 
-def getAcoustics(eigvecs, eigvals, masses): 
+def getAcoustics(modelist, eigvecs, eigvals, masses): 
     # get the candidates for possible acoustic modes
-    acoustic = []
-    for j in range(len(eigvals)):
-        if np.abs(eigvals[j]) < 10:
-            acoustic.append(j)
+    candidates = []
+    for mode in modelist:
+        if np.abs(eigvals[mode]) < 10:
+            candidates.append(mode)
         #
     #   
     masses = np.array(masses)
     sqrt_m = np.sqrt(masses)
     
-    indicators = np.empty(len(eigvecs))
-    for j in range(len(eigvecs)):
-        mode = np.array(eigvecs[j])
-        S = np.sum(sqrt_m[:, None] * mode, axis=0) 
-        indicators[j] = np.linalg.norm(S)
+    indicators = {}
+    for mode in modelist:
+        eigvec = np.array(eigvecs[mode])
+        S = np.sum(sqrt_m[:, None] * eigvec, axis=0) 
+        indicators[mode] = np.linalg.norm(S)
     #
-    if np.array_equal( np.sort(indicators.argsort()[-3:]), np.sort(acoustic) ) or \
-       np.array_equal( np.sort(indicators.argsort()[-2:]), np.sort(acoustic) ) or \
-       np.array_equal( np.sort(indicators.argsort()[-1:]), np.sort(acoustic) ):
-        return [x+1 for x in acoustic]
+
+    top3_keys = heapq.nlargest(3, indicators, key=indicators.get)
+
+    acoustics = []
+    for mode in candidates:
+        if mode in top3_keys and mode in candidates and len(acoustics) < 3:
+            acoustics.append(mode)
+        #
+    #
+    
+    if len(acoustics) > 0:
+        return acoustics
     else:
         print("[getAcoustics]: Could not determine acoustic modes, continuing...")
         return []
     #
 #
 
-def getRotations(masses, positions, eigvecs, tol=0.8):
+def getRotations(modelist, masses, positions, eigvecs, tol=0.8):
 
     def mw_dot(a, b):
         return np.sum(masses[:, None] * a * b)
@@ -2471,7 +2480,7 @@ def getRotations(masses, positions, eigvecs, tol=0.8):
 
     rotations = []
 
-    for j in range(len(eigvecs)):
+    for j in modelist:
         eigvec = eigvecs[j]
         A = []
         b = []
@@ -2504,19 +2513,21 @@ def getRotations(masses, positions, eigvecs, tol=0.8):
     return np.array([x+1 for x in rotations])
 #
 
-def getDegenerates(eigvals, labels, prec=1e0):
+def getDegenerates(modelist, eigvals, labels, prec=1e0):
     degenerates = []
-    for j in range(len(eigvals)):
-        for k in range(j+1, len(eigvals)):
-            tmp = []
-            if np.abs(eigvals[j] - eigvals[k]) < prec and labels[j] == labels[k]:
-                if j not in tmp:
-                    tmp.append(j+1)
+    for j in modelist:
+        for k in modelist[j:]:
+            if j != k:
+                tmp = []
+                if np.abs(eigvals[j] - eigvals[k]) < prec and labels[j] == labels[k]:
+                    if j not in tmp:
+                        tmp.append(j)
+                    #
+                    tmp.append(k)
                 #
-                tmp.append(k+1)
-            #
-            if tmp != []:
-                degenerates.append(tmp)
+                if tmp != []:
+                    degenerates.append(tmp)
+                #
             #
         #
     #
@@ -2527,7 +2538,7 @@ def getRamanSilent(modelist, labels, pointgroup):
     RamanTensors = RamanTensorComponents[pointgroup]
     silent = []
     for mode in modelist:
-        if labels[mode-1] not in RamanTensors[::2]:
+        if labels[mode] not in RamanTensors[::2]:
             silent.append(mode)
         #
     #

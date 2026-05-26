@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
-def plotSpectrum(path, w0, porto, qdir, lualatex=False):
+def plotSpectrum(ramandata, path, w0, porto, qdir, lualatex=False):
 
     if qdir == (1,0,0):
         ki = "x"
@@ -66,11 +66,12 @@ def plotSpectrum(path, w0, porto, qdir, lualatex=False):
     mpl.rcParams['ytick.labelsize'] = size
     mpl.rcParams['legend.fontsize'] = size
     mpl.rcParams['figure.titlesize'] = size
+    
+    dict = {"xx": 0, "yy": 1, "zz": 2, "xy": 3, "yz": 4, "xz": 5, "perp": 6, "back": 7}
 
-    dft_raw_data = np.loadtxt(path+"Intensity_"+str(w0)+"eV.dat") # format: wavelength (cm-1) Intensity
-    dict = {"xx": 1, "yy": 2, "zz": 3, "xy": 4, "yz": 5, "xz": 6, "perp": 7, "back": 8}
-    x_data = [x[0] for x in dft_raw_data]
-    y_data = [x[dict[porto]] for x in dft_raw_data]
+    x_data = ramandata[dict[porto]][0]
+    y_data = ramandata[dict[porto]][1]
+
     ymax = np.max(y_data)
     """
     # print the peak positions
@@ -102,22 +103,9 @@ def plotSpectrum(path, w0, porto, qdir, lualatex=False):
     plt.close()
 #
 
-def plotIRspectrum(path, file, lualatex=False):
-    # data
-    epsi_data = []
-    epsr_data = []
-    dft_raw_data = np.loadtxt(path+file) # format: wavelength (cm-1) Intensity (Imag, Real)
-    dict = {0: "x", 1: "y", 2: "z", 3: "avg"}
-    w_data = [x[0] for x in dft_raw_data]
-    epsi_data.append( [x[1] for x in dft_raw_data] )
-    epsr_data.append( [x[2] for x in dft_raw_data] )
-    epsi_data.append( [x[3] for x in dft_raw_data] )
-    epsr_data.append( [x[4] for x in dft_raw_data] )
-    epsi_data.append( [x[5] for x in dft_raw_data] )
-    epsr_data.append( [x[6] for x in dft_raw_data] )
-    epsi_data.append( [x[7] for x in dft_raw_data] )
-    epsr_data.append( [x[8] for x in dft_raw_data] )
-
+def plotIRspectrum(IRdata, path, file, lualatex=False):
+    dict = {1: "x", 2: "y", 3: "z", 4: "avg"}
+    w_data = IRdata[0].real
 
     # Fonts
     if lualatex == True:
@@ -139,7 +127,7 @@ def plotIRspectrum(path, file, lualatex=False):
     mpl.rcParams['legend.fontsize'] = size
     mpl.rcParams['figure.titlesize'] = size
 
-    for j in range(4):
+    for j in range(1,3):
         # plotting    
         fig, ((ax1, ax2)) = plt.subplots(1,2, layout="constrained")
         if j == 3:
@@ -148,14 +136,14 @@ def plotIRspectrum(path, file, lualatex=False):
             fig.suptitle("IR: E||"+dict[j]+" polarization")
         #
         ax1.set_xlim([w_data[0], w_data[-1]])
-        ax1.plot(w_data, epsr_data[j], color="black", label="Real")
+        ax1.plot(w_data, IRdata[j].real, color="black", label="Real")
         ax1.axhline(ls="dashed")
         ax1.set_xlabel("Wavenumber (cm$^{-1}$)")
         ax1.set_ylabel("Re($\\varepsilon$)")
 
         ax2.set_xlim([w_data[0], w_data[-1]])
-        ax2.set_ylim([0, np.max(epsi_data[j])*1.1])
-        ax2.plot(w_data, epsi_data[j], color="black", label="Imag")
+        ax2.set_ylim([0, np.max(IRdata[j].imag)*1.1])
+        ax2.plot(w_data, IRdata[j].imag, color="black", label="Imag")
         ax2.set_xlabel("Wavenumber (cm$^{-1}$)")
         ax2.set_ylabel("Im($\\varepsilon$)")
     
@@ -165,16 +153,9 @@ def plotIRspectrum(path, file, lualatex=False):
     print("[plotIR]: Done.") 
 #
 
-def plotRspectrum(path, file, lualatex=False):
-    # data
-    T_data = []
-    dft_raw_data = np.loadtxt(path+file) # format: wavelength (cm-1) Transmittance
-    dict = {0: "x", 1: "y", 2: "z", 3: "avg"}
-    w_data = [x[0] for x in dft_raw_data]
-    T_data.append( [x[1] for x in dft_raw_data] )
-    T_data.append( [x[2] for x in dft_raw_data] )
-    T_data.append( [x[3] for x in dft_raw_data] )
-    T_data.append( [x[4] for x in dft_raw_data] )
+def plotRspectrum(R_data, path, file, lualatex=False):
+    dict = {1: "x", 2: "y", 3: "z", 4: "avg"}
+    w_data = R_data[0]
 
 
     # Fonts
@@ -197,7 +178,7 @@ def plotRspectrum(path, file, lualatex=False):
     mpl.rcParams['legend.fontsize'] = size
     mpl.rcParams['figure.titlesize'] = size
 
-    for j in range(4):
+    for j in range(1,4):
         # plotting    
         fig, ax = plt.subplots(1,1, layout="constrained")
         if j == 3:
@@ -207,7 +188,7 @@ def plotRspectrum(path, file, lualatex=False):
         #
         ax.set_xlim([w_data[0], w_data[-1]])
         ax.set_ylim([0, 1.05])
-        ax.plot(w_data, T_data[j], color="black", label="T")
+        ax.plot(w_data, R_data[j], color="black", label="T")
         ax.set_xlabel("Wavenumber (cm$^{-1}$)")
         ax.set_ylabel("R")
     
