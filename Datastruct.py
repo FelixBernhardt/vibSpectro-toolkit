@@ -78,7 +78,7 @@ def writeRaman(Phonon):
         lines.append("- Laser_Frequency: eV")
         lines.append("- Raman_Tensor: 10⁻30 Cm^2/V")
         lines.append("Mode: " + str(mode) + "(" + Phonon.labels[mode] + ")")
-        lines.append("- Frequency: {: .6f}".format(Phonon.eigenfreqs[mode-1]))
+        lines.append("- Frequency: {: .6f}".format(Phonon.eigenfreqs[mode]))
         lines.append("- Raman_Tensor:")
         
         for i in range(len(Phonon.ramantensors_data[mode])):

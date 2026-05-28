@@ -193,7 +193,7 @@ class Phonon:
         elif self.ordering == "descending":
             self.labels = dict(enumerate([self._labels_tmp[3*self._nat-i] for i in self._modelist], start=1))
         #    
-        self.degenerates = getDegenerates(self.modelist, self.eigenfreqs, self.labels, prec=1e0)
+        self.degenerates = getDegenerates(modelist, self.eigenfreqs, self.labels, prec=1e0)
         self.silent = getRamanSilent(self._modelist, self.labels, self.pointgroup)
         #self.modelist = [mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations]
         self.IRmodelist = np.array([mode for mode in modelist if mode not in self.acoustics and mode not in self.rotations], dtype=int)
