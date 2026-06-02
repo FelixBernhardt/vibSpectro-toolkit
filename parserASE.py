@@ -5,6 +5,7 @@
 #
 
 from ase.io import read
+from ase import Atoms
 import numpy as np
 
 class CalculatorParser:
@@ -26,6 +27,28 @@ class CalculatorParser:
     
     def parse_born_charges(self):
         return None
+    #
+#
+
+# Own format
+from IO import loadAtomsData, loadPhononsData, loadBornData, loadEpsInfData
+class OwnParser(CalculatorParser):
+    def parse_structure(self):
+        symbols, positions, cell = loadAtomsData(self.filename)
+        atoms = Atoms(symbols=symbols, positions=positions, cell=cell)
+        return atoms
+
+    def parse_vibrations(self):
+        freqs, modes, modelist = loadPhononsData(self.filename)
+        return freqs, modes
+    
+    def parse_eps_inf(self):
+        eps_inf = loadEpsInfData(self.filename)
+        return eps_inf
+
+    def parse_born_charges(self):
+        born = loadBornData(self.filename)
+        return born
     #
 #
 
@@ -111,7 +134,6 @@ class QEParser(CalculatorParser):
 # phonopy
 from parserPhonopy import parsePhonopy
 from phonopy.interface.phonopy_yaml import PhonopyYaml
-from ase import Atoms
 
 class PhonopyParser(CalculatorParser):
     def parse_structure(self):
@@ -162,6 +184,9 @@ class ASEParser:
 
         if "phonopy.yaml" in fn:
             return PhonopyParser(self.filename)
+        
+        if ".yaml" in fn:
+            return OwnParser(self.filename)
 
         raise ValueError("Unknown calculator format")
 

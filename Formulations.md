@@ -3,7 +3,7 @@
 ## Infrared spectroscopy
 Infrared spectra are calculated via the effective charges $Z_a$ of ion $a$ and the phononic eigenvectors $\hat{Q}$. The imaginary part of the ionic contribution to the dielectric function (i.e. phononic absorption) is calculated by:<br><br>
 $\Im(\epsilon_{ij}(\omega_p))=\frac{1}{4\pi^2\epsilon_0V}\left(\sum\limits_{a,k}Z_{a,ik}\hat{Q}_{p,a}\right)\left(\sum\limits_{a,k}Z_{a,jk}\hat{Q}_{p,a}\right).$<br><br>
-The ionic contribution of the imaginary part of the dielectric function thus yields delta-peaks at the phonon frequencies $\omega_p$. A Lorentzian smearing is applied to obtain a more realistic spectrum.
+The ionic contribution of the imaginary part of the dielectric function thus yields delta-peaks at the phonon frequencies $\omega_p$. A Lorentzian smearing is again applied to obtain a more realistic spectrum.
 The corresponding real part is calculated using Kramers-Kronig relations:<br><br>
 $\Re(\epsilon_{ij}(\omega))=\sum\limits_p\frac{\Im(\epsilon_{ij}(\omega_p))(\omega_p^2-\omega^2)}{(\omega_p^2-\omega^2)^2+\gamma^2\omega^2}$.<br><br>
 The reflectance $R$ in the infrared regime can then be calculated by:<br><br>

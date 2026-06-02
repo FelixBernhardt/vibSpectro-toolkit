@@ -75,8 +75,10 @@ def calcRaman(w, Im1, Re1, Im2, Re2, stepsize, basis):
     return np.array(ramantensor)
 #
 
-def calcDegenerates(modes, labels, ramantensors, ramandata):
-    # not tested !!
+def calcDegenerates(path, modes, labels, ramantensors, ramandata, eigval):
+    # not used or tested !!
+    # this might be mathematically impossible !!
+    # get the corresponding ramantensors
     Rn = []
     indx = []
     label = labels[modes[0]-1]
@@ -157,13 +159,16 @@ def calcDegenerates(modes, labels, ramantensors, ramandata):
 
     # get the calculated, degenerate raman tensor
     data = ramandata
+    #data = np.genfromtxt(path+"Ramantensors/alpha_"+str(modes[0])+".dat", dtype=complex)
+    #with open(path+"Ramantensors/alpha_"+str(modes[0])+".dat") as f:
+    #    f.readline()
+    #    eigval = f.readline().split()[-1]
+    #
 
     w = []
     I = []
-    #rotation = np.eye(3)
-    rotation = np.array([[0.5, np.sqrt(3)/2,0],[-np.sqrt(3)/2, 0.5, 0], [0, 0, 1]])
-    for i in [10]:
-    #for i in range(len(data)):
+    #for i in [10]:
+    for i in range(len(data)):
         w.append(np.real(data[i,0]))
         Atest = np.zeros((3,3), dtype=complex)
         Atest[0,0] = data[i,1]
@@ -175,16 +180,15 @@ def calcDegenerates(modes, labels, ramantensors, ramandata):
         Atest[1,0] = Atest[0,1]
         Atest[2,1] = Atest[1,2]
         Atest[2,0] = Atest[0,2]
-        # rotate the calculatd tensor such that the default configuration is reached
-        Atest = np.dot(np.linalg.inv(rotation), np.nan_to_num(Atest, nan=0.0))
+        Atest = np.nan_to_num(Atest, nan=0.0)
 
         #print(Atest)
-        for i in range(len(E)):
-            print(E[i])
+        #for i in range(len(E)):
+        #    print(E[i])
 
         #print(Atest)
         # decompose calculated tensor into its general tensor components, all possible Tensors
-        x = np.real(np.array( np.linalg.lstsq( np.column_stack([tmp.reshape(-1) for tmp in E]), Atest.reshape(-1), rcond=1.e-12)[0] ))
+        x = np.real(np.array( np.linalg.lstsq( np.column_stack([tmp.reshape(-1) for tmp in E]), Atest.reshape(-1), rcond=1.e-5)[0] ))
         #print(x)
         normx = np.linalg.norm(x[:4])
         #print(x[:4])
@@ -192,13 +196,13 @@ def calcDegenerates(modes, labels, ramantensors, ramandata):
         # normalization of decomposition components
         r = np.sqrt(x[0]**2+x[1]**2)
         v1 = np.array([x[0]/r * normx, x[1]/r * normx])
-        print(v1)
+        #print(v1)
 
-        # construct Raman tensors in high symmetry form, rotate back to original
+        # construct Raman tensors in high symmetry form
         #print(E)
         degenerates = np.zeros((len(modes),9,1), dtype=complex)
         for j in range(len(modes)):
-            R_degen = np.dot(rotation, v1[0]*E[j*2] + v1[1]*E[j*2+1])
+            R_degen = v1[0]*E[j*2] + v1[1]*E[j*2+1]
             degenerates[j] = [[data[i,0]], [R_degen[0,0]], [R_degen[1,1]], [R_degen[2,2]], [R_degen[0,1]], [R_degen[1,2]], [R_degen[0,2]], [data[i,7]], [data[i,8]]]
         #
 
@@ -249,6 +253,7 @@ def calcTensors(path, modelist, program, eigvals, norms, basis, degenerates, lab
     if program == "VASP":
         from parserVASP import getOpticsVASP
         for mode in modelist:
+            eigval = eigvals[mode]
             w1, Im1, Re1 = getOpticsVASP(path+"displacements/mode"+str(mode)+"_"+str(disps[0])+"/vasprun.xml")
             w2, Im2, Re2 = getOpticsVASP(path+"displacements/mode"+str(mode)+"_"+str(disps[1])+"/vasprun.xml")
 
@@ -256,7 +261,7 @@ def calcTensors(path, modelist, program, eigvals, norms, basis, degenerates, lab
             ramantensor[mode] = calcRaman(w, Im1, Re1, Im2, Re2, stepsize, basis)
 
             if mode in [x[0] for x in degenerates]:
-                degeneratetensors = calcDegenerates([mode, mode+1], labels, ramantensors, ramantensor[mode])
+                degeneratetensors = calcDegenerates(path, [mode, mode+1], labels, ramantensors, ramantensor[mode], eigval)
                 counter = 0
                 for degen in [mode, mode+1]:
                     ramantensor[degen] = degeneratetensors[:,:,counter]
@@ -267,20 +272,15 @@ def calcTensors(path, modelist, program, eigvals, norms, basis, degenerates, lab
         return ramantensor
     elif program == "QE":
         from parserQE import getOpticsQE
+        iteration = 0
         for mode in modelist:
+            eigval = eigvals[mode]
             w1, Im1, Re1 = getOpticsQE(path+"displacements/mode"+str(mode)+"_"+str(disps[0]))
             w2, Im2, Re2 = getOpticsQE(path+"displacements/mode"+str(mode)+"_"+str(disps[1]))
 
             w, Im1, Re1, Im2, Re2 = alignOmega(w1, w2, Im1, Re1, Im2, Re2)
-            ramantensor[mode] = calcRaman(w, Im1, Re1, Im2, Re2, stepsize, basis)
-
-            if mode in [x[0] for x in degenerates]:
-                degeneratetensors = calcDegenerates([mode, mode+1], labels, ramantensors, ramantensor[mode])
-                counter = 0
-                for degen in [mode, mode+1]:
-                    ramantensor[degen] = degeneratetensors[:,:,counter]
-                    counter += 1
-            #
+            ramantensor.append(calcRaman(path, mode, eigval, w, Im1, Re1, Im2, Re2, stepsize, basis))
+            iteration += 1
         #
         print("[calcTensors]: Done.")
         return ramantensor

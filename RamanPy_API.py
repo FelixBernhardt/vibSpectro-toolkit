@@ -8,7 +8,7 @@ import numpy as np
 from numpy.typing import NDArray
 from spglib import get_symmetry_dataset
 from Symmetries import periodTable, getAcoustics, getRotations, getDegenerates, getDecomposition, getRamanSilent, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols
-from Datastruct import writeRaman, writeRamanSpectrum, writeConstantRaman, writeIRSpectrum, writeReflectanceSpectrum
+from IO import writeData, writeRaman, writeRamanSpectrum, writeConstantRaman, writeIRSpectrum, writeReflectanceSpectrum, loadSymmetryData, loadPhononsData, loadConstantRaman, loadSpectrum
 from IR import calcIR, calcReflectance
 from displace import calcdisplace
 from calcTensors import calcTensors
@@ -100,15 +100,22 @@ class Phonon:
         modelist = np.array(modelist)
 
         parser = ASEParser(self.path+self.file, modelist=modelist)
-
+        
         atoms = parser.get_structure()
         self._nat = len(atoms)
-        self._modelist = range(1,3*self._nat+1)
+               
+        if parser.backend.__class__.__name__ == "OwnParser":
+            _, _, calcmodes = loadPhononsData(self.path+self.file)
+            self._modelist = calcmodes
+        else:
+            self._modelist = np.array(range(1,3*self._nat+1))
+        
         if np.all(modelist == None):
             modelist = self._modelist
-        elif np.any(modelist > 3*self._nat):
-            print("[__init__]: invalid mode specified, resorting to default modelist")
-            modelist = self._modelist
+        if any(mode not in self._modelist for mode in modelist):
+            print("[__init__]: WARNING: not all requested modes are present in "+self.path+self.file+", continuing...")
+            modelist = [mode for mode in modelist if mode in self._modelist]
+       
         eigenfreqs, eigenvecs = parser.get_vibrations()
         self.elements = atoms.get_chemical_symbols()
         self.cartesian = atoms.get_positions()
@@ -124,8 +131,8 @@ class Phonon:
         else:
             print("[__init__]: Could not detect ordering of frequencies !?")
         #
-        self.eigenvecs = dict(enumerate(eigenvecs, start=1))
-        self.eigenfreqs = dict(enumerate(eigenfreqs, start=1))
+        self.eigenvecs = dict(zip(modelist, eigenvecs))
+        self.eigenfreqs = dict(zip(modelist, eigenfreqs))
         self._norms = dict(zip(modelist, np.array([np.linalg.norm(self.eigenvecs[mode]) for mode in modelist])))
 
         self.acoustics = getAcoustics(modelist, self.eigenvecs, self.eigenfreqs, self.masses)
@@ -137,11 +144,38 @@ class Phonon:
         #
         self.modelist = np.array([mode for mode in modelist if mode not in self.acoustics and mode not in self.rotations], dtype=int)
 
-        if nosym == False and os.path.isfile(self.path+"FORCE_CONSTANTS"):
-            self.set_symmetries(modelist)
+        if nosym == False:
+            if os.path.isfile(self.path+"FORCE_CONSTANTS") and parser.backend.__class__.__name__ != "OwnParser":
+                self._dataset = get_symmetry_dataset((self.basis, self.direct, [periodTable[element] for element in self.elements]), symprec=1.e-5)
+                #self.pointgroup = str(self._dataset.pointgroup)
+                self.pointgroup = str(self._dataset["pointgroup"])
+                self._labels_tmp = getIrrepsSymbols(self.path, self.basis, self.direct, self.elements, self.pointgroup)
+                #
+                if self.ordering == "ascending":
+                    self.labels = dict(enumerate([self._labels_tmp[i-1] for i in self._modelist], start=1))
+                elif self.ordering == "descending":
+                    self.labels = dict(enumerate([self._labels_tmp[3*self._nat-i] for i in self._modelist], start=1))
+                #
+                self.set_symmetries(modelist)
+            elif parser.backend.__class__.__name__ == "OwnParser":
+                system, symmetry, pointgroup, labels = loadSymmetryData(self.path+self.file)
+                self.name = system
+                if symmetry == True:
+                    nosym = False
+                    self.pointgroup = pointgroup
+                    self.labels = dict(zip(self._modelist, labels))
+                    self.set_symmetries(modelist)
+                else:
+                    nosym = True
+            else:
+                nosym = True
+            #
         else:
-            if nosym == False:
-                print("[__init__]: Could not find FORCE_CONSTANTS in "+self.path+". Symmetry analysis is disabled.")
+            print("[__init__]: Could not find FORCE_CONSTANTS in "+self.path+". Symmetry analysis is disabled.")
+            nosym = True
+        #
+        if nosym == True:
+            print("[__init__]: Symmetry analysis is disabled.")
             #
             self._dataset = []
             self.pointgroup = ""
@@ -162,7 +196,10 @@ class Phonon:
             self.eps_inf = np.zeros((3, 3))
         #
 
+        if code_out != "QE" and code_out != "VASP":
+            print("[__init__]: "+code_out+" is not supported, some functionalities might fail. Continuing...")
         self.code_out = code_out
+        
         self.smearing = smearing
         self.temperature = temperature
         self.photon_freq = photon_freq
@@ -181,19 +218,9 @@ class Phonon:
     # Symmetry related fuctions
     ###########################
     def set_symmetries(self, modelist):
-        self._dataset = get_symmetry_dataset((self.basis, self.direct, [periodTable[element] for element in self.elements]), symprec=1.e-5)
-        #self.pointgroup = str(self._dataset.pointgroup)
-        self.pointgroup = str(self._dataset["pointgroup"])
         self.ramantensors = analyzeRamanTensors(self.pointgroup, varprint=False)
-        self.dielectrictensor = analyzeDielectricTensor(self.pointgroup, varprint=False)
-        self._labels_tmp = getIrrepsSymbols(self.path, self.basis, self.direct, self.elements, self.pointgroup)
-        #
-        if self.ordering == "ascending":
-            self.labels = dict(enumerate([self._labels_tmp[i-1] for i in self._modelist], start=1))
-        elif self.ordering == "descending":
-            self.labels = dict(enumerate([self._labels_tmp[3*self._nat-i] for i in self._modelist], start=1))
-        #    
-        self.degenerates = getDegenerates(modelist, self.eigenfreqs, self.labels, prec=1e0)
+        self.dielectrictensor = analyzeDielectricTensor(self.pointgroup, varprint=False)    
+        self.degenerates = getDegenerates(self.modelist, self.eigenfreqs, self.labels, prec=1e0)
         self.silent = getRamanSilent(self._modelist, self.labels, self.pointgroup)
         #self.modelist = [mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations]
         self.IRmodelist = np.array([mode for mode in modelist if mode not in self.acoustics and mode not in self.rotations], dtype=int)
@@ -205,7 +232,7 @@ class Phonon:
         if self.pointgroup == "":
             print("[print_ramantensors]: ERROR, need pointgroup")
         else:
-            labellist = [self.labels[mode] for mode in self.modelist if mode not in self.acoustics and mode not in self.rotations]
+            labellist = [self.labels[mode] for mode in self._modelist if mode not in self.acoustics and mode not in self.rotations]
             getDecomposition(labellist)
         #
     #
@@ -277,13 +304,13 @@ class Phonon:
         self.ramantensors_data = calcTensors(self.path, self.modelist, self.code_out, self.eigenfreqs, self._norms, self.basis, self.degenerates, self.labels, self.ramantensors, self.stepsize)
     #
     def write_tensors(self):
-        writeRaman(self.path, self.modelist, self.eigenfreqs, self.ramantensors_data)
+        writeRaman(self)
 
     def spectrum(self):
         self.constantraman_data, self.ramanspectrum_data = calcSpectrum(self.path, self.ramantensors_data, self.modelist, self.Ramanmodelist, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.born, self.eps_inf, self.photon_freq, self.temperature, self.smearing, self.stokes, self.qdir, self.LOcorr)        
     #
     def write_spectrum(self):
-        writeConstantRaman(self.path, self.constantraman_data, self.photon_freq, self.qdir)
+        writeConstantRaman(self)
         writeRamanSpectrum(self)
     #
     def plot_Raman(self, porto=["xx", "yy", "zz", "xy", "yz", "xz", "perp", "back"], lualatex=False):
@@ -293,4 +320,16 @@ class Phonon:
         #
         print("[plot_Raman]: Done.") 
     #
+
+    ########
+    # Misc
+    ########
+    def write_System(self):
+        writeData(self)
+    #
+    def load_constantraman_data(self, filename="Raman.yaml"):
+        self.constantraman_data = loadConstantRaman(self.path+filename)
+    #
+    def load_spectrum(self, filename="Intensity.yaml"):
+        self.ramanspectrum_data, self.qdir = loadSpectrum(self.path+filename)
 #

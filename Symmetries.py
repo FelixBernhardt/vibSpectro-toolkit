@@ -2515,9 +2515,8 @@ def getRotations(modelist, masses, positions, eigvecs, tol=0.8):
 
 def getDegenerates(modelist, eigvals, labels, prec=1e0):
     degenerates = []
-    counter = 0
     for j in modelist:
-        for k in modelist[counter:]:
+        for k in modelist[j:]:
             if j != k:
                 tmp = []
                 if np.abs(eigvals[j] - eigvals[k]) < prec and labels[j] == labels[k]:
@@ -2531,7 +2530,6 @@ def getDegenerates(modelist, eigvals, labels, prec=1e0):
                 #
             #
         #
-        counter += 1
     #
     return degenerates
 #
