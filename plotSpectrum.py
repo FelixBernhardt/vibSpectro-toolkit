@@ -181,10 +181,7 @@ def plotRspectrum(R_data, path, file, lualatex=False):
     for j in range(1,4):
         # plotting    
         fig, ax = plt.subplots(1,1, layout="constrained")
-        if j == 3:
-            fig.suptitle("spatially averaged polarization")
-        else:
-            fig.suptitle("Reflectance: E||"+dict[j]+" polarization")
+        fig.suptitle("Reflectance: E||"+dict[j]+" polarization")
         #
         ax.set_xlim([w_data[0], w_data[-1]])
         ax.set_ylim([0, 1.05])

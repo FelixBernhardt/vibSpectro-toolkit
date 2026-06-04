@@ -172,6 +172,8 @@ if __name__ == '__main__':
 
     if args.analysis == True and args.no_symmetry == False:
         print("[__main__]: Analyzing symmetries")
+        print("Pointgroup: "+ph.pointgroup)
+        ph.print_decomposition()
         ph.print_ramantensors()
         ph.print_dielectrictensor()
         ph.print_ramanselection()

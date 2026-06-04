@@ -272,15 +272,21 @@ def calcTensors(path, modelist, program, eigvals, norms, basis, degenerates, lab
         return ramantensor
     elif program == "QE":
         from parserQE import getOpticsQE
-        iteration = 0
         for mode in modelist:
             eigval = eigvals[mode]
             w1, Im1, Re1 = getOpticsQE(path+"displacements/mode"+str(mode)+"_"+str(disps[0]))
             w2, Im2, Re2 = getOpticsQE(path+"displacements/mode"+str(mode)+"_"+str(disps[1]))
 
             w, Im1, Re1, Im2, Re2 = alignOmega(w1, w2, Im1, Re1, Im2, Re2)
-            ramantensor.append(calcRaman(path, mode, eigval, w, Im1, Re1, Im2, Re2, stepsize, basis))
-            iteration += 1
+            ramantensor[mode] = calcRaman(w, Im1, Re1, Im2, Re2, stepsize, basis)
+
+            if mode in [x[0] for x in degenerates]:
+                degeneratetensors = calcDegenerates(path, [mode, mode+1], labels, ramantensors, ramantensor[mode], eigval)
+                counter = 0
+                for degen in [mode, mode+1]:
+                    ramantensor[degen] = degeneratetensors[:,:,counter]
+                    counter += 1
+            #
         #
         print("[calcTensors]: Done.")
         return ramantensor

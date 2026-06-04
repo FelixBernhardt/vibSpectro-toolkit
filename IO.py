@@ -79,23 +79,27 @@ def writeRaman(Phonon):
     for mode in Phonon.Ramanmodelist:
         lines = []
         lines.append("System: " + Phonon.name)
-        lines.append("Source: " + Phonon.path +"displacements/mode" + str(mode) + "_1/" + outfile)
-        lines.append("        " + Phonon.path +"displacements/mode" + str(mode) + "_-1/" + outfile)
+        lines.append("Source:")
+        lines.append("- " + Phonon.path + "displacements/mode" + str(mode) + "_1/" + outfile)
+        lines.append("- " + Phonon.path + "displacements/mode" + str(mode) + "_-1/" + outfile)
         lines.append("Units:")
-        lines.append("- Frequency: cm⁻1")
-        lines.append("- Laser_Frequency: eV")
-        lines.append("- Raman_Tensor: 10⁻30 Cm^2/V")
-        lines.append("Mode: " + str(mode) + "(" + Phonon.labels[mode] + ")")
-        lines.append("- Frequency: {: .6f}".format(Phonon.eigenfreqs[mode-1]))
-        lines.append("- Raman_Tensor:")
+        lines.append("  Phonon Wavelength: cm⁻1")
+        lines.append("  Laser_Frequency: eV")
+        lines.append("  Raman_Tensor: 10⁻30 Cm^2/V")
+        lines.append("Mode:")
+        lines.append("- Index: " + str(mode))
+        lines.append("  Label: " + Phonon.labels[mode])
+        lines.append("  Wavelength: {: .6f}".format(Phonon.eigenfreqs[mode]))
+        lines.append("  Raman_Tensor:")
         
         for i in range(len(Phonon.ramantensors_data[mode])):
             lines.append("  - Laser_Frequency: {: .6f}".format(Phonon.ramantensors_data[mode][i][0].real))
+            lines.append("    perpendicular : {: .6f}".format(Phonon.ramantensors_data[mode][i][7].real))
+            lines.append("    backscattering: {: .6f}".format(Phonon.ramantensors_data[mode][i][8].real))
+            lines.append("    Raman_Tensor:")
             lines.append("    - [ {: .6f},  {: .6f},  {: .6f} ]".format(Phonon.ramantensors_data[mode][i][1], Phonon.ramantensors_data[mode][i][4], Phonon.ramantensors_data[mode][i][6]))
             lines.append("    - [ {: .6f},  {: .6f},  {: .6f} ]".format(Phonon.ramantensors_data[mode][i][4], Phonon.ramantensors_data[mode][i][2], Phonon.ramantensors_data[mode][i][5]))
             lines.append("    - [ {: .6f},  {: .6f},  {: .6f} ]".format(Phonon.ramantensors_data[mode][i][6], Phonon.ramantensors_data[mode][i][5], Phonon.ramantensors_data[mode][i][3]))
-            lines.append("    - perpendicular : {: .6f}".format(Phonon.ramantensors_data[mode][i][7].real))
-            lines.append("    - backscattering: {: .6f}".format(Phonon.ramantensors_data[mode][i][8].real))
         
         with open(Phonon.path+"Ramantensors/alpha"+str(mode)+".yaml", "w") as w:
             w.write("\n".join(lines))
@@ -188,17 +192,20 @@ def writeIRSpectrum(Phonon):
     lines = []
     lines.append("System: " + Phonon.name)
     lines.append("Units:")
-    lines.append("- Frequency: cm⁻1")
+    lines.append(" Frequency: cm⁻1")
 
-    lines.append("Source: " +Phonon.path+Phonon.file)
+    lines.append("Source:")
+    lines.append("- "+Phonon.path+Phonon.file)
     if Phonon.file == "phonopy.yaml":
-        lines.append("        "+Phonon.path+"qpoints.yaml")
-        lines.append("        "+Phonon.path+"BORN")
+        lines.append("- "+Phonon.path+"qpoints.yaml")
+        lines.append("- "+Phonon.path+"BORN")
 
+    lines.append("Geometry:")
     for polarization in ["x", "y", "z"]:
-        lines.append("Polarization: E || "  + polarization )
+        lines.append("- Polarization: E || "  + polarization )
+        lines.append("  Spectrum:")
         for j in range(len(Phonon.IR_data[0])):
-            lines.append("- [ {: .6f},  {: .6f} ]".format(Phonon.IR_data[0][j].real, Phonon.IR_data[dict[polarization]][j]))
+            lines.append("  - [ {: .6f},  {: .6f} ]".format(Phonon.IR_data[0][j].real, Phonon.IR_data[dict[polarization]][j]))
     
     with open(Phonon.path+"IR.yaml", "w") as w:
         w.write("\n".join(lines))
@@ -210,17 +217,20 @@ def writeReflectanceSpectrum(Phonon):
     lines = []
     lines.append("System: " + Phonon.name)
     lines.append("Units:")
-    lines.append("- Frequency: cm⁻1")
+    lines.append(" Frequency: cm⁻1")
 
-    lines.append("Source: " +Phonon.path+Phonon.file)
+    lines.append("Source:")
+    lines.append("- "+Phonon.path+Phonon.file)
     if Phonon.file == "phonopy.yaml":
-        lines.append("        "+Phonon.path+"qpoints.yaml")
-        lines.append("        "+Phonon.path+"BORN")
+        lines.append("- "+Phonon.path+"qpoints.yaml")
+        lines.append("- "+Phonon.path+"BORN")
 
+    lines.append("Geometry:")
     for polarization in ["x", "y", "z"]:
-        lines.append("Polarization: E || "  + polarization )
+        lines.append("- Polarization: E || "  + polarization )
+        lines.append("  Spectrum:")
         for j in range(len(Phonon.reflectance_data[0])):
-            lines.append("- [ {: .6f},  {: .6f} ]".format(Phonon.reflectance_data[0][j], Phonon.reflectance_data[dict[polarization]][j]))
+            lines.append("  - [ {: .6f},  {: .6f} ]".format(Phonon.reflectance_data[0][j], Phonon.reflectance_data[dict[polarization]][j]))
     
     with open(Phonon.path+"Reflectance.yaml", "w") as w:
         w.write("\n".join(lines))
@@ -304,6 +314,30 @@ def loadSymmetryData(filename):
     return system, symmetry, pointgroup, labels
 #
 
+############################
+# Raman tensors and spectrum
+############################
+def loadRamanTensor(path, mode):
+    # load a single, frequency dependent ramantensor
+    filename = path+"Ramantensors/alpha"+str(mode)+".yaml"
+    with open(filename, "r") as f:
+        Data = yaml.safe_load(f)
+
+    tensor = np.zeros((len(Data["Mode"][0]["Raman_Tensor"]), 9), dtype=complex)
+    for i in range(len(Data["Mode"][0]["Raman_Tensor"])):
+        tensor[i, 0] = Data["Mode"][0]["Raman_Tensor"][i]["Laser_Frequency"]
+        tensor[i, 1] = Data["Mode"][0]["Raman_Tensor"][i]["Raman_Tensor"][0][0]
+        tensor[i, 2] = Data["Mode"][0]["Raman_Tensor"][i]["Raman_Tensor"][1][1]
+        tensor[i, 3] = Data["Mode"][0]["Raman_Tensor"][i]["Raman_Tensor"][2][2]
+        tensor[i, 4] = Data["Mode"][0]["Raman_Tensor"][i]["Raman_Tensor"][0][1]
+        tensor[i, 5] = Data["Mode"][0]["Raman_Tensor"][i]["Raman_Tensor"][1][2]
+        tensor[i, 6] = Data["Mode"][0]["Raman_Tensor"][i]["Raman_Tensor"][0][2]
+        tensor[i, 7] = Data["Mode"][0]["Raman_Tensor"][i]["perpendicular"]
+        tensor[i, 8] = Data["Mode"][0]["Raman_Tensor"][i]["backscattering"]
+    
+    return tensor    
+#
+
 def loadConstantRaman(filename):
     with open(filename, "r") as f:
         Data = yaml.safe_load(f)
@@ -329,8 +363,6 @@ def loadSpectrum(filename):
     with open(filename, "r") as f:
         Data = yaml.safe_load(f)
 
-    print(Data["Geometry"][0])
-
     ki = Data["Geometry"][0]["Polarization"].split("(")[0]
     ko = Data["Geometry"][0]["Polarization"].split(")")[-1]
 
@@ -347,9 +379,69 @@ def loadSpectrum(filename):
     elif ki == "x" and ko == "z":
         qdir = (1,0,1)
     else:
-        qdir = (0,0,0)
+        qdir = (1,0,0)
     #
 
-    spectrum = 0
+    spectrum = np.zeros((8, 2, len(Data["Geometry"][0]["Spectrum"])))
+
+    for geometry in range(len(Data["Geometry"])):
+        if Data["Geometry"][geometry]["Polarization"].split("(")[-1].split(")")[0] == "xx":
+            col = 0
+        elif Data["Geometry"][geometry]["Polarization"].split("(")[-1].split(")")[0] == "yy":
+            col = 1
+        elif Data["Geometry"][geometry]["Polarization"].split("(")[-1].split(")")[0] == "zz":
+            col = 2
+        elif Data["Geometry"][geometry]["Polarization"].split("(")[-1].split(")")[0] == "xy" or Data["Geometry"][geometry]["Polarization"].split("(")[-1].split(")")[0] == "yx":
+            col = 3
+        elif Data["Geometry"][geometry]["Polarization"].split("(")[-1].split(")")[0] == "yz" or Data["Geometry"][geometry]["Polarization"].split("(")[-1].split(")")[0] == "zy":
+            col = 4
+        elif Data["Geometry"][geometry]["Polarization"].split("(")[-1].split(")")[0] == "xz" or Data["Geometry"][geometry]["Polarization"].split("(")[-1].split(")")[0] == "zx":
+            col = 5
+        elif Data["Geometry"][geometry]["Polarization"].split("(")[-1].split(")")[0] == "perpendicular":
+            col = 6
+        elif Data["Geometry"][geometry]["Polarization"].split("(")[-1].split(")")[0] == "backscattering":
+            col = 7
+        else:
+            print("[loadSpectrum]: Invalid polarization found in "+filename+". Denoting it with xx and continuing...")
+            col = 0
+        
+        for i in range(len(Data["Geometry"][geometry]["Spectrum"])):
+            spectrum[col, 0, i] = Data["Geometry"][geometry]["Spectrum"][i][0]
+            spectrum[col, 1, i] = Data["Geometry"][geometry]["Spectrum"][i][1]*10**(-30)
+
     return spectrum, qdir
 #    
+
+#############################
+# IR spectrum and reflectance
+#############################
+
+def loadIR(filename):
+    with open(filename, "r") as f:
+        Data = yaml.safe_load(f)
+    
+    spectrum = np.zeros((4, len(Data["Geometry"][0]["Spectrum"])), dtype=complex)
+
+    for i in range(len(Data["Geometry"][0]["Spectrum"])):
+        spectrum[0, i] = Data["Geometry"][0]["Spectrum"][i][0]
+        spectrum[1, i] = Data["Geometry"][0]["Spectrum"][i][1]
+        spectrum[2, i] = Data["Geometry"][1]["Spectrum"][i][1]
+        spectrum[3, i] = Data["Geometry"][2]["Spectrum"][i][1]
+                   
+    return spectrum
+#
+
+def loadReflectance(filename):
+    with open(filename, "r") as f:
+        Data = yaml.safe_load(f)
+    
+    spectrum = np.zeros((4, len(Data["Geometry"][0]["Spectrum"])))
+
+    for i in range(len(Data["Geometry"][0]["Spectrum"])):
+        spectrum[0, i] = Data["Geometry"][0]["Spectrum"][i][0]
+        spectrum[1, i] = Data["Geometry"][0]["Spectrum"][i][1]
+        spectrum[2, i] = Data["Geometry"][1]["Spectrum"][i][1]
+        spectrum[3, i] = Data["Geometry"][2]["Spectrum"][i][1]
+                   
+    return spectrum
+#

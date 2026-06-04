@@ -8,7 +8,7 @@ import numpy as np
 from numpy.typing import NDArray
 from spglib import get_symmetry_dataset
 from Symmetries import periodTable, getAcoustics, getRotations, getDegenerates, getDecomposition, getRamanSilent, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols
-from IO import writeData, writeRaman, writeRamanSpectrum, writeConstantRaman, writeIRSpectrum, writeReflectanceSpectrum, loadSymmetryData, loadPhononsData, loadConstantRaman, loadSpectrum
+from IO import writeData, writeRaman, writeRamanSpectrum, writeConstantRaman, writeIRSpectrum, writeReflectanceSpectrum, loadSymmetryData, loadPhononsData, loadRamanTensor, loadConstantRaman, loadSpectrum, loadIR, loadReflectance
 from IR import calcIR, calcReflectance
 from displace import calcdisplace
 from calcTensors import calcTensors
@@ -168,11 +168,9 @@ class Phonon:
                 else:
                     nosym = True
             else:
+                print("[__init__]: Could not find FORCE_CONSTANTS in "+self.path+". Symmetry analysis is disabled.")
                 nosym = True
             #
-        else:
-            print("[__init__]: Could not find FORCE_CONSTANTS in "+self.path+". Symmetry analysis is disabled.")
-            nosym = True
         #
         if nosym == True:
             print("[__init__]: Symmetry analysis is disabled.")
@@ -182,7 +180,7 @@ class Phonon:
             self.ramantensors = []
             self.dielectrictensor = []
             self._labels_tmp = []
-            self.labels = dict(enumerate(["A1" for x in range(len(modelist))], start=1))
+            self.labels = dict(zip(modelist, ["A1" for x in range(len(modelist))]))
             self.degenerates = []
             self.silent = []
             self.IRmodelist = self.modelist
@@ -327,9 +325,19 @@ class Phonon:
     def write_System(self):
         writeData(self)
     #
+    def load_ramantensors_data(self, mode=1):
+        self.ramantensors_data[mode] = loadRamanTensor(self.path, mode)
+    #
     def load_constantraman_data(self, filename="Raman.yaml"):
         self.constantraman_data = loadConstantRaman(self.path+filename)
     #
     def load_spectrum(self, filename="Intensity.yaml"):
         self.ramanspectrum_data, self.qdir = loadSpectrum(self.path+filename)
+    #
+    def load_IR(self, filename="IR.yaml"):
+        self.IR_data = loadIR(self.path+filename)
+    #
+    def load_Reflectance(self, filename="Reflectance.yaml"):
+        self.reflectance_data = loadReflectance(self.path+filename)
+    #
 #

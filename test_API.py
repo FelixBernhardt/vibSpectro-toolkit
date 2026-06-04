@@ -15,7 +15,7 @@ path = "/home/felix/Forschung/sqs_00"
 #path = "/home/felixbernhardt/Forschung/Yassine/"
 #test = Phonon(file="phonopy.yaml", path=path, born=False, qdir=(0,1,0), nosym=False, modelist=[7,8], smearing=5)
 #test = Phonon(file="OUTCAR", path=path, born=True, qdir=(1,1,0), nosym=False, modelist=[16,17], smearing=5)
-test = Phonon(file="OUTCAR", path=path, born=True, qdir=(1,1,0), nosym=False, modelist=range(1,31), smearing=5)
+test = Phonon(file="OUTCAR", path=path, born=True, qdir=(1,1,0), nosym=True, modelist=[5], smearing=5)
 #test = Phonon(file="OUTCAR", path=path, born=False, qdir=(1,0,0), nosym=True, modelist=[2,3,4,5,6,8,9,11,12,13,14,15,16,17,19,20,21,22,23,24,26,27], smearing=5)
 
 #test = Phonon(file="OUTCAR", path=path, born=True, qdir=(1,1,0), nosym=False, modelist=range(1,31), smearing=5)
@@ -32,23 +32,28 @@ test = Phonon(file="OUTCAR", path=path, born=True, qdir=(1,1,0), nosym=False, mo
 #print(test.silent)
 
 #test.IR()
-#test.plot_IR()
 #test.reflectance()
-#test.plot_reflectance()
 #test.write_System()
 #test.write_IR()
 #test.write_Reflectance()
+#test.load_IR()
+#test.load_Reflectance()
+#test.plot_IR()
+#test.plot_reflectance()
 
-test.tensors()
-test.spectrum()
+
+#test.tensors()
+#test.spectrum()
 #test.plot_Raman()
-test.write_spectrum()
+#test.write_spectrum()
 #test.write_tensors()
+#test.load_ramantensors_data(5)
 
 
-#print(test.ramanspectrum_data[2])
-test.load_spectrum()
-print(test.ramanspectrum_data[2])
+#print(test.ramanspectrum_data[2][0:10])
+#test.load_spectrum()
+#print(test.ramanspectrum_data[2][0:10])
+#test.plot_Raman()
 
 #test.pointgroup = "6"
 #test.print_ramantensors()

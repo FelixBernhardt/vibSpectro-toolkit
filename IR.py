@@ -31,13 +31,9 @@ def calcReflectance(IRdata):
     """
     w = np.array(IRdata[0]).real
     col = []
-    for j in range(1,5):
-        if j == 4:
-            epsi = 1/3*np.add(np.array(IRdata[1]).imag, np.add(np.array(IRdata[2]).imag, np.array(IRdata[3]).imag))
-            epsr = 1/3*np.add(np.array(IRdata[1]).real, np.add(np.array(IRdata[2]).imag, np.array(IRdata[3]).imag))
-        else:
-            epsi = np.array(IRdata[j]).imag
-            epsr = np.array(IRdata[j]).real
+    for j in range(1,4):
+        epsi = np.array(IRdata[j]).imag
+        epsr = np.array(IRdata[j]).real
         #
         tmp = []
         for i in range(len(w)):
@@ -61,7 +57,7 @@ def calcReflectance(IRdata):
     #
 
     print("[calcReflectance]: Done.")
-    return np.array([w, col[0], col[1], col[2], col[3]])
+    return np.array([w, col[0], col[1], col[2]])
 #
 
 def calcIR(modelist, eigvals, eigvecs, basis, nat, masses, born, smearing): 
