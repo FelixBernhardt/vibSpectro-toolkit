@@ -109,6 +109,29 @@ def writeRaman(Phonon):
 
 # Raman tensors at constant excitation energy
 def writeConstantRaman(Phonon):
+    if Phonon.qdir == (1,0,0):
+        ki = "x"
+        ko = "-x"
+    elif Phonon.qdir == (0,1,0):
+        ki = "y"
+        ko = "-y"
+    elif Phonon.qdir == (0,0,1):
+        ki = "z"
+        ko = "-z"
+    elif Phonon.qdir == (1,1,0):
+        ki = "x"
+        ko = "y"
+    elif Phonon.qdir == (0,1,1):
+        ki = "y"
+        ko = "z"
+    elif Phonon.qdir == (1,0,1):
+        ki = "x"
+        ko = "z"
+    else:
+        ki = "x"
+        ko = "x"
+    #
+
     lines = []
     lines.append("System: " + Phonon.name)
     lines.append("Source: " + Phonon.path+"Ramantensors/alpha*.yaml")
@@ -117,11 +140,15 @@ def writeConstantRaman(Phonon):
     lines.append(" Laser_Frequency: eV")
     lines.append(" Raman_Tensor: 10⁻30 Cm^2/V")
     lines.append("Laser_frequency: {: .6f}".format(Phonon.photon_freq))
+    lines.append("Geometry: "+ki+"(..)"+ko)
     lines.append("Modes:")
     for mode in Phonon.Ramanmodelist:
         lines.append("- Mode: " + str(mode))
         lines.append("  Label: \""+ Phonon.labels[mode] +"\"")
-        lines.append("  Frequency: {: .6f}".format(Phonon.eigenfreqs[mode]))
+        if Phonon.LOcorr == True:
+            lines.append("  Frequency: {: .6f}".format(Phonon.eigenfreqs_LO[mode]))
+        else:
+            lines.append("  Frequency: {: .6f}".format(Phonon.eigenfreqs[mode]))
         lines.append("  Tensor:")
         lines.append("  - [ {: .6f},  {: .6f},  {: .6f} ]".format(Phonon.constantraman_data[mode][0], Phonon.constantraman_data[mode][3], Phonon.constantraman_data[mode][5]))
         lines.append("  - [ {: .6f},  {: .6f},  {: .6f} ]".format(Phonon.constantraman_data[mode][3], Phonon.constantraman_data[mode][1], Phonon.constantraman_data[mode][4]))

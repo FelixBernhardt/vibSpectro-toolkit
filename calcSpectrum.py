@@ -45,15 +45,8 @@ def broadenData(modelist, raman, eigvals, w0, col, temp, smear, stokes):
 def getConstantRaman(path, ramantensors, modelist, eigvals, eigvecs, w0, basis, nat, born, eps_inf, qdir, LOcorr):
     # apply LO correction if needed
     if LOcorr == True:
-        eigvalsLO_all = getLOFreqs(path, eigvecs, eigvals, qdir)
-        eigvalsLO = np.empty(len(modelist))
-        counter = 0
-        for mode in modelist:
-            eigvalsLO[counter] = eigvalsLO_all[mode-1]
-            counter += 1
-        #
         V0 = np.linalg.det(basis)
-        LOTerm = getLOCorrection(born, eps_inf, qdir, V0, w0, nat, eigvecs)
+        LOTerm = getLOCorrection(path, born, eps_inf, qdir, V0, w0, nat, eigvecs)
     else:
         LOTerm = np.zeros(8)
     #
@@ -68,23 +61,7 @@ def getConstantRaman(path, ramantensors, modelist, eigvals, eigvecs, w0, basis, 
             alpha.append(np.abs(np.interp([w0], w_list, ramantensors[mode][:,i]))[0] + LOTerm[i-1])
         #
         Raman[mode] = alpha
-    """
-    for file in filelist:
-        data = np.genfromtxt(file, dtype=complex)
-        with open(file) as f:
-            f.readline()
-            eigval = f.readline().split()[-1]
-        #
-        eigvals.append(eigval) 
-        w_list = np.real(data[:,0])
-        alpha = []
-
-        for i in range(1, 9):
-            alpha.append(np.abs(np.interp([w0], w_list, data[:,i]))[0] + LOTerm[i-1])
-        #
-        Raman.append(alpha)
     #
-    """
 
     return Raman
 #

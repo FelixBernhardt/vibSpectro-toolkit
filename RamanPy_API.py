@@ -10,6 +10,7 @@ from spglib import get_symmetry_dataset
 from Symmetries import periodTable, getAcoustics, getRotations, getDegenerates, getDecomposition, getRamanSilent, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols
 from IO import writeData, writeRaman, writeRamanSpectrum, writeConstantRaman, writeIRSpectrum, writeReflectanceSpectrum, loadSymmetryData, loadPhononsData, loadRamanTensor, loadConstantRaman, loadSpectrum, loadIR, loadReflectance
 from IR import calcIR, calcReflectance
+from LoTo import getLOFreqs
 from displace import calcdisplace
 from calcTensors import calcTensors
 from calcSpectrum import calcSpectrum
@@ -282,6 +283,12 @@ class Phonon:
         plotIRspectrum(self.IR_data, self.path, lualatex)
     #
     def reflectance(self):
+        if not hasattr(self, "IR_data"):
+            parser = ASEParser(self.path+self.file, modelist=self.modelist)
+            self.born = parser.get_born_charges()
+            if np.all(self.born == 0):
+                self.IR_data = calcIR(self.IRmodelist, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.masses, self.born, self.smearing)
+        #
         self.reflectance_data = calcReflectance(self.IR_data)
     #
     def write_Reflectance(self):
@@ -303,9 +310,15 @@ class Phonon:
     #
     def write_tensors(self):
         writeRaman(self)
-
+    #
     def spectrum(self):
-        self.constantraman_data, self.ramanspectrum_data = calcSpectrum(self.path, self.ramantensors_data, self.modelist, self.Ramanmodelist, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.born, self.eps_inf, self.photon_freq, self.temperature, self.smearing, self.stokes, self.qdir, self.LOcorr)        
+        # check for LO
+        if self.LOcorr == True:
+            self.eigenfreqs_LO = getLOFreqs(self.path, self.eigenvecs, self.eigenfreqs, self.qdir, self.ordering, self.degenerates, self.labels)
+        else:
+            self.eigenfreqs_LO = self.eigenfreqs
+        #
+        self.constantraman_data, self.ramanspectrum_data = calcSpectrum(self.path, self.ramantensors_data, self.modelist, self.Ramanmodelist, self.eigenfreqs_LO, self.eigenvecs, self.basis, self._nat, self.born, self.eps_inf, self.photon_freq, self.temperature, self.smearing, self.stokes, self.qdir, self.LOcorr)        
     #
     def write_spectrum(self):
         writeConstantRaman(self)
