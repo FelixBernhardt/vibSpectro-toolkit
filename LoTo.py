@@ -95,11 +95,8 @@ def align_subspace(E0_block, ENAC_block):
     return ENAC_rot, Sigma
 #
 
-def rec_assign_label(E0_dict, ENAC_dict, nac_irrep_proj, irrep_label):
+def assign_label(E0_dict, ENAC_dict, nac_irrep_proj, irrep_label):
     nmodes = len(ENAC_dict)
-    qdir = [1,1,1]
-    qperp1 = [-1,0,1]
-    qperp2 = [1,0,-1]
     possible_labels = ["A1", "A2", "E"]
     # first assign all modes to their best match
     irrep_label_nac = {}
@@ -110,11 +107,11 @@ def rec_assign_label(E0_dict, ENAC_dict, nac_irrep_proj, irrep_label):
             weight.append(nac_irrep_proj[mode][label]["weight"])
             dict[weight[-1]] = label
         #
-        print(np.max(weight))
         irrep_label_nac[mode] = dict[np.max(weight)]
         #
     #
 
+    """
     # check if the best matches are consistent
     nlabels = {}
     nlabels_nac = {}
@@ -133,7 +130,8 @@ def rec_assign_label(E0_dict, ENAC_dict, nac_irrep_proj, irrep_label):
     #
     print(nlabels)
     print(nlabels_nac)
-    #    
+    #
+    """ 
 
     return irrep_label_nac
 #
@@ -155,58 +153,43 @@ def LOTOassign(E0_dict, ENAC_dict, degenerate_groups, irrep_label):
     irrep_bases, irrep_groups = build_irrep_bases(E0_dict, irrep_label)
     nac_irrep_proj = decompose_nac_into_irreps(ENAC_dict, irrep_bases)
 
-    
-    print(irrep_label)
-
-    # recursively assign the mode labels to the OVERALL best match
-    irrep_label_nac = rec_assign_label(E0_dict, ENAC_dict, nac_irrep_proj, irrep_label)
-    print(irrep_label_nac)
+    # the nac mode labels
+    irrep_label_nac = assign_label(E0_dict, ENAC_dict, nac_irrep_proj, irrep_label)
 
     results = {}
 
     # Process each degenerate TO block (each block belongs to one irrep)
     for group in degenerate_groups:
         # Determine irrep of this block
-        Γ = irrep_label[group[0]]
-        EΓ = irrep_bases[Γ]
-
-        #print(Γ)
+        label = irrep_label[group[0]]
+        chosen = [mode for mode in range(1,len(ENAC_dict)+1) if irrep_label_nac[mode] == label]
 
         # Build TO subspace matrix for this block
         E0_block = collect_matrix(E0_dict, group)
-        m = len(group)
-
-        # Select NAC modes with largest projection weight into this irrep
-        weights = []
-        for j in ENAC_dict.keys():
-            w = nac_irrep_proj[j][Γ]["weight"]
-            #print(j)
-            weights.append((w, j))
-        weights.sort(reverse=True)
-        chosen = [j for (_, j) in weights[:m]]
 
         # Build NAC block matrix from projected vectors
-        ENAC_block = np.column_stack([
-            normalize(nac_irrep_proj[j][Γ]["proj_vec"]) for j in chosen
-        ])
+        ENAC_block = np.column_stack( [normalize(nac_irrep_proj[mode][label]["proj_vec"]) for mode in chosen] )
 
         # Align subspaces
         ENAC_rot, Sigma = align_subspace(E0_block, ENAC_block)
 
-        # Store results
-        for k, to_idx in enumerate(group):
-            #e0 = E0_block[:, k]
-            #eN = ENAC_rot[:, k]
-            #overlap = np.abs(np.vdot(e0, eN))**2
-            #results[to_idx] = {
-            #    "nac_index": chosen[k],
-            #    "aligned_eigenvector": eN,
-            #    "overlap": overlap,
-            #    "irrep": Γ,
-            #    "singular_value": Sigma[k]
-            #}
-            results[to_idx] = chosen[k]
+        # find best match
+        weight = []
+        dict = {}
+        for k, indx0 in enumerate(group):
+            for j, indxNAC in enumerate(chosen):
+                e0 = E0_block[:, k]
+                eN = ENAC_rot[:, j]
+                weight.append( np.abs(np.vdot(e0, eN))**2 )
+                dict[weight[-1]] = indxNAC
+            #
+            #print(weight)
+            print(dict)
+            results[indx0] = dict[np.max(weight)]
+        #            
+    #
 
+    #print(results)
     return results
 
 
@@ -228,10 +211,7 @@ def getLOFreqs(path, eigvecs, eigvals, qdir_cart, qdir_direct, ordering, degener
         eigvals_pt = dict(zip([3*nat+1-j for j in range(1,3*nat+1)], eigvals_tmp))
 
     # match the TO to the LO modes
-
     LoToDict = LOTOassign(eigvecs, eigvecs_pt, degenerates, labels)
-
-    print(LoToDict)
     
     # reorder the frequencies
     eigvalsLO = {}
