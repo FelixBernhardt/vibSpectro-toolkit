@@ -100,6 +100,7 @@ class Phonon:
         # just in case
         modelist = np.array(modelist)
 
+        # unit cell and phonon mode information from external software
         parser = ASEParser(self.path+self.file, modelist=modelist)
         
         atoms = parser.get_structure()
@@ -124,6 +125,14 @@ class Phonon:
         self.basis = atoms.get_cell()
         self.masses = atoms.get_masses()
 
+        # phonopy uses q-direction in reciprocal direct coords, input qdir is assumed to be cartesian
+        if qdir != (1,0,0) and qdir != (0,1,0) and qdir != (0,0,1) and qdir != (1,1,0) and qdir != (1,0,1) and qdir != (0,1,1) and qdir != (1,1,1):
+            print("[__init__]: Invalid q-direction specified, resorting to default.")
+            qdir = (1,0,0)
+        #
+        self.qdir_direct = np.linalg.solve(atoms.cell.reciprocal().T, np.array(qdir))
+        self.qdir_cartesian = qdir
+
         # check the mode's ordering
         if np.all(np.diff(eigenfreqs) >= 0):
             self.ordering = "ascending"
@@ -136,6 +145,7 @@ class Phonon:
         self.eigenfreqs = dict(zip(modelist, eigenfreqs))
         self._norms = dict(zip(modelist, np.array([np.linalg.norm(self.eigenvecs[mode]) for mode in modelist])))
 
+        # check for pure translations and rotations
         self.acoustics = getAcoustics(modelist, self.eigenvecs, self.eigenfreqs, self.masses)
         self.molecule = molecule
         if self.molecule == True:
@@ -145,6 +155,7 @@ class Phonon:
         #
         self.modelist = np.array([mode for mode in modelist if mode not in self.acoustics and mode not in self.rotations], dtype=int)
 
+        # symmetry analysis of modes and pointgroup
         if nosym == False:
             if os.path.isfile(self.path+"FORCE_CONSTANTS") and parser.backend.__class__.__name__ != "OwnParser":
                 self._dataset = get_symmetry_dataset((self.basis, self.direct, [periodTable[element] for element in self.elements]), symprec=1.e-5)
@@ -203,7 +214,6 @@ class Phonon:
         self.temperature = temperature
         self.photon_freq = photon_freq
         self.stokes = stokes
-        self.qdir = qdir
         self.LOcorr = LOcorr
         self.stepsize = stepsize
 
@@ -314,11 +324,11 @@ class Phonon:
     def spectrum(self):
         # check for LO
         if self.LOcorr == True:
-            self.eigenfreqs_LO = getLOFreqs(self.path, self.eigenvecs, self.eigenfreqs, self.qdir, self.ordering, self.degenerates, self.labels)
+            self.eigenfreqs_LO = getLOFreqs(self.path, self.eigenvecs, self.eigenfreqs, self.qdir_cartesian, self.qdir_direct, self.ordering, self.degenerates, self.labels)
         else:
             self.eigenfreqs_LO = self.eigenfreqs
         #
-        self.constantraman_data, self.ramanspectrum_data = calcSpectrum(self.path, self.ramantensors_data, self.modelist, self.Ramanmodelist, self.eigenfreqs_LO, self.eigenvecs, self.basis, self._nat, self.born, self.eps_inf, self.photon_freq, self.temperature, self.smearing, self.stokes, self.qdir, self.LOcorr)        
+        self.constantraman_data, self.ramanspectrum_data = calcSpectrum(self.path, self.ramantensors_data, self.modelist, self.Ramanmodelist, self.eigenfreqs_LO, self.eigenvecs, self.basis, self._nat, self.born, self.eps_inf, self.photon_freq, self.temperature, self.smearing, self.stokes, self.qdir_cartesian, self.LOcorr)        
     #
     def write_spectrum(self):
         writeConstantRaman(self)
@@ -333,7 +343,7 @@ class Phonon:
     #
 
     ########
-    # Misc
+    # IO
     ########
     def write_System(self):
         writeData(self)

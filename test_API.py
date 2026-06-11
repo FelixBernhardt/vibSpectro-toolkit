@@ -8,9 +8,9 @@ import sys
 #test.eigenvecs=[test.eigenvecs[29-mode] for mode in range(30)]
 #test.eigenfreqs=[test.eigenfreqs[29-mode] for mode in range(30)]
 
-#path = "/Users/felixbernhardt/Desktop/sqs_00"
+path = "/Users/felixbernhardt/Desktop/sqs_00"
 #path = "/home/felix/Forschung/test_molecule"
-path = "/home/felix/Forschung/sqs_00"
+#path = "/home/felix/Forschung/sqs_00"
 #path = "/home/felixbernhardt/Forschung/sqs_00_allVASP/"
 #path = "/home/felixbernhardt/Forschung/Yassine/"
 #test = Phonon(file="phonopy.yaml", path=path, born=False, qdir=(0,1,0), nosym=False, modelist=[7,8], smearing=5)

@@ -46,11 +46,11 @@ V2THz = 15.633302
 THz2cm = 33.36
 
 
-def parsePhonopy(file, qdir):
+def parsePhonopy(file, qdirs):
     path = os.path.split(file)[0]+"/"
     pwd = os.getcwd()
 
-    if qdir == None:
+    if qdirs == None:
         try:
             with open(path+"qpoints.yaml", "r") as stream:
                 dataDM = yaml.safe_load(stream)
@@ -67,19 +67,19 @@ def parsePhonopy(file, qdir):
         # write and read the dynamical matrix with nac correction if not already present
         qstr = ""
         for j in range(3):
-            qstr += str(qdir[j]) + " "
+            qstr += str(qdirs[1][j]) + " "
         try: 
-            with open(path+"qpoints_"+portoq[qdir]+".yaml", "r") as stream:
+            with open(path+"qpoints_"+portoq[qdirs[0]]+".yaml", "r") as stream:
                 dataDM = yaml.safe_load(stream)
             #
         except IOError:
             os.chdir(path)
             os.system("mv qpoints.yaml tmp")
             os.system("phonopy --readfc --sym-fc --writedm --nac --qpoints=\"0 0 0\" --q-direction=\""+qstr+"\" --dim=\"1 1 1\"")
-            os.system("mv qpoints.yaml qpoints_"+portoq[qdir]+".yaml")
+            os.system("mv qpoints.yaml qpoints_"+portoq[qdirs[0]]+".yaml")
             os.system("mv tmp qpoints.yaml")
             os.chdir(pwd)
-            with open(path+"qpoints_"+portoq[qdir]+".yaml", "r") as stream:
+            with open(path+"qpoints_"+portoq[qdirs[0]]+".yaml", "r") as stream:
                 dataDM = yaml.safe_load(stream)
             #
         #

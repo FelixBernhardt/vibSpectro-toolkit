@@ -93,24 +93,13 @@ def align_subspace(E0_block, ENAC_block):
     U, Sigma, Vh = np.linalg.svd(S)
     ENAC_rot = ENAC_block @ Vh.conj().T
     return ENAC_rot, Sigma
-
-def longitudinal_character(evec, qhat, qhat1, qhat2):
-    # evec shape: (natoms, 3)
-    flat = evec.reshape(-1, 3)
-    projLO = np.sum(flat @ qhat)
-    projTO = np.sum(flat @ qhat1) + np.sum(flat @ qhat2)
-    print(projLO-projTO)
-    if projLO - projTO > 0.4:
-        return "LO"
-    else:
-        return "TO"
 #
 
 def rec_assign_label(E0_dict, ENAC_dict, nac_irrep_proj, irrep_label):
     nmodes = len(ENAC_dict)
-    qdir = [0,0,1]
-    qperp1 = [1,0,0]
-    qperp2 = [0,1,0]
+    qdir = [1,1,1]
+    qperp1 = [-1,0,1]
+    qperp2 = [1,0,-1]
     possible_labels = ["A1", "A2", "E"]
     # first assign all modes to their best match
     irrep_label_nac = {}
@@ -121,23 +110,12 @@ def rec_assign_label(E0_dict, ENAC_dict, nac_irrep_proj, irrep_label):
             weight.append(nac_irrep_proj[mode][label]["weight"])
             dict[weight[-1]] = label
         #
-        if np.max(weight) > 0.99:
-            irrep_label_nac[mode] = dict[np.max(weight)]
-        else:
-            #weight.remove(np.max(weight))
-            irrep_label_nac[mode] = dict[np.max(weight)]
+        print(np.max(weight))
+        irrep_label_nac[mode] = dict[np.max(weight)]
         #
     #
 
-    # look which modes are LO and which are TO
-    LOs = {}
-    TOs = {}
-    for mode in range(1,nmodes+1):
-        weight = longitudinal_character(ENAC_dict[mode], qdir, qperp1, qperp2)
-        print(mode, weight)
-
     # check if the best matches are consistent
-    # if not, start with the worst match and reassign the mode
     nlabels = {}
     nlabels_nac = {}
     for label in possible_labels:
@@ -232,13 +210,14 @@ def LOTOassign(E0_dict, ENAC_dict, degenerate_groups, irrep_label):
     return results
 
 
-def getLOFreqs(path, eigvecs, eigvals, qdir, ordering, degenerates, labels):
+def getLOFreqs(path, eigvecs, eigvals, qdir_cart, qdir_direct, ordering, degenerates, labels):
     # get the LO modes corresponding to the direction to be analyzed
     #<phonopy --readfc --sym-fc --writedm --qpoints="0 0 0" --nac --q-direction="0 0 1">
 
     #print(eigvals)
+    print("[getLOFreqs]: Using cartesian q-direction "+str(qdir_cart))
 
-    eigvals_tmp, eigvecs_tmp, norms_pt, qpoint_pt, basis, nat, elements, cPos, masses = parsePhonopy(path, qdir)
+    eigvals_tmp, eigvecs_tmp, norms_pt, qpoint_pt, basis, nat, elements, cPos, masses = parsePhonopy(path, [qdir_cart, qdir_direct])
 
     # phonopy always provides all modes
     if ordering == "ascending":
@@ -277,10 +256,10 @@ def getChi2(path):
     return 4*np.pi/(3*10e4)*1e-2*[xx, yy, zz, xy, yz, xz]
 #
 
-def getLOCorrection(path, born, eps_inf, qdir, vol, w, nat, eigvecs):
+def getLOCorrection(path, born, eps_inf, qdir_cart, vol, w, nat, eigvecs):
     # using Fröhlich formula
 
-    eps_inf_q = np.dot( qdir, np.dot(eps_inf, qdir) )
+    eps_inf_q = np.dot( qdir_cart, np.dot(eps_inf, qdir_cart) )
     corr = np.empty(7, dtype=complex)
     for mode in range(len(eigvecs)):
         tot = []
