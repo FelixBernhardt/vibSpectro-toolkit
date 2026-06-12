@@ -229,7 +229,7 @@ class Phonon:
     def set_symmetries(self, modelist):
         self.ramantensors = analyzeRamanTensors(self.pointgroup, varprint=False)
         self.dielectrictensor = analyzeDielectricTensor(self.pointgroup, varprint=False)    
-        self.degenerates = getDegenerates(self.modelist, self.eigenfreqs, self.labels, prec=1e0)
+        self.degenerates = getDegenerates(self._modelist, self.eigenfreqs, self.labels, prec=1e0)
         self.silent = getRamanSilent(self._modelist, self.labels, self.pointgroup)
         #self.modelist = [mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations]
         self.IRmodelist = np.array([mode for mode in modelist if mode not in self.acoustics and mode not in self.rotations], dtype=int)

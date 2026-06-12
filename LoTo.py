@@ -82,23 +82,50 @@ def decompose_nac_into_irreps(ENAC_dict, irrep_bases):
 # SVD alignment inside each irrep
 # ------------------------------
 
-def align_subspace(E0_block, ENAC_block):
-    """
-    Perform SVD alignment:
-        S = E0^† ENAC
-        S = U Σ V^†
-        ENAC_rot = ENAC V
-    """
-    S = E0_block.conj().T @ ENAC_block
-    U, Sigma, Vh = np.linalg.svd(S)
-    ENAC_rot = ENAC_block @ Vh.conj().T
-    return ENAC_rot, Sigma
+def align_subspace(E_block, groupsize, qdir):
+    nat3 = len(E_block[:,0])
+    nmodes = len(E_block[0,:])
+    if groupsize == 1:
+        return E_block
+    elif groupsize == 2:
+        E_rot = np.zeros_like(E_block)
+        q = np.tile(qdir, int(nat3/3)) 
+        mode = 0
+        for j in range(int(nmodes/2)):
+            v = E_block[:,mode:mode+1] @ (E_block[:,mode:mode+1].conj().T @ q)
+
+            norm_v = np.linalg.norm(v)
+            if norm_v < 1e-12:
+                raise ValueError("Direction d has negligible projection onto TO E subspace.")
+
+            e_parallel = v / norm_v
+            
+            # Build orthogonal partner inside the same subspace
+            # Start from one of the original TO modes and Gram-Schmidt
+            w = E_block[:,mode] - np.vdot(e_parallel, E_block[:,mode]) * e_parallel
+            norm_w = np.linalg.norm(w)
+            if norm_w < 1e-12:
+                # If unlucky, use the other TO mode
+                w = E_block[:,mode+1] - np.vdot(e_parallel, E_block[:,mode+1]) * e_parallel
+                norm_w = np.linalg.norm(w)
+                if norm_w < 1e-12:
+                    raise RuntimeError("Failed to construct orthogonal E component.")
+
+            e_perp = w / norm_w
+
+            E_rot[:,mode] = e_parallel
+            E_rot[:,mode+1] = e_perp
+            mode += 2
+        #
+    #
+
+    return E_rot
 #
 
 def assign_label(E0_dict, ENAC_dict, nac_irrep_proj, irrep_label):
     nmodes = len(ENAC_dict)
     possible_labels = ["A1", "A2", "E"]
-    # first assign all modes to their best match
+    # assign all modes to their best match
     irrep_label_nac = {}
     for mode in range(1,nmodes+1):
         weight = []
@@ -111,28 +138,6 @@ def assign_label(E0_dict, ENAC_dict, nac_irrep_proj, irrep_label):
         #
     #
 
-    """
-    # check if the best matches are consistent
-    nlabels = {}
-    nlabels_nac = {}
-    for label in possible_labels:
-        counter = 0
-        counter_nac = 0
-        for mode in range(1,nmodes+1):
-            if irrep_label[mode] == label:
-                counter += 1
-            if irrep_label_nac[mode] == label:
-                counter_nac += 1
-            #
-        #
-        nlabels[label] = counter
-        nlabels_nac[label] = counter_nac
-    #
-    print(nlabels)
-    print(nlabels_nac)
-    #
-    """ 
-
     return irrep_label_nac
 #
 
@@ -140,7 +145,7 @@ def assign_label(E0_dict, ENAC_dict, nac_irrep_proj, irrep_label):
 # Main routine: irrep-clean LO/TO assignment
 # ------------------------------
 
-def LOTOassign(E0_dict, ENAC_dict, degenerate_groups, irrep_label):
+def LOTOassign(E0_dict, ENAC_dict, degenerate_groups, irrep_label, qdir):
     
     for mode in range(1,len(E0_dict)+1):
         if any(mode in x for x in degenerate_groups):
@@ -170,26 +175,26 @@ def LOTOassign(E0_dict, ENAC_dict, degenerate_groups, irrep_label):
         # Build NAC block matrix from projected vectors
         ENAC_block = np.column_stack( [normalize(nac_irrep_proj[mode][label]["proj_vec"]) for mode in chosen] )
 
-        # Align subspaces
-        ENAC_rot, Sigma = align_subspace(E0_block, ENAC_block)
+        # Align subspaces, this does not work!
+        ENAC_rot = align_subspace(ENAC_block, len(group), qdir)
+        E0_rot = align_subspace(E0_block, len(group), qdir)
 
         # find best match
-        weight = []
-        dict = {}
         for k, indx0 in enumerate(group):
+            weight = []
+            dict = {}
             for j, indxNAC in enumerate(chosen):
-                e0 = E0_block[:, k]
+                #e0 = E0_block[:, k]
+                #eN = ENAC_block[:, j]
+                e0 = E0_rot[:, k]
                 eN = ENAC_rot[:, j]
                 weight.append( np.abs(np.vdot(e0, eN))**2 )
                 dict[weight[-1]] = indxNAC
             #
-            #print(weight)
-            print(dict)
             results[indx0] = dict[np.max(weight)]
         #            
     #
 
-    #print(results)
     return results
 
 
@@ -211,12 +216,12 @@ def getLOFreqs(path, eigvecs, eigvals, qdir_cart, qdir_direct, ordering, degener
         eigvals_pt = dict(zip([3*nat+1-j for j in range(1,3*nat+1)], eigvals_tmp))
 
     # match the TO to the LO modes
-    LoToDict = LOTOassign(eigvecs, eigvecs_pt, degenerates, labels)
+    LoToDict = LOTOassign(eigvecs, eigvecs_pt, degenerates, labels, qdir_cart)
     
     # reorder the frequencies
     eigvalsLO = {}
     for mode in range(1,3*nat+1):
-        print(str(eigvals[mode])+" -> "+ str(eigvals_pt[LoToDict[mode]]))
+        #print(str(eigvals[mode])+" -> "+ str(eigvals_pt[LoToDict[mode]]))
         eigvalsLO[mode] = eigvals_pt[LoToDict[mode]]
     #
 
