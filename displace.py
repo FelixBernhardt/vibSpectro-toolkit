@@ -9,7 +9,7 @@ import numpy as np
 from parserVASP import writePOSCAR, linkVASP
 from parserQE import writeSCF, linkQE
 
-def calcdisplace(path, modelist, stepsize, program, eigvecs, norms, basis, nat, elements, positions, scffile):
+def calcDisplace(path, modelist, stepsize, program, eigvecs, norms, basis, nat, elements, positions, scffile):
     if program != "VASP" and program != "QE":
         print("[displace]: code not supported, exiting...")
         sys.exit(1)

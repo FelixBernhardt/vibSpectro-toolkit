@@ -15,7 +15,7 @@ path = "/home/felix/Forschung/sqs_00"
 #path = "/home/felixbernhardt/Forschung/Yassine/"
 #test = Phonon(file="phonopy.yaml", path=path, born=False, qdir=(0,1,0), nosym=False, modelist=[7,8], smearing=5)
 #test = Phonon(file="OUTCAR", path=path, born=True, qdir=(1,1,0), nosym=False, modelist=[16,17], smearing=5)
-test = Phonon(file="OUTCAR", path=path, born=True, qdir=(0,0,1), nosym=False, modelist=range(1,31), smearing=5, LOcorr=True)
+test = Phonon(file="OUTCAR", path=path, born=True, qdir=(0,0,1), nosym=False, modelist=range(20,31), smearing=5, LOcorr=True)
 #test = Phonon(file="OUTCAR", path=path, born=False, qdir=(1,0,0), nosym=True, modelist=[2,3,4,5,6,8,9,11,12,13,14,15,16,17,19,20,21,22,23,24,26,27], smearing=5)
 
 #test = Phonon(file="OUTCAR", path=path, born=True, qdir=(1,1,0), nosym=False, modelist=range(1,31), smearing=5)

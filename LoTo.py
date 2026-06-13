@@ -7,6 +7,8 @@
 
 import numpy as np
 from parserPhonopy import parsePhonopy
+from spglib import get_symmetry_dataset
+from Symmetries import periodTable, getIrrepsSymbols, getDegenerates
 from Symmetries import flatten, e_charge
 from calcTensors import placzeckInvs
 
@@ -17,7 +19,7 @@ from calcTensors import placzeckInvs
 def normalize(v):
     return v / np.linalg.norm(v)
 
-def collect_matrix(evec_dict, indices):
+def collectMatrix(evec_dict, indices):
     """Build matrix with normalized eigenvectors as columns."""
     cols = [normalize(evec_dict[i].ravel()) for i in indices]
     return np.column_stack(cols)  # shape (3N, m)
@@ -26,7 +28,7 @@ def collect_matrix(evec_dict, indices):
 # Build irrep subspaces from TO modes
 # ------------------------------
 
-def build_irrep_bases(E0_dict, irrep_label):
+def buildIrrepBases(E0_dict, irrep_label):
     """
     Returns:
         irrep_bases[Γ] = matrix whose columns span the Γ irrep subspace
@@ -38,7 +40,7 @@ def build_irrep_bases(E0_dict, irrep_label):
 
     irrep_bases = {}
     for Γ, idxs in irrep_groups.items():
-        irrep_bases[Γ] = collect_matrix(E0_dict, idxs)
+        irrep_bases[Γ] = collectMatrix(E0_dict, idxs)
 
     return irrep_bases, irrep_groups
 
@@ -46,7 +48,7 @@ def build_irrep_bases(E0_dict, irrep_label):
 # Project NAC eigenvectors into each irrep
 # ------------------------------
 
-def project_into_irrep(EΓ, v):
+def projectIntoIrrep(EΓ, v):
     """
     Project vector v into the irrep subspace spanned by EΓ.
     Returns:
@@ -58,7 +60,7 @@ def project_into_irrep(EΓ, v):
     weight = np.sum(np.abs(coeffs)**2)
     return proj_vec, weight
 
-def decompose_nac_into_irreps(ENAC_dict, irrep_bases):
+def decomposeNAC(ENAC_dict, irrep_bases):
     """
     Returns:
         nac_irrep_proj[j][Γ] = {
@@ -71,7 +73,7 @@ def decompose_nac_into_irreps(ENAC_dict, irrep_bases):
         v = normalize(v_raw.ravel())
         nac_irrep_proj[j] = {}
         for Γ, EΓ in irrep_bases.items():
-            proj_vec, weight = project_into_irrep(EΓ, v)
+            proj_vec, weight = projectIntoIrrep(EΓ, v)
             nac_irrep_proj[j][Γ] = {
                 "proj_vec": proj_vec,
                 "weight": weight
@@ -82,21 +84,22 @@ def decompose_nac_into_irreps(ENAC_dict, irrep_bases):
 # SVD alignment inside each irrep
 # ------------------------------
 
-def align_subspace(E_block, groupsize, qdir):
+def alignSubspace(E_block, groupsize, qdir):
     nat3 = len(E_block[:,0])
     nmodes = len(E_block[0,:])
+    E_rot = np.zeros_like(E_block)
+    q = np.tile(qdir, int(nat3/3))
+    mode = 0
     if groupsize == 1:
         return E_block
-    elif groupsize == 2:
-        E_rot = np.zeros_like(E_block)
-        q = np.tile(qdir, int(nat3/3)) 
-        mode = 0
+    elif groupsize == 2: 
         for j in range(int(nmodes/2)):
             v = E_block[:,mode:mode+1] @ (E_block[:,mode:mode+1].conj().T @ q)
 
             norm_v = np.linalg.norm(v)
             if norm_v < 1e-12:
-                raise ValueError("Direction d has negligible projection onto TO E subspace.")
+                print("[alignSubspace]: Direction q has negligible projection onto TO E subspace, rotations not applied.")
+                return E_block
 
             e_parallel = v / norm_v
             
@@ -109,7 +112,8 @@ def align_subspace(E_block, groupsize, qdir):
                 w = E_block[:,mode+1] - np.vdot(e_parallel, E_block[:,mode+1]) * e_parallel
                 norm_w = np.linalg.norm(w)
                 if norm_w < 1e-12:
-                    raise RuntimeError("Failed to construct orthogonal E component.")
+                    print("[alignSubspace]: Direction q has negligible projection onto TO E subspace, rotations not applied.")
+                    return E_block
 
             e_perp = w / norm_w
 
@@ -117,14 +121,73 @@ def align_subspace(E_block, groupsize, qdir):
             E_rot[:,mode+1] = e_perp
             mode += 2
         #
-    #
+    elif groupsize == 3: 
+        for j in range(int(nmodes/2)):
+            v = E_block[:,mode:mode+1] @ (E_block[:,mode:mode+1].conj().T @ q)
 
+            norm_v = np.linalg.norm(v)
+            if norm_v < 1e-12:
+                print("[alignSubspace]: Direction q has negligible projection onto TO E subspace, rotations not applied.")
+                return E_block
+            #
+            e_parallel = v / norm_v
+            
+            # Build orthogonal partner inside the same subspace
+            # Start from one of the original TO modes and Gram-Schmidt
+            w = E_block[:,mode] - np.vdot(e_parallel, E_block[:,mode]) * e_parallel
+            norm_w = np.linalg.norm(w)
+            if norm_w < 1e-12:
+                # If unlucky, use the other TO mode
+                w = E_block[:,mode+1] - np.vdot(e_parallel, E_block[:,mode+1]) * e_parallel
+                norm_w = np.linalg.norm(w)
+                if norm_w < 1e-12:
+                    # If unlucky, use the other TO mode
+                    w = E_block[:,mode+2] - np.vdot(e_parallel, E_block[:,mode+2]) * e_parallel
+                    norm_w = np.linalg.norm(w)
+                    if norm_w < 1e-12:
+                        print("[alignSubspace]: Direction q has negligible projection onto TO E subspace, rotations not applied.")
+                        return E_block
+                    #
+                #
+            #
+            e_perp1 = w / norm_w
+
+            # Build second orthogonal partner inside the same subspace
+            # Start from one of the original TO modes and Gram-Schmidt
+            w = E_block[:,mode] - np.vdot(e_parallel, E_block[:,mode]) * e_parallel - np.vdot(e_perp1, E_block[:,mode]) * e_perp1
+            norm_w = np.linalg.norm(w)
+            if norm_w < 1e-12:
+                # If unlucky, use the other TO mode
+                w = E_block[:,mode+1] - np.vdot(e_parallel, E_block[:,mode+1]) * e_parallel - np.vdot(e_perp1, E_block[:,mode+1]) * e_perp1
+                norm_w = np.linalg.norm(w)
+                if norm_w < 1e-12:
+                    # If unlucky, use the other TO mode
+                    w = E_block[:,mode+2] - np.vdot(e_parallel, E_block[:,mode+2]) * e_parallel - np.vdot(e_perp1, E_block[:,mode+2]) * e_perp1
+                    norm_w = np.linalg.norm(w)
+                    if norm_w < 1e-12:
+                        print("[alignSubspace]: Direction q has negligible projection onto TO E subspace, rotations not applied.")
+                        return E_block
+                    #
+                #
+            #
+            e_perp2 = w / norm_w
+
+            E_rot[:,mode] = e_parallel
+            E_rot[:,mode+1] = e_perp1
+            E_rot[:,mode+2] = e_perp2
+            mode += 3
+        #
+    #
+    else:
+        print("[alignSubspace]: Invalid degenerate group detected, rotations not applied.")
+        return E_block
+    #
     return E_rot
 #
 
-def assign_label(E0_dict, ENAC_dict, nac_irrep_proj, irrep_label):
+def assignLabel(ENAC_dict, nac_irrep_proj, irrep_label):
     nmodes = len(ENAC_dict)
-    possible_labels = ["A1", "A2", "E"]
+    possible_labels = set(irrep_label.values())
     # assign all modes to their best match
     irrep_label_nac = {}
     for mode in range(1,nmodes+1):
@@ -155,11 +218,11 @@ def LOTOassign(E0_dict, ENAC_dict, degenerate_groups, irrep_label, qdir):
         #
     #
 
-    irrep_bases, irrep_groups = build_irrep_bases(E0_dict, irrep_label)
-    nac_irrep_proj = decompose_nac_into_irreps(ENAC_dict, irrep_bases)
+    irrep_bases, irrep_groups = buildIrrepBases(E0_dict, irrep_label)
+    nac_irrep_proj = decomposeNAC(ENAC_dict, irrep_bases)
 
     # the nac mode labels
-    irrep_label_nac = assign_label(E0_dict, ENAC_dict, nac_irrep_proj, irrep_label)
+    irrep_label_nac = assignLabel(ENAC_dict, nac_irrep_proj, irrep_label)
 
     results = {}
 
@@ -170,14 +233,14 @@ def LOTOassign(E0_dict, ENAC_dict, degenerate_groups, irrep_label, qdir):
         chosen = [mode for mode in range(1,len(ENAC_dict)+1) if irrep_label_nac[mode] == label]
 
         # Build TO subspace matrix for this block
-        E0_block = collect_matrix(E0_dict, group)
+        E0_block = collectMatrix(E0_dict, group)
 
         # Build NAC block matrix from projected vectors
         ENAC_block = np.column_stack( [normalize(nac_irrep_proj[mode][label]["proj_vec"]) for mode in chosen] )
 
         # Align subspaces, this does not work!
-        ENAC_rot = align_subspace(ENAC_block, len(group), qdir)
-        E0_rot = align_subspace(E0_block, len(group), qdir)
+        ENAC_rot = alignSubspace(ENAC_block, len(group), qdir)
+        E0_rot = alignSubspace(E0_block, len(group), qdir)
 
         # find best match
         for k, indx0 in enumerate(group):
@@ -196,36 +259,54 @@ def LOTOassign(E0_dict, ENAC_dict, degenerate_groups, irrep_label, qdir):
     #
 
     return results
+#
 
-
-def getLOFreqs(path, eigvecs, eigvals, qdir_cart, qdir_direct, ordering, degenerates, labels):
+def getLOFreqs(path, modelist, qdir_cart, qdir_direct, ordering, eigvecs, degenerates, labels):
     # get the LO modes corresponding to the direction to be analyzed
     #<phonopy --readfc --sym-fc --writedm --qpoints="0 0 0" --nac --q-direction="0 0 1">
 
-    #print(eigvals)
+    # read the LO modes
     print("[getLOFreqs]: Using cartesian q-direction "+str(qdir_cart))
-
     eigvals_tmp, eigvecs_tmp, norms_pt, qpoint_pt, basis, nat, elements, cPos, masses = parsePhonopy(path, [qdir_cart, qdir_direct])
 
-    # phonopy always provides all modes
-    if ordering == "ascending":
-        eigvecs_pt = dict(zip([j for j in range(1,3*nat+1)], eigvecs_tmp))
-        eigvals_pt = dict(zip([j for j in range(1,3*nat+1)], eigvals_tmp))
-    else:
-        eigvecs_pt = dict(zip([3*nat+1-j for j in range(1,3*nat+1)], eigvecs_tmp))
-        eigvals_pt = dict(zip([3*nat+1-j for j in range(1,3*nat+1)], eigvals_tmp))
+    # phonopy always provides all modes in ascending order
+    eigvecs_pt = dict(zip([j for j in range(1,3*nat+1)], eigvecs_tmp))
+    eigvals_pt = dict(zip([j for j in range(1,3*nat+1)], eigvals_tmp))
+
+    if len(modelist) != 3*nat-3:
+        # read all the TO modes from phonopy
+        eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(path, None)
+        direct = np.dot(cPos, np.linalg.inv(basis))
+        eigvecs = dict(zip([j for j in range(1,3*nat+1)], eigvecs))
+        eigvals = dict(zip([j for j in range(1,3*nat+1)], eigvals))
+
+        _dataset = get_symmetry_dataset((basis, direct, [periodTable[element] for element in elements]), symprec=1.e-5)
+        pointgroup = str(_dataset["pointgroup"])
+        _labels_tmp = getIrrepsSymbols(path, basis, direct, elements, pointgroup)
+        labels = dict(enumerate([_labels_tmp[i-1] for i in range(1,3*nat+1)], start=1))
+        degenerates = getDegenerates(range(1,3*nat+1), eigvals, labels, prec=1e0)
+    #
 
     # match the TO to the LO modes
     LoToDict = LOTOassign(eigvecs, eigvecs_pt, degenerates, labels, qdir_cart)
     
     # reorder the frequencies
     eigvalsLO = {}
-    for mode in range(1,3*nat+1):
-        #print(str(eigvals[mode])+" -> "+ str(eigvals_pt[LoToDict[mode]]))
-        eigvalsLO[mode] = eigvals_pt[LoToDict[mode]]
+    if ordering == "ascending":
+        for mode in modelist:
+            eigvalsLO[mode] = eigvals_pt[LoToDict[mode]]
+        #
+    elif ordering == "descending" and len(modelist) != 3*nat-3:
+        for mode in modelist:
+            eigvalsLO[mode] = eigvals_pt[LoToDict[3*nat+1-mode]]
+        #
+    elif ordering == "descending" :
+        for mode in modelist:
+            eigvalsLO[mode] = eigvals_pt[LoToDict[mode]]
+        #
     #
 
-    return eigvals_pt
+    return eigvalsLO
 #
 
 def getChi2(path):

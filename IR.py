@@ -7,7 +7,7 @@
 import numpy as np
 from Symmetries import eps0, c_cm, e_charge, amu
 
-def Lorentz_IR(hw, ab, gam=0.001):
+def LorentzIR(hw, ab, gam=0.001):
     fmax = max(hw)
     erange = np.arange(0, 1.1*fmax, gam/10)
     spectrum = 0.0 * erange
@@ -86,7 +86,7 @@ def calcIR(modelist, eigvals, eigvecs, basis, nat, masses, born, smearing):
 
     # apply the smearing
     for alpha in range(3):
-        w, tmp = Lorentz_IR([eigvals[mode] for mode in modelist], Sm[alpha], smearing)
+        w, tmp = LorentzIR([eigvals[mode] for mode in modelist], Sm[alpha], smearing)
         IR_Im.append(tmp)
     #
     IR_Im = np.array(IR_Im)
