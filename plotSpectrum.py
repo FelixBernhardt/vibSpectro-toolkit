@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
-def plotSpectrum(ramandata, path, w0, porto, qdir, lualatex=False):
+def _plotRamanSpectrum(ramandata, path, w0, porto, qdir, lualatex=False):
 
     if qdir == (1,0,0):
         ki = "x"
@@ -29,7 +29,7 @@ def plotSpectrum(ramandata, path, w0, porto, qdir, lualatex=False):
         ki = "x"
         ko = "z"
     else:
-        print("[plotSpectrum]: ERROR: invalid propagation direction specified")
+        print("[_plotRamanSpectrum]: ERROR: invalid propagation direction specified")
         return 0
     #
     
@@ -40,11 +40,11 @@ def plotSpectrum(ramandata, path, w0, porto, qdir, lualatex=False):
     elif str(porto) == "zx":
         porto = "xz"
     elif str(porto) != "xx" and str(porto) != "yy" and str(porto) != "zz" and str(porto) != "xy" and str(porto) != "xz" and str(porto) != "yz" and str(porto) != "perp" and str(porto) != "back":
-        print("[plotSpectrum]: ERROR: invalid polarization direction specified, exiting")
+        print("[_plotRamanSpectrum]: ERROR: invalid polarization direction specified, exiting")
         return 0
     #
 
-    print("[plotSpectrum]: plotting "+ki+"("+porto+")"+ko+" configuration")
+    #print("[plotSpectrum]: plotting "+ki+"("+porto+")"+ko+" configuration")
         
     # Fonts
     if lualatex == True:
@@ -103,7 +103,14 @@ def plotSpectrum(ramandata, path, w0, porto, qdir, lualatex=False):
     plt.close()
 #
 
-def plotIRspectrum(IRdata, path, file, lualatex=False):
+def plotRamanSpectrum(ramanspectrum_data, path, photon_freq, qdir_cartesian, porto, lualatex):
+    for pt in porto:
+        _plotRamanSpectrum(ramanspectrum_data, path, photon_freq, pt, qdir_cartesian, lualatex)
+    #
+    print("[plotRamanSpectrum]: Done.") 
+#
+
+def plotIRSpectrum(IRdata, path, file, lualatex=False):
     dict = {1: "x", 2: "y", 3: "z", 4: "avg"}
     w_data = IRdata[0].real
 
@@ -150,10 +157,10 @@ def plotIRspectrum(IRdata, path, file, lualatex=False):
         plt.savefig(path+"IR_"+dict[j]+".pdf")
         plt.close()
     #
-    print("[plotIR]: Done.") 
+    print("[plotIRSpectrum]: Done.") 
 #
 
-def plotRspectrum(R_data, path, file, lualatex=False):
+def plotReflectanceSpectrum(R_data, path, file, lualatex=False):
     dict = {1: "x", 2: "y", 3: "z", 4: "avg"}
     w_data = R_data[0]
 
@@ -192,5 +199,5 @@ def plotRspectrum(R_data, path, file, lualatex=False):
         plt.savefig(path+"R_"+dict[j]+".pdf")
         plt.close()
     #
-    print("[plotRspectrum]: Done.") 
+    print("[plotReflectanceSpectrum]: Done.") 
 #

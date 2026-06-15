@@ -18,17 +18,6 @@ def LorentzIR(hw, ab, gam=0.001):
 #
 
 def calcReflectance(IRdata):
-    """
-    parser for IR.dat file
-    data = np.genfromtxt(path+file)
-    w = np.array([x[0] for x in data])
-    col = []
-    for j in range(1,8,2):
-        epsi = np.array([x[j] for x in data])
-        epsr = np.array([x[j+1] for x in data])
-        tmp = []
-        for i in range(len(w)):
-    """
     w = np.array(IRdata[0]).real
     col = []
     for j in range(1,4):
@@ -37,12 +26,6 @@ def calcReflectance(IRdata):
         #
         tmp = []
         for i in range(len(w)):
-            """
-            omega   : array of angular frequencies [rad/s] (or use 2*pi*c / lambda)
-            eps_ion : array of ionic dielectric contribution (scalar for chosen polarization)
-            eps_inf : scalar high-frequency dielectric constant
-            d       : thickness [cm]
-            """
 
             eps = complex(epsr[i], epsi[i])          # total dielectric function
             n_complex = np.sqrt(eps)                 # n + i k
@@ -55,7 +38,6 @@ def calcReflectance(IRdata):
         #
         col.append(tmp)
     #
-
     print("[calcReflectance]: Done.")
     return np.array([w, col[0], col[1], col[2]])
 #
@@ -102,7 +84,6 @@ def calcIR(modelist, eigvals, eigvecs, basis, nat, masses, born, smearing):
             #
         #
     #
-    #IR_Re = IR_Re/( 2 * np.pi * c_cm )**2
 
     # write output
     IRdata = np.array([w, [complex(IR_Re[0][i], IR_Im[0][i]) for i in range(len(w))],

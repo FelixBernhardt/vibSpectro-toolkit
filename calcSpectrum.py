@@ -4,10 +4,8 @@
 # library for VASP_Raman.py
 #
 
-import os
 import numpy as np
-from Symmetries import flatten, portoq, eps0, c_cm, h, kb, ev2rcm
-from LoTo import getLOFreqs, getLOCorrection
+from Symmetries import eps0, c_cm, h, kb, ev2rcm
 
 def Lorentz(hw, ab, gam=0.001):
     fmax = max(hw)
@@ -42,23 +40,14 @@ def broadenData(modelist, raman, eigvals, w0, col, temp, smear, stokes):
     return np.array([w, Spectrum])
 #
 
-def getConstantRaman(path, ramantensors, modelist, eigvals, eigvecs, w0, basis, nat, born, eps_inf, qdir, LOcorr):
-    # apply LO correction if needed
-    if LOcorr == True:
-        V0 = np.linalg.det(basis)
-        LOTerm = getLOCorrection(path, born, eps_inf, qdir, V0, w0, nat, eigvecs)
-    else:
-        LOTerm = np.zeros(8)
-    #
-    
-    # read ramantensors and collect raman-shift at laser-wavelength w0
+def getConstantRaman(ramantensors, modelist, w0):
     Raman = {}
     for mode in modelist:
         w_list = np.real(ramantensors[mode][:,0])
         alpha = []
 
         for i in range(1, 9):
-            alpha.append(np.abs(np.interp([w0], w_list, ramantensors[mode][:,i]))[0] + LOTerm[i-1])
+            alpha.append(np.abs(np.interp([w0], w_list, ramantensors[mode][:,i]))[0])
         #
         Raman[mode] = alpha
     #
@@ -66,13 +55,13 @@ def getConstantRaman(path, ramantensors, modelist, eigvals, eigvecs, w0, basis, 
     return Raman
 #
 
-def calcSpectrum(path, ramantensors, modelist, Ramanmodelist, eigvals, eigvecs, basis, nat, born, eps_inf, w0, temp, smear, stokes, qdir, LOcorr):
+def calcSpectrum(ramantensors, modelist, Ramanmodelist, eigvals, w0, temp, smear, stokes):
     print("[calcSpectrum]: Calculating Raman spectrum of modes "+str(modelist))
     #print("[calcSpectrum]: Note: check e.g. https://www.cryst.ehu.es/cryst/polarizationselrules.html for selection rules")
     print("[calcSpectrum]: Laser frequency set to "+str(w0)+"eV")
     print("[calcSpectrum]: Temperature set to "+str(temp)+"K")
     print("[calcSpectrum]: Smearing width set to "+str(smear)+"cm^-1")
-    raman = getConstantRaman(path, ramantensors, Ramanmodelist, eigvals, eigvecs, w0, basis, nat, born, eps_inf, qdir, LOcorr)
+    raman = getConstantRaman(ramantensors, Ramanmodelist, w0)
     spectrum = []
     for col in range(8):
         spectrum.append(broadenData(modelist, raman, eigvals, w0, col, temp, smear, stokes))

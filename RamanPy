@@ -13,6 +13,8 @@ import argparse
 sys.dont_write_bytecode = True
 
 parser = argparse.ArgumentParser()
+parser.add_argument("--name", type=str, default="MySystem",\
+                    help="The system name.")
 parser.add_argument("--path", type=str, default="./",\
                     help="The path where the input information can be found.")
 parser.add_argument("--file", type=str, default="phonopy.yaml",\
@@ -53,6 +55,8 @@ parser.add_argument("-scf", "--QEinputfile", type=str, default="scf.in",\
                     help="The pw.x input file to be duplicated for the Raman calculations.")
 parser.add_argument("-nosym", "--no_symmetry", action="store_true",\
                     help="Disables symmetry considerations.")
+parser.add_argument("--molecule", action="store_true",\
+                    help="Consider pure rotations for symmetry.")
 parser.add_argument("-lua", "--lualatex", action="store_true",\
                     help="Use LuaLatex for plotting.")
 
@@ -99,7 +103,7 @@ if __name__ == '__main__':
     print("")
     
     #
-    version = "0.0.1"
+    version = "1.0.0"
     disps = [-1, 1]
     
     ###################################
@@ -145,7 +149,7 @@ if __name__ == '__main__':
     elif args.antistokes == False and args.stokes == True:
         stokes = True
     else:
-        print("[__main__]: Paramter stokes and antistokes cannot both be True, resetting to defaults.")
+        print("[__main__]: arguments stokes and antistokes cannot both be True, resetting to defaults")
         stokes = True
     #
     if args.infrared == True or args.LOcorr == True:
@@ -156,11 +160,13 @@ if __name__ == '__main__':
 
     # setup the Phonon object
     ph = Phonon(
+        name = args.name,
         path = args.path,
         file = args.file, 
         code_out = args.code_out, 
         modelist = args.modelist,
         nosym = args.no_symmetry,
+        molecule = args.molecule,
         stepsize = args.stepsize,
         smearing = args.smearing,
         temperature = args.temperature,
@@ -185,18 +191,18 @@ if __name__ == '__main__':
     #######################
     if args.infrared == True:
         print("[__main__]: Calculating IR spectrum")
-        ph.IR()
-        ph.write_IR()
+        ph.calc_ir()
+        ph.write_ir()
 
     if args.plotIR == True:
         print("[__main__]: Plotting IR spectrum")
-        ph.plot_IR(lualatex=args.lualatex)
+        ph.plot_ir(lualatex=args.lualatex)
     
     # IR Reflectance
     if args.reflectance == True:
         print("[__main__]: Calculating Reflectance")
-        ph.reflectance()
-        ph.write_Reflectance()
+        ph.calc_reflectance()
+        ph.write_reflectance()
 
     if args.plotReflectance == True:
         print("[__main__]: Plotting Reflectance")
@@ -208,11 +214,6 @@ if __name__ == '__main__':
     #
     ###########
 
-    # LO not implemented
-    if ph.LOcorr == True:
-        print("[__main__]: LO correction not implemented, please switch off, exiting...")
-        sys.exit(1)
-
     ####################
     # Raman spectroscopy
     ####################
@@ -220,25 +221,26 @@ if __name__ == '__main__':
 
     if args.displace == True:
         print("[__main__]: Displacing modes")
-        ph.displace(args.QEinputfile)
+        ph.calc_raman_displace(args.QEinputfile)
         sys.exit(0)
     
     if args.tensors == True:
         print("[__main__]: Calculating Raman tensors")
-        ph.tensors()
-        ph.write_tensors()
+        ph.calc_raman_tensors()
+        ph.write_raman_tensors()
 
     if args.spectrum == True:
         print("[__main__]: Calculating Raman spectrum")
-        ph.spectrum()
-        ph.write_spectrum() 
+        ph.calc_raman_spectrum()
+        ph.write_raman_spectrum() 
     
     if args.plotRaman == True:
         print("[__main__]: Plotting Raman spectrum", args.porto)
         if args.porto == "":
-            ph.plot_Raman(lualatex=args.lualatex)
+            ph.plot_raman(lualatex=args.lualatex)
         else:
-            ph.plot_Raman(porto=args.porto, lualatex=args.lualatex)
+            ph.plot_raman(porto=args.porto, lualatex=args.lualatex)
         #
     #
+    print("[__main__]: Done.")
 #

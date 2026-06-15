@@ -14,7 +14,7 @@ from LoTo import getLOFreqs
 from displace import calcDisplace
 from calcTensors import calcTensors
 from calcSpectrum import calcSpectrum
-from plotSpectrum import plotSpectrum, plotIRspectrum, plotRspectrum
+from plotSpectrum import plotRamanSpectrum, plotIRSpectrum, plotReflectanceSpectrum
 from parserASE import ASEParser
 
 class Phonon:
@@ -32,6 +32,7 @@ class Phonon:
     ordering -> are the phonons ordered by ascending/descending frequency?
     code_out -> software to be used to calculate the Raman spectra
     born -> do we need effective charges?
+    molecule -> can we consider pure rotations?
 
     basis -> basis vectors of unit cell in angstrom
     cartesian -> positions of ions in cartesian coords. (angstrom)
@@ -54,12 +55,13 @@ class Phonon:
     degenerates -> tuple of indices for degenerate phonon modes
 
     stepsize -> scaling factor for the finite-differences method used to displace the ions along the phononic eigenvectors
-    smearing -> the smearing to be applied to the spectra in cm⁻1
-    temperature -> the temperature to calculate the specrta for in Kelvin
-    photon_freq -> the photon energy of the laser light used to simulate the Raman spectra in eV
-
-    ALL LO STUFF NOT IMPLEMENTED!
-    qdir -> the momentum direction of the incoming photon in cartesian coordinates. This defines the outermost values in Porto's notation. Make sure to correctly account for LO modes!
+    smearing -> the smearing to be applied to the spectra in, cm⁻1
+    temperature -> the temperature to calculate the specrta for, in Kelvin
+    photon_freq -> the photon energy of the laser light used to simulate the Raman spectra, in eV
+    stokes -> True for stokes scattering, False for anti-stokes
+    
+    qdir_cartesian -> the momentum direction of the incoming photon in cartesian coordinates. This defines the outermost values in Porto's notation. Make sure to correctly account for LO modes via the selection rules!
+    qdir_direct -> the momentum direction of the incoming photon in reciprocal direct coordinates. Needed for phonopy
     LOcorr -> do we need to correct for LO modes in geometry setup with qdir?
 
     version -> the version number
@@ -84,7 +86,7 @@ class Phonon:
         LOcorr: bool = False,
     ) -> None:
 
-        self.version = "0.0.1"
+        self.version = "1.0.0"
 
         ###############
         # general setup
@@ -126,6 +128,7 @@ class Phonon:
         self.masses = atoms.get_masses()
 
         # phonopy uses q-direction in reciprocal direct coords, input qdir is assumed to be cartesian
+        # only the direction is important, not the length of the vector
         if qdir != (1,0,0) and qdir != (0,1,0) and qdir != (0,0,1) and qdir != (1,1,0) and qdir != (1,0,1) and qdir != (0,1,1) and qdir != (1,1,1):
             print("[__init__]: Invalid q-direction specified, resorting to default.")
             qdir = (1,0,0)
@@ -192,13 +195,14 @@ class Phonon:
             self.ramantensors = []
             self.dielectrictensor = []
             self._labels_tmp = []
-            self.labels = dict(zip(modelist, ["A1" for x in range(len(modelist))]))
+            self.labels = dict(zip(modelist, ["A" for x in range(len(modelist))]))
             self.degenerates = []
             self.silent = []
             self.IRmodelist = self.modelist
             self.Ramanmodelist = self.modelist
         #
         if LOcorr == True or born == True:
+            print("[__init__]: reading effective charges")
             self.born = parser.get_born_charges()
             self.eps_inf = parser.get_epsilon_inf()
         else:
@@ -217,9 +221,8 @@ class Phonon:
         self.LOcorr = LOcorr
         self.stepsize = stepsize
 
-        # LO not implemented
         if self.LOcorr == True:
-            print("[__init__]: LO correction not implemented, please switch off! Results may be unreliable")
+            print("[__init__]: applying LO correction")
         #
     #
 
@@ -278,10 +281,12 @@ class Phonon:
     # Infrared spectroscopy
     ########################
     def calc_ir(self):
-        parser = ASEParser(self.path+self.file, modelist=self.modelist)
-        self.born = parser.get_born_charges()
         if np.all(self.born == 0):
-            print("[IR]: ERROR, need effective charges")
+            parser = ASEParser(self.path+self.file, modelist=self.modelist)
+            self.born = parser.get_born_charges()
+            print("[calc_ir]: reading effective charges")
+        if np.all(self.born == 0):
+            print("[calc_ir]: ERROR, need effective charges")
         else:
             self.IR_data = calcIR(self.IRmodelist, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.masses, self.born, self.smearing)
         #
@@ -290,14 +295,17 @@ class Phonon:
         writeIRSpectrum(self)
     #
     def plot_ir(self, lualatex=False):
-        plotIRspectrum(self.IR_data, self.path, lualatex)
+        plotIRSpectrum(self.IR_data, self.path, lualatex)
     #
     def calc_reflectance(self):
         if not hasattr(self, "IR_data"):
             parser = ASEParser(self.path+self.file, modelist=self.modelist)
             self.born = parser.get_born_charges()
             if np.all(self.born == 0):
+                print("[calc_reflectance]: ERROR, need effective charges")            
+            else:
                 self.IR_data = calcIR(self.IRmodelist, self.eigenfreqs, self.eigenvecs, self.basis, self._nat, self.masses, self.born, self.smearing)
+            #
         #
         self.reflectance_data = calcReflectance(self.IR_data)
     #
@@ -305,7 +313,7 @@ class Phonon:
         writeReflectanceSpectrum(self)
     #
     def plot_reflectance(self, lualatex=False):
-        plotRspectrum(self.reflectance_data, self.path, lualatex)
+        plotReflectanceSpectrum(self.reflectance_data, self.path, lualatex)
     #
 
     ####################
@@ -328,18 +336,14 @@ class Phonon:
         else:
             self.eigenfreqs_LO = self.eigenfreqs
         #
-        self.constantraman_data, self.ramanspectrum_data = calcSpectrum(self.path, self.ramantensors_data, self.modelist, self.Ramanmodelist, self.eigenfreqs_LO, self.eigenvecs, self.basis, self._nat, self.born, self.eps_inf, self.photon_freq, self.temperature, self.smearing, self.stokes, self.qdir_cartesian, self.LOcorr)        
+        self.constantraman_data, self.ramanspectrum_data = calcSpectrum(self.ramantensors_data, self.modelist, self.Ramanmodelist, self.eigenfreqs_LO, self.photon_freq, self.temperature, self.smearing, self.stokes)        
     #
     def write_raman_spectrum(self):
         writeConstantRaman(self)
         writeRamanSpectrum(self)
     #
     def plot_raman(self, porto=["xx", "yy", "zz", "xy", "yz", "xz", "perp", "back"], lualatex=False):
-        print("[plot_Raman]: Plotting Raman spectrum")
-        for pt in porto:
-            plotSpectrum(self.ramanspectrum_data, self.path, self.photon_freq, pt, self.qdir, lualatex)
-        #
-        print("[plot_Raman]: Done.") 
+        plotRamanSpectrum(self.ramanspectrum_data, self.path, self.photon_freq, self.qdir_cartesian, porto, lualatex)
     #
 
     ########
@@ -348,8 +352,11 @@ class Phonon:
     def write_system(self):
         writeData(self)
     #
-    def load_raman_tensors(self, mode=1):
-        self.ramantensors_data[mode] = loadRamanTensor(self.path, mode)
+    def load_raman_tensors(self):
+        if not hasattr(self, "ramantensors_data"):
+            self.ramantensors_data = {}
+        for mode in self.Ramanmodelist:
+            self.ramantensors_data[mode] = loadRamanTensor(self.path, mode)
     #
     def load_raman_tensors_const(self, filename="Raman.yaml"):
         self.constantraman_data = loadConstantRaman(self.path+filename)

@@ -251,7 +251,7 @@ def getModesVASP(file, modelist, nat):
 def MAT_m_VEC(m, v):
     p = [ 0.0 for i in range(len(v)) ]
     for i in range(len(m)):
-        assert len(v) == len(m[i]), "[Mat_m_VEC]: Length of the matrix row is not equal to the length of the vector."
+        assert len(v) == len(m[i]), "[Mat_m_VEC]: Length of the matrix row is not equal to the length of the vector"
         p[i] = sum( [ m[i][j]*v[j] for j in range(len(v)) ] )
     return p
 #
@@ -260,7 +260,7 @@ def getCellVASP(file):
     try: 
         poscar_fh = open(file, "r")
     except IOError:
-        print("[getCellVASP]: ERROR Couldn't open "+file+".")
+        print("[getCellVASP]: ERROR Couldn't open "+file)
         return 1, np.eye(3), np.zeros(3), [""]
     #
     poscar_fh.seek(0) # just in case

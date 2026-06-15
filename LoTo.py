@@ -9,65 +9,46 @@ import numpy as np
 from parserPhonopy import parsePhonopy
 from spglib import get_symmetry_dataset
 from Symmetries import periodTable, getIrrepsSymbols, getDegenerates
-from Symmetries import flatten, e_charge
-from calcTensors import placzeckInvs
-
-# ------------------------------
-# Basic utilities
-# ------------------------------
 
 def normalize(v):
     return v / np.linalg.norm(v)
+#
 
 def collectMatrix(evec_dict, indices):
-    """Build matrix with normalized eigenvectors as columns."""
+    # Build matrix with normalized eigenvectors as columns
     cols = [normalize(evec_dict[i].ravel()) for i in indices]
     return np.column_stack(cols)  # shape (3N, m)
+#
 
-# ------------------------------
 # Build irrep subspaces from TO modes
-# ------------------------------
-
 def buildIrrepBases(E0_dict, irrep_label):
-    """
-    Returns:
-        irrep_bases[Γ] = matrix whose columns span the Γ irrep subspace
-        irrep_groups[Γ] = list of TO indices belonging to Γ
-    """
+    # irrep_bases[Γ] = matrix whose columns span the Γ irrep subspace
+    # irrep_groups[Γ] = list of TO indices belonging to Γ
     irrep_groups = {}
     for idx, Γ in irrep_label.items():
         irrep_groups.setdefault(Γ, []).append(idx)
-
+    #
     irrep_bases = {}
     for Γ, idxs in irrep_groups.items():
         irrep_bases[Γ] = collectMatrix(E0_dict, idxs)
+    #
+    return irrep_bases
+#
 
-    return irrep_bases, irrep_groups
-
-# ------------------------------
 # Project NAC eigenvectors into each irrep
-# ------------------------------
-
 def projectIntoIrrep(EΓ, v):
-    """
-    Project vector v into the irrep subspace spanned by EΓ.
-    Returns:
-        proj_vec: projected vector in Γ-subspace
-        weight: total projection weight
-    """
+    # proj_vec: projected vector in Γ-subspace
+    # weight: total projection weight
     coeffs = EΓ.conj().T @ v
     proj_vec = EΓ @ coeffs
     weight = np.sum(np.abs(coeffs)**2)
     return proj_vec, weight
+#
 
 def decomposeNAC(ENAC_dict, irrep_bases):
-    """
-    Returns:
-        nac_irrep_proj[j][Γ] = {
-            "proj_vec": projected NAC eigenvector,
-            "weight": projection weight
-        }
-    """
+    # nac_irrep_proj[j][Γ] = {
+    #        "proj_vec": projected NAC eigenvector,
+    #        "weight": projection weight }
     nac_irrep_proj = {}
     for j, v_raw in ENAC_dict.items():
         v = normalize(v_raw.ravel())
@@ -76,14 +57,13 @@ def decomposeNAC(ENAC_dict, irrep_bases):
             proj_vec, weight = projectIntoIrrep(EΓ, v)
             nac_irrep_proj[j][Γ] = {
                 "proj_vec": proj_vec,
-                "weight": weight
-            }
+                "weight": weight}
+        #
+    #
     return nac_irrep_proj
+#
 
-# ------------------------------
-# SVD alignment inside each irrep
-# ------------------------------
-
+# orthogonalization inside each irrep
 def alignSubspace(E_block, groupsize, qdir):
     nat3 = len(E_block[:,0])
     nmodes = len(E_block[0,:])
@@ -204,10 +184,6 @@ def assignLabel(ENAC_dict, nac_irrep_proj, irrep_label):
     return irrep_label_nac
 #
 
-# ------------------------------
-# Main routine: irrep-clean LO/TO assignment
-# ------------------------------
-
 def LOTOassign(E0_dict, ENAC_dict, degenerate_groups, irrep_label, qdir):
     
     for mode in range(1,len(E0_dict)+1):
@@ -218,7 +194,7 @@ def LOTOassign(E0_dict, ENAC_dict, degenerate_groups, irrep_label, qdir):
         #
     #
 
-    irrep_bases, irrep_groups = buildIrrepBases(E0_dict, irrep_label)
+    irrep_bases = buildIrrepBases(E0_dict, irrep_label)
     nac_irrep_proj = decomposeNAC(ENAC_dict, irrep_bases)
 
     # the nac mode labels
@@ -238,7 +214,7 @@ def LOTOassign(E0_dict, ENAC_dict, degenerate_groups, irrep_label, qdir):
         # Build NAC block matrix from projected vectors
         ENAC_block = np.column_stack( [normalize(nac_irrep_proj[mode][label]["proj_vec"]) for mode in chosen] )
 
-        # Align subspaces, this does not work!
+        # Align subspaces
         ENAC_rot = alignSubspace(ENAC_block, len(group), qdir)
         E0_rot = alignSubspace(E0_block, len(group), qdir)
 
@@ -290,7 +266,7 @@ def getLOFreqs(path, modelist, qdir_cart, qdir_direct, ordering, eigvecs, degene
     # match the TO to the LO modes
     LoToDict = LOTOassign(eigvecs, eigvecs_pt, degenerates, labels, qdir_cart)
     
-    # reorder the frequencies
+    # reorder and assign the frequencies
     eigvalsLO = {}
     if ordering == "ascending":
         for mode in modelist:
@@ -307,115 +283,4 @@ def getLOFreqs(path, modelist, qdir_cart, qdir_direct, ordering, eigvecs, degene
     #
 
     return eigvalsLO
-#
-
-def getChi2(path):
-    # from yambo o.xx, test case
-    # unit cm/V, gaussian
-    xx = np.genfromtxt(path+"oxx", dtype=float)
-    xy = np.genfromtxt(path+"oxy", dtype=float)
-    xz = np.genfromtxt(path+"oxz", dtype=float)
-    yy = np.genfromtxt(path+"oyy", dtype=float)
-    yz = np.genfromtxt(path+"oyz", dtype=float)
-    zz = np.genfromtxt(path+"ozz", dtype=float)
-    # return in m/V, SI
-    return 4*np.pi/(3*10e4)*1e-2*[xx, yy, zz, xy, yz, xz]
-#
-
-def getLOCorrection(path, born, eps_inf, qdir_cart, vol, w, nat, eigvecs):
-    # using Fröhlich formula
-
-    eps_inf_q = np.dot( qdir_cart, np.dot(eps_inf, qdir_cart) )
-    corr = np.empty(7, dtype=complex)
-    for mode in range(len(eigvecs)):
-        tot = []
-        for i in range(3):
-            for j in range(3):
-                tmp1 = 0
-                tmp2 = 0
-                for atom in range(nat):
-                    for x in range(3):
-                        tmp1 += born[atom][i][x] * eigvecs[mode][atom][x]
-                        tmp2 += born[atom][j][x] * eigvecs[mode][atom][x]
-                        #
-                    #
-                #
-                tot.append((4*np.pi/eps_inf_q)**2*tmp1*tmp2)
-            #
-        #
-        tmp3 = [tot[0], tot[4], tot[-1], tot[1], tot[5], tot[2]]
-        perp, back = placzeckInvs(tmp3, 1)
-        #             xx      yy      zz       xy      yz      xz    perp   back
-        corr.append(tot[0], tot[4], tot[-1], tot[1], tot[5], tot[2], perp, back)
-    #
-
-    return corr
-#                
-
-
-
-    """
-    chi2 = np.empty((3,3,3), dtype=complex)
-    
-    chi2[0,0,0] = np.interp([w], [x[0] for x in chi2_tmp[0]], [complex(x[2], x[1]) for x in chi2_tmp[0]])
-    chi2[0,0,1] = np.interp([w], [x[0] for x in chi2_tmp[3]], [complex(x[2], x[1]) for x in chi2_tmp[3]])
-    chi2[0,0,2] = np.interp([w], [x[0] for x in chi2_tmp[5]], [complex(x[2], x[1]) for x in chi2_tmp[5]])
-    chi2[1,0,0] = np.interp([w], [x[0] for x in chi2_tmp[0]], [complex(x[4], x[3]) for x in chi2_tmp[0]])
-    chi2[1,0,1] = np.interp([w], [x[0] for x in chi2_tmp[3]], [complex(x[4], x[3]) for x in chi2_tmp[3]])
-    chi2[1,0,2] = np.interp([w], [x[0] for x in chi2_tmp[5]], [complex(x[4], x[3]) for x in chi2_tmp[5]])
-    chi2[2,0,0] = np.interp([w], [x[0] for x in chi2_tmp[0]], [complex(x[6], x[5]) for x in chi2_tmp[0]])
-    chi2[2,0,1] = np.interp([w], [x[0] for x in chi2_tmp[3]], [complex(x[6], x[5]) for x in chi2_tmp[3]])
-    chi2[2,0,2] = np.interp([w], [x[0] for x in chi2_tmp[5]], [complex(x[6], x[5]) for x in chi2_tmp[5]])
-
-    chi2[0,1,0] = np.interp([w], [x[0] for x in chi2_tmp[3]], [complex(x[2], x[1]) for x in chi2_tmp[3]])
-    chi2[0,1,1] = np.interp([w], [x[0] for x in chi2_tmp[1]], [complex(x[2], x[1]) for x in chi2_tmp[1]])
-    chi2[0,1,2] = np.interp([w], [x[0] for x in chi2_tmp[4]], [complex(x[2], x[1]) for x in chi2_tmp[4]])
-    chi2[1,1,0] = np.interp([w], [x[0] for x in chi2_tmp[3]], [complex(x[4], x[3]) for x in chi2_tmp[3]])
-    chi2[1,1,1] = np.interp([w], [x[0] for x in chi2_tmp[1]], [complex(x[4], x[3]) for x in chi2_tmp[1]])
-    chi2[1,1,2] = np.interp([w], [x[0] for x in chi2_tmp[4]], [complex(x[4], x[3]) for x in chi2_tmp[4]])
-    chi2[2,1,0] = np.interp([w], [x[0] for x in chi2_tmp[3]], [complex(x[6], x[5]) for x in chi2_tmp[3]])
-    chi2[2,1,1] = np.interp([w], [x[0] for x in chi2_tmp[1]], [complex(x[6], x[5]) for x in chi2_tmp[1]])
-    chi2[2,1,2] = np.interp([w], [x[0] for x in chi2_tmp[4]], [complex(x[6], x[5]) for x in chi2_tmp[4]])
-
-    chi2[0,2,0] = np.interp([w], [x[0] for x in chi2_tmp[5]], [complex(x[2], x[1]) for x in chi2_tmp[5]])
-    chi2[0,2,1] = np.interp([w], [x[0] for x in chi2_tmp[4]], [complex(x[2], x[1]) for x in chi2_tmp[4]])
-    chi2[0,2,2] = np.interp([w], [x[0] for x in chi2_tmp[2]], [complex(x[2], x[1]) for x in chi2_tmp[2]])
-    chi2[1,2,0] = np.interp([w], [x[0] for x in chi2_tmp[5]], [complex(x[4], x[3]) for x in chi2_tmp[5]])
-    chi2[1,2,1] = np.interp([w], [x[0] for x in chi2_tmp[4]], [complex(x[4], x[3]) for x in chi2_tmp[4]])
-    chi2[1,2,2] = np.interp([w], [x[0] for x in chi2_tmp[2]], [complex(x[4], x[3]) for x in chi2_tmp[2]])
-    chi2[2,2,0] = np.interp([w], [x[0] for x in chi2_tmp[5]], [complex(x[6], x[5]) for x in chi2_tmp[5]])
-    chi2[2,2,1] = np.interp([w], [x[0] for x in chi2_tmp[4]], [complex(x[6], x[5]) for x in chi2_tmp[4]])
-    chi2[2,2,2] = np.interp([w], [x[0] for x in chi2_tmp[2]], [complex(x[6], x[5]) for x in chi2_tmp[2]])
-
-    #
-    # formats
-    # chi2[i][j][l]
-    # born[atom][l][k]
-    # qdir[l]
-    # eps_inf[l][k]
-    # formula from https://www.nature.com/articles/s41524-024-01236-3
-
-    corr = np.empty(7, dtype=complex)
-    dirdict = {0: (0,0), 1: (1,1), 2: (2,2), 3: (0,1), 4: (1,2), 5: (0,2)}
-    for dir in range(6):
-        tmpEps = 0
-        tmpZ = 0
-        tmpChi2 = 0
-        for j in range(3):
-            m, n = dirdict[dir]
-            tmpChi2 += chi2[m, n, j]
-            for k in range(3):
-                tmpEps += qdir[j]*eps_inf[j,k]*qdir[k]
-                for atom in range(nat):
-                    tmpZ += qdir[j]*born[atom,j,k]
-                #
-            #
-        #
-        corr[dir] += 8*np.pi / vol * ( tmpZ * e_charge) / tmpEps * tmpChi2
-    #
-        
-    # units are now 10e-30 C/Vm^2
-    """
-    
-    return corr
 #

@@ -4,19 +4,18 @@
 # create input files for different DFT codes
 #
 
-import sys, os
+import os
 import numpy as np
 from parserVASP import writePOSCAR, linkVASP
 from parserQE import writeSCF, linkQE
 
 def calcDisplace(path, modelist, stepsize, program, eigvecs, norms, basis, nat, elements, positions, scffile):
     if program != "VASP" and program != "QE":
-        print("[displace]: code not supported, exiting...")
-        sys.exit(1)
+        print("[calcDisplace]: ERROR, code not supported")
     #
     # write unit cells with displacements
     disps = [-1, 1]
-    print("[displace]: Generating displacements...")
+    print("[calcDisplace]: Generating displacements...")
     if os.path.isdir(path+"displacements") == False:
         os.system("mkdir "+path+"displacements")
     #
@@ -37,10 +36,9 @@ def calcDisplace(path, modelist, stepsize, program, eigvecs, norms, basis, nat, 
                 writeSCF(nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm, scffile)
                 linkQE(file)
             else:
-                print("[displace]: Format not implemented, exiting")
-                sys.exit(1)
+                print("[calcDisplace]: ERROR, format not implemented")
             #
         #
     #
-    print("[displace]: Done.")
+    print("[calcDisplace]: Done.")
 #

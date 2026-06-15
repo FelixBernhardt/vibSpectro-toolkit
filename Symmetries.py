@@ -2098,7 +2098,7 @@ def RamanSelectionRules(pointgroup, RTs):
     # just in case...
     else:
         print("[RamanLib]: no valid point group found, exiting...")
-        sys.exit(1)
+        return [], [], [], []
     #
 
     return backscattering, backComponents, rightscattering, rightComponents
@@ -2465,7 +2465,7 @@ def getAcoustics(modelist, eigvecs, eigvals, masses):
     if len(acoustics) > 0:
         return acoustics
     else:
-        print("[getAcoustics]: Could not determine acoustic modes, continuing...")
+        print("[getAcoustics]: Could not determine acoustic modes")
         return []
     #
 #
