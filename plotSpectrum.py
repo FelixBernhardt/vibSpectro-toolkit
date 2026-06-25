@@ -134,10 +134,10 @@ def plotIRSpectrum(IRdata, path, file, lualatex=False):
     mpl.rcParams['legend.fontsize'] = size
     mpl.rcParams['figure.titlesize'] = size
 
-    for j in range(1,3):
+    for j in range(1,4):
         # plotting    
         fig, ((ax1, ax2)) = plt.subplots(1,2, layout="constrained")
-        if j == 3:
+        if j == 4:
             fig.suptitle("spatially averaged polarization")
         else:
             fig.suptitle("IR: E||"+dict[j]+" polarization")
@@ -194,7 +194,7 @@ def plotReflectanceSpectrum(R_data, path, file, lualatex=False):
         ax.set_ylim([0, 1.05])
         ax.plot(w_data, R_data[j], color="black", label="T")
         ax.set_xlabel("Wavenumber (cm$^{-1}$)")
-        ax.set_ylabel("R")
+        ax.set_ylabel("Reflectance")
     
         plt.savefig(path+"R_"+dict[j]+".pdf")
         plt.close()

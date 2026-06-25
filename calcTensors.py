@@ -81,7 +81,7 @@ def calcDegenerates(path, modes, labels, ramantensors, ramandata, eigval):
     # get the corresponding ramantensors
     Rn = []
     indx = []
-    label = labels[modes[0]-1]
+    label = labels[modes[0]]
     for i in range(int(len(ramantensors)/2)):
         if ramantensors[2*i] == label:
             indx.append(i)
@@ -92,6 +92,7 @@ def calcDegenerates(path, modes, labels, ramantensors, ramandata, eigval):
 
     Rb = []
     Rb2 = []
+    Rb3 = []
     # decompose general tensors into their coefficients
     for letter in ["a", "b", "c", "d", "e", "f"]:
         find = False
@@ -130,6 +131,7 @@ def calcDegenerates(path, modes, labels, ramantensors, ramandata, eigval):
             if foundOne == True:
                 Rnc.append(tmp_R)
                 Rb.append(np.array(tmp_R))
+                Rb3.append([letter, np.array(tmp_R)])
                 tmp_R2 = np.add(tmp_R2, Rb[-1])
             #
         #
@@ -137,107 +139,81 @@ def calcDegenerates(path, modes, labels, ramantensors, ramandata, eigval):
             Rb2.append(np.array(tmp_R2))
     #
 
-    #print(Rb2)
-    #print(Rb)
-
-    # orthonormalization, E holds the basis matrizes that the calculated Ramantensor decomposes into, includes possible mode-mixing
-    M = np.column_stack([R.reshape(-1) for R in Rb])
-    normsE = [np.linalg.norm(x) for x in Rb]
-    U = np.linalg.svd( M, full_matrices=False)[0]
+    # reorder matrices by letters
     E = []
-    for i in range(len(U[0])):
-        E.append(U[:, i].reshape(3,3))
+    for letter in ["a", "b", "c", "d", "e", "f"]:
+        for j in range(len(Rb)):
+            if letter == Rb3[j][0]:
+                E.append(Rb3[j][1])
+            #
+        #
     #
-
-    #print(Rb)
-    #print(E)
-
-
-    # reorder E, here manually
-    #E = [E[-3], E[0], E[1], E[-2], E[2], E[-1]]
-    E = [Rb[2], Rb[4], Rb[3], Rb[5], Rb[0], Rb[1]]
 
     # get the calculated, degenerate raman tensor
     data = ramandata
-    #data = np.genfromtxt(path+"Ramantensors/alpha_"+str(modes[0])+".dat", dtype=complex)
-    #with open(path+"Ramantensors/alpha_"+str(modes[0])+".dat") as f:
-    #    f.readline()
-    #    eigval = f.readline().split()[-1]
-    #
 
     w = []
     I = []
     #for i in [10]:
     for i in range(len(data)):
         w.append(np.real(data[i,0]))
-        Atest = np.zeros((3,3), dtype=complex)
-        Atest[0,0] = data[i,1]
-        Atest[1,1] = data[i,2]
-        Atest[2,2] = data[i,3]
-        Atest[0,1] = data[i,4]
-        Atest[1,2] = data[i,5]
-        Atest[0,2] = data[i,6]
-        Atest[1,0] = Atest[0,1]
-        Atest[2,1] = Atest[1,2]
-        Atest[2,0] = Atest[0,2]
-        Atest = np.nan_to_num(Atest, nan=0.0)
+        A = np.zeros((3,3), dtype=complex)
+        A[0,0] = data[i,1]
+        A[1,1] = data[i,2]
+        A[2,2] = data[i,3]
+        A[0,1] = data[i,4]
+        A[1,2] = data[i,5]
+        A[0,2] = data[i,6]
+        A[1,0] = A[0,1]
+        A[2,1] = A[1,2]
+        A[2,0] = A[0,2]
+        A = np.nan_to_num(A, nan=0.0)
 
-        #print(Atest)
+        #print(A)
         #for i in range(len(E)):
         #    print(E[i])
 
-        #print(Atest)
-        # decompose calculated tensor into its general tensor components, all possible Tensors
-        x = np.real(np.array( np.linalg.lstsq( np.column_stack([tmp.reshape(-1) for tmp in E]), Atest.reshape(-1), rcond=1.e-5)[0] ))
+        # decompose calculated tensor into its general tensor components, all possible tensors and mode-mixing included
+        x = np.real(np.array( np.linalg.lstsq( np.column_stack([tmp.reshape(-1) for tmp in E]), A.reshape(-1), rcond=1.e-5)[0] ))
         #print(x)
-        normx = np.linalg.norm(x[:4])
-        #print(x[:4])
-        
-        # normalization of decomposition components
-        r = np.sqrt(x[0]**2+x[1]**2)
-        v1 = np.array([x[0]/r * normx, x[1]/r * normx])
-        #print(v1)
 
-        # construct Raman tensors in high symmetry form
-        #print(E)
-        degenerates = np.zeros((len(modes),9,1), dtype=complex)
-        for j in range(len(modes)):
-            R_degen = v1[0]*E[j*2] + v1[1]*E[j*2+1]
-            degenerates[j] = [[data[i,0]], [R_degen[0,0]], [R_degen[1,1]], [R_degen[2,2]], [R_degen[0,1]], [R_degen[1,2]], [R_degen[0,2]], [data[i,7]], [data[i,8]]]
+        # which tensors to ignore when constructing the degenerate tensors
+        off = []
+        for j in range(indx[0]):
+            for k in range(3):
+                for i in range(3):
+                    if np.any(Rn[j][k,i] in off) or Rn[j][k,i] == "0":
+                        continue
+                    else:
+                        off.append(Rn[j][k,i])
+                    #
+                #
+            #
         #
-
-
-        """
-        # 2. Build an orthonormal basis with v1 as first vector
-        # Start with random matrix and insert v1
-        n = len(v1)
-        M = np.random.randn(n, n)
-        M[0] = v1
-
-        # QR gives orthonormal rows if we transpose
-        Q = np.linalg.qr(M.T)[0]
-        V = Q.T   # rows are orthonormal vectors in coefficient space
-
-        # 3. Construct degenerate Raman tensors and reconstruct original tensor, add all contributions back in
-        degenerates = np.zeros((len(modes),9,1), dtype=complex)
-        for j in range(len(modes)):
-            coeffs = np.array([V[j,0]*x[0], V[j,0]*x[1], V[j,1]*x[2], V[j,1]*x[3], x[-2], x[-1]])
-            #if j == 0:
-            #coeffs = np.concatenate([V[j], v1])*norm  # vector of length n
-            #else:
-            #    coeffs = np.concatenate([V[j], np.zeros(len(x)-n)])*norm
-            R_degen = sum(coeffs[k] * E[k] for k in range(len(E)))
+        offset = len(off)
+        lenmodes = len(modes)
+        
+        # construct Raman tensors in high symmetry form
+        degenerates = np.zeros((lenmodes,9,1), dtype=complex)
+        for j in range(lenmodes):
+            R_degen = np.zeros((3,3))
+            # get general Raman tensor components
+            if lenmodes == 2:
+                for k in range(2):
+                    R_degen += np.sqrt(x[k+offset+1]**2+x[k+offset+2]**2)*E[j+2*k+offset]
+                #
+            elif lenmodes == 3:
+                for k in range(3):
+                    R_degen += np.sqrt(x[k+offset+1]**2+x[k+offset+2]**2+x[k+offset+3]**2)*E[j+3*k+offset]
+                #
+            #
             #print(R_degen)
             degenerates[j] = [[data[i,0]], [R_degen[0,0]], [R_degen[1,1]], [R_degen[2,2]], [R_degen[0,1]], [R_degen[1,2]], [R_degen[0,2]], [data[i,7]], [data[i,8]]]
         #
-        """
-
         I.append(degenerates)
     #
-    #print(np.shape(I))
     I = np.swapaxes(np.array(I, dtype=complex), 1, 3)
     I = np.swapaxes(np.array(I, dtype=complex), 0, 1)
-    #print(np.shape(I))
 
     return I[0,:,:,:]
 #

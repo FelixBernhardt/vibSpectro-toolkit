@@ -109,22 +109,22 @@ def writeRaman(Phonon):
 
 # Raman tensors at constant excitation energy
 def writeConstantRaman(Phonon):
-    if Phonon.qdir == (1,0,0):
+    if Phonon.qdir_cartesian == (1,0,0):
         ki = "x"
         ko = "-x"
-    elif Phonon.qdir == (0,1,0):
+    elif Phonon.qdir_cartesian == (0,1,0):
         ki = "y"
         ko = "-y"
-    elif Phonon.qdir == (0,0,1):
+    elif Phonon.qdir_cartesian == (0,0,1):
         ki = "z"
         ko = "-z"
-    elif Phonon.qdir == (1,1,0):
+    elif Phonon.qdir_cartesian == (1,1,0):
         ki = "x"
         ko = "y"
-    elif Phonon.qdir == (0,1,1):
+    elif Phonon.qdir_cartesian == (0,1,1):
         ki = "y"
         ko = "z"
-    elif Phonon.qdir == (1,0,1):
+    elif Phonon.qdir_cartesian == (1,0,1):
         ki = "x"
         ko = "z"
     else:
@@ -162,22 +162,22 @@ def writeConstantRaman(Phonon):
 #
 
 def writeRamanSpectrum(Phonon):
-    if Phonon.qdir == (1,0,0):
+    if Phonon.qdir_cartesian == (1,0,0):
         ki = "x"
         ko = "-x"
-    elif Phonon.qdir == (0,1,0):
+    elif Phonon.qdir_cartesian == (0,1,0):
         ki = "y"
         ko = "-y"
-    elif Phonon.qdir == (0,0,1):
+    elif Phonon.qdir_cartesian == (0,0,1):
         ki = "z"
         ko = "-z"
-    elif Phonon.qdir == (1,1,0):
+    elif Phonon.qdir_cartesian == (1,1,0):
         ki = "x"
         ko = "y"
-    elif Phonon.qdir == (0,1,1):
+    elif Phonon.qdir_cartesian == (0,1,1):
         ki = "y"
         ko = "z"
-    elif Phonon.qdir == (1,0,1):
+    elif Phonon.qdir_cartesian == (1,0,1):
         ki = "x"
         ko = "z"
     else:
@@ -191,7 +191,7 @@ def writeRamanSpectrum(Phonon):
     lines.append("System: " + Phonon.name)
     lines.append("Source: " + Phonon.path + "Raman.yaml")
     if Phonon.LOcorr == True:
-        lines.append("        " + Phonon.path + "qpoints_"+portoq[Phonon.qdir] + ".yaml")
+        lines.append("        " + Phonon.path + "qpoints_"+portoq[Phonon.qdir_cartesian] + ".yaml")
         lines.append("        " + Phonon.path + "whateverFile")
     lines.append("Units:")
     lines.append(" Frequency: cm⁻1")
