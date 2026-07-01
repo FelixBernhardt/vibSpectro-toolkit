@@ -2530,6 +2530,8 @@ def getDegenerates(modelist, eigvals, labels, prec=1e0):
                 #
             #
         #
+        if j not in flatten(degenerates):
+            degenerates.append([j])
     #
     return degenerates
 #

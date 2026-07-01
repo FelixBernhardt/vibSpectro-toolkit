@@ -1,6 +1,5 @@
 from RamanPy_API import Phonon
 from IO import writeData, writeRaman, writeConstantRaman, writeRamanSpectrum, writeIRSpectrum, writeReflectanceSpectrum
-import sys
 
 # files created by displace in ascending or descending order is important!! Here, all use the VASP default
 # reordering works like this
@@ -10,7 +9,7 @@ import sys
 
 path = "/Users/felixbernhardt/Desktop/sqs_00"
 #path = "/home/felix/Forschung/sqs_00"
-test = Phonon(file="OUTCAR", path=path, born=True, qdir=(1,0,0), nosym=False, modelist=range(1,31), smearing=5, LOcorr=False)
+test = Phonon(file="OUTCAR", path=path, born=True, qdir=(0,1,0), nosym=False, modelist=range(1,31), smearing=5, LOcorr=False)
 
 
 #print(test.pointgroup)

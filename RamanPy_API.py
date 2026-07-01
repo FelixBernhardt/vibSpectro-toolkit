@@ -28,7 +28,8 @@ class Phonon:
 
     path -> the folder path where the calculated phonon eigenmodes can be found, and where the subsequent calculations are run
     modelist -> the modes the user wants to calculate, the ordering of modes is the same as used in the "file" software
-    
+    parser -> defines what codes are used to read and write datafiles
+
     ordering -> are the phonons ordered by ascending/descending frequency?
     code_out -> software to be used to calculate the Raman spectra
     born -> do we need effective charges?
@@ -52,7 +53,7 @@ class Phonon:
     acoustic -> indices of acoustic phonon modes
     rotations -> indices of (almost) pure rotational modes, only relevant for isolated molecules
     silent -> indices of raman silent phonon modes
-    degenerates -> tuple of indices for degenerate phonon modes
+    degenerates -> groupings for degenerate phonon modes
 
     stepsize -> scaling factor for the finite-differences method used to displace the ions along the phononic eigenvectors
     smearing -> the smearing to be applied to the spectra in, cm⁻1
@@ -91,7 +92,12 @@ class Phonon:
         ###############
         # general setup
         ###############
-        self.name = name
+        if name == "phonopy" or name.split("_")[0] == "qpoints":
+            print("[__init__]: System name cannot be "+name+", resorting to default")
+            self.name = "MySystem"
+        else:
+            self.name = name
+
         if path.endswith("/"):
             self.path = path
         else:
@@ -102,13 +108,21 @@ class Phonon:
         # just in case
         modelist = np.array(modelist)
 
-        # unit cell and phonon mode information from external software
-        parser = ASEParser(self.path+self.file, modelist=modelist)
+        # setup the parsers to utilize
+        self.parser = ASEParser(self.path+self.file, modelist=modelist, code_out=code_out)
         
-        atoms = parser.get_structure()
+        # get the structure
+        atoms = self.parser.get_structure()
         self._nat = len(atoms)
-               
-        if parser.backend.__class__.__name__ == "OwnParser":
+        self.elements = atoms.get_chemical_symbols()
+        self.cartesian = atoms.get_positions()
+        self.direct = atoms.get_scaled_positions()
+        self.basis = atoms.get_cell()
+        self.masses = atoms.get_masses()
+
+        # get the phonon modes
+        # first check which modes to calculate
+        if self.parser.backend.__class__.__name__ == "OwnParser":
             _, _, calcmodes = loadPhononsData(self.path+self.file)
             self._modelist = calcmodes
         else:
@@ -120,13 +134,9 @@ class Phonon:
             print("[__init__]: WARNING: not all requested modes are present in "+self.path+self.file+", continuing...")
             modelist = [mode for mode in modelist if mode in self._modelist]
        
-        eigenfreqs, eigenvecs = parser.get_vibrations()
-        self.elements = atoms.get_chemical_symbols()
-        self.cartesian = atoms.get_positions()
-        self.direct = atoms.get_scaled_positions()
-        self.basis = atoms.get_cell()
-        self.masses = atoms.get_masses()
+        eigenfreqs, eigenvecs = self.parser.get_vibrations()
 
+        # setup for q-direction
         # phonopy uses q-direction in reciprocal direct coords, input qdir is assumed to be cartesian
         # only the direction is important, not the length of the vector
         if qdir != (1,0,0) and qdir != (0,1,0) and qdir != (0,0,1) and qdir != (1,1,0) and qdir != (1,0,1) and qdir != (0,1,1) and qdir != (1,1,1):
@@ -148,7 +158,7 @@ class Phonon:
         self.eigenfreqs = dict(zip(modelist, [eigenfreqs[mode-1] for mode in modelist]))
         self._norms = dict(zip(modelist, np.array([np.linalg.norm(self.eigenvecs[mode]) for mode in modelist])))
 
-        # check for pure translations and rotations
+        # check for pure translations and rotations, these can be safelx ignored in all calculations
         self.acoustics = getAcoustics(modelist, self.eigenvecs, self.eigenfreqs, self.masses)
         self.molecule = molecule
         if self.molecule == True:
@@ -160,7 +170,7 @@ class Phonon:
 
         # symmetry analysis of modes and pointgroup
         if nosym == False:
-            if os.path.isfile(self.path+"FORCE_CONSTANTS") and parser.backend.__class__.__name__ != "OwnParser":
+            if os.path.isfile(self.path+"FORCE_CONSTANTS") and self.parser.backend.__class__.__name__ != "OwnParser":
                 self._dataset = get_symmetry_dataset((self.basis, self.direct, [periodTable[element] for element in self.elements]), symprec=1.e-5)
                 #self.pointgroup = str(self._dataset.pointgroup)
                 self.pointgroup = str(self._dataset["pointgroup"])
@@ -172,7 +182,7 @@ class Phonon:
                     self.labels = dict(enumerate([self._labels_tmp[3*self._nat-i] for i in self._modelist], start=1))
                 #
                 self.set_symmetries(modelist)
-            elif parser.backend.__class__.__name__ == "OwnParser":
+            elif self.parser.backend.__class__.__name__ == "OwnParser":
                 system, symmetry, pointgroup, labels = loadSymmetryData(self.path+self.file)
                 self.name = system
                 if symmetry == True:
@@ -201,19 +211,19 @@ class Phonon:
             self.IRmodelist = self.modelist
             self.Ramanmodelist = self.modelist
         #
+
+        # effective charges for LO or IR
         if LOcorr == True or born == True:
             print("[__init__]: reading effective charges")
-            self.born = parser.get_born_charges()
-            self.eps_inf = parser.get_epsilon_inf()
+            self.born = self.parser.get_born_charges()
+            self.eps_inf = self.parser.get_epsilon_inf()
         else:
             self.born = np.zeros((self._nat, 3, 3))
             self.eps_inf = np.zeros((3, 3))
         #
 
-        if code_out != "QE" and code_out != "VASP":
-            print("[__init__]: "+code_out+" is not supported, some functionalities might fail. Continuing...")
+        # final calculation parameters
         self.code_out = code_out
-        
         self.smearing = smearing
         self.temperature = temperature
         self.photon_freq = photon_freq
@@ -237,7 +247,7 @@ class Phonon:
         #self.modelist = [mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations]
         self.IRmodelist = np.array([mode for mode in modelist if mode not in self.acoustics and mode not in self.rotations], dtype=int)
         self.Ramanmodelist = np.array([mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations], dtype=int)
-        self.modelist = np.array([mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations and mode not in [x[1] for x in self.degenerates]], dtype=int)
+        self.modelist = np.array([mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations and mode not in [x[1] for x in self.degenerates if len(x) > 1]], dtype=int)
         #
     #
     def print_decomposition(self):
@@ -282,8 +292,7 @@ class Phonon:
     ########################
     def calc_ir(self):
         if np.all(self.born == 0):
-            parser = ASEParser(self.path+self.file, modelist=self.modelist)
-            self.born = parser.get_born_charges()
+            self.born = self.parser.get_born_charges()
             print("[calc_ir]: reading effective charges")
         if np.all(self.born == 0):
             print("[calc_ir]: ERROR, need effective charges")
@@ -299,8 +308,7 @@ class Phonon:
     #
     def calc_reflectance(self):
         if not hasattr(self, "IR_data"):
-            parser = ASEParser(self.path+self.file, modelist=self.modelist)
-            self.born = parser.get_born_charges()
+            self.born = self.parser.get_born_charges()
             if np.all(self.born == 0):
                 print("[calc_reflectance]: ERROR, need effective charges")            
             else:
@@ -320,11 +328,11 @@ class Phonon:
     # Raman spectroscopy
     ####################
     def calc_raman_displace(self, scffile="scf.in"):
-        calcDisplace(self.path, self.modelist, self.stepsize, self.code_out, self.eigenvecs, self._norms, self.basis, self._nat, self.elements, self.cartesian, scffile)
+        calcDisplace(self.path, self.modelist, self.stepsize, self.parser, self.eigenvecs, self._norms, self.basis, self._nat, self.elements, self.cartesian, scffile)
     #
     def calc_raman_tensors(self):
         # format [mode_index][[w, xx, yy, zz, xy, yz, xz, perp, back]]
-        self.ramantensors_data = calcTensors(self.path, self.modelist, self.code_out, self.eigenfreqs, self._norms, self.basis, self.degenerates, self.labels, self.ramantensors, self.stepsize)
+        self.ramantensors_data = calcTensors(self.path, self.modelist, self.parser, self.eigenfreqs, self._norms, self.basis, self.degenerates, self.labels, self.ramantensors, self.stepsize)
     #
     def write_raman_tensors(self):
         writeRaman(self)

@@ -6,13 +6,9 @@
 
 import os
 import numpy as np
-from parserVASP import writePOSCAR, linkVASP
-from parserQE import writeSCF, linkQE
 
-def calcDisplace(path, modelist, stepsize, program, eigvecs, norms, basis, nat, elements, positions, scffile):
-    if program != "VASP" and program != "QE":
-        print("[calcDisplace]: ERROR, code not supported")
-    #
+def calcDisplace(path, modelist, stepsize, parser, eigvecs, norms, basis, nat, elements, positions, scffile):
+    
     # write unit cells with displacements
     disps = [-1, 1]
     print("[calcDisplace]: Generating displacements...")
@@ -29,15 +25,8 @@ def calcDisplace(path, modelist, stepsize, program, eigvecs, norms, basis, nat, 
             if os.path.isdir(file) == False:
                 os.system("mkdir "+file)
             #
-            if program == "VASP":
-                writePOSCAR(nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm)
-                linkVASP(file)
-            elif program == "QE":
-                writeSCF(nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm, scffile)
-                linkQE(file)
-            else:
-                print("[calcDisplace]: ERROR, format not implemented")
-            #
+            parser.write_file(nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm, scffile)
+            parser.link_file(file)
         #
     #
     print("[calcDisplace]: Done.")

@@ -198,7 +198,11 @@ def calcDegenerates(path, modes, labels, ramantensors, ramandata, eigval):
         for j in range(lenmodes):
             R_degen = np.zeros((3,3))
             # get general Raman tensor components
-            if lenmodes == 2:
+            if lenmodes == 1:
+                for k in range(2):
+                    R_degen += np.sqrt(x[k+offset+1]**2+x[k+offset+2]**2)*E[j+2*k+offset]
+            #
+            elif lenmodes == 2:
                 for k in range(2):
                     R_degen += np.sqrt(x[k+offset+1]**2+x[k+offset+2]**2)*E[j+2*k+offset]
                 #
@@ -218,7 +222,7 @@ def calcDegenerates(path, modes, labels, ramantensors, ramandata, eigval):
     return I[0,:,:,:]
 #
         
-def calcTensors(path, modelist, program, eigvals, norms, basis, degenerates, labels, ramantensors, stepsize):
+def calcTensors(path, modelist, parser, eigvals, norms, basis, degenerates, labels, ramantensors, stepsize):
     disps = [-1, 1]
     ramantensor = {}
 
@@ -226,47 +230,22 @@ def calcTensors(path, modelist, program, eigvals, norms, basis, degenerates, lab
     if os.path.isdir(path+"Ramantensors") == False:
         os.system("mkdir "+path+"Ramantensors")
     #
-    if program == "VASP":
-        from parserVASP import getOpticsVASP
-        for mode in modelist:
-            eigval = eigvals[mode]
-            w1, Im1, Re1 = getOpticsVASP(path+"displacements/mode"+str(mode)+"_"+str(disps[0])+"/vasprun.xml")
-            w2, Im2, Re2 = getOpticsVASP(path+"displacements/mode"+str(mode)+"_"+str(disps[1])+"/vasprun.xml")
+    for mode in modelist:
+        eigval = eigvals[mode]
+        w1, Im1, Re1 = parser.get_epsilon(path, mode , disps[0])
+        w2, Im2, Re2 = parser.get_epsilon(path, mode , disps[1])
 
-            w, Im1, Re1, Im2, Re2 = alignOmega(w1, w2, Im1, Re1, Im2, Re2)
-            ramantensor[mode] = calcRaman(w, Im1, Re1, Im2, Re2, stepsize, basis)
+        w, Im1, Re1, Im2, Re2 = alignOmega(w1, w2, Im1, Re1, Im2, Re2)
+        ramantensor[mode] = calcRaman(w, Im1, Re1, Im2, Re2, stepsize, basis)
 
-            if mode in [x[0] for x in degenerates]:
-                degeneratetensors = calcDegenerates(path, [mode, mode+1], labels, ramantensors, ramantensor[mode], eigval)
-                counter = 0
-                for degen in [mode, mode+1]:
-                    ramantensor[degen] = degeneratetensors[:,:,counter]
-                    counter += 1
-            #
+        if mode in [x[0] for x in degenerates]:
+            degeneratetensors = calcDegenerates(path, [mode, mode+1], labels, ramantensors, ramantensor[mode], eigval)
+            counter = 0
+            for degen in [mode, mode+1]:
+                ramantensor[degen] = degeneratetensors[:,:,counter]
+                counter += 1
         #
-        print("[calcTensors]: Done.")
-        return ramantensor
-    elif program == "QE":
-        from parserQE import getOpticsQE
-        for mode in modelist:
-            eigval = eigvals[mode]
-            w1, Im1, Re1 = getOpticsQE(path+"displacements/mode"+str(mode)+"_"+str(disps[0]))
-            w2, Im2, Re2 = getOpticsQE(path+"displacements/mode"+str(mode)+"_"+str(disps[1]))
-
-            w, Im1, Re1, Im2, Re2 = alignOmega(w1, w2, Im1, Re1, Im2, Re2)
-            ramantensor[mode] = calcRaman(w, Im1, Re1, Im2, Re2, stepsize, basis)
-
-            if mode in [x[0] for x in degenerates]:
-                degeneratetensors = calcDegenerates(path, [mode, mode+1], labels, ramantensors, ramantensor[mode], eigval)
-                counter = 0
-                for degen in [mode, mode+1]:
-                    ramantensor[degen] = degeneratetensors[:,:,counter]
-                    counter += 1
-            #
-        #
-        print("[calcTensors]: Done.")
-        return ramantensor
-    else:
-        print("[calcTensors]: Format not implemented.")
     #
+    print("[calcTensors]: Done.")
+    return ramantensor
 #

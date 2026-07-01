@@ -53,7 +53,7 @@ class OwnParser(CalculatorParser):
 #
 
 # VASP
-from parserVASP import getModesVASP, getBornVASP, getEpsInfVASP
+from parserVASP import getModesVASP, getBornVASP, getEpsInfVASP, getOpticsVASP, writePOSCAR, linkVASP
 
 class VASPParser(CalculatorParser):
     def parse_structure(self):
@@ -94,10 +94,20 @@ class VASPParser(CalculatorParser):
             atoms = read(self.filename)
             nat = len(atoms)
             return np.zeros((nat, 3, 3))
+    
+    def parse_epsilon(self, path, mode, disp):
+        return getOpticsVASP(path+"displacements/mode"+str(mode)+"_"+str(disp)+"/vasprun.xml")
+    
+    def write_file(self, nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm, filename):
+        return writePOSCAR(nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm)
+    
+    def link_file(self, file):
+        return linkVASP(file)
     #
 #
 
 # QE
+from parserQE import getOpticsQE, linkQE, writeSCF
 class QEParser(CalculatorParser):
     def parse_structure(self):
         return read(self.filename)
@@ -128,6 +138,15 @@ class QEParser(CalculatorParser):
                 i += 1
 
         return np.array(freqs), modes
+    
+    def parse_epsilon(self, path, mode, disp):
+        return getOpticsQE(path+"displacements/mode"+str(mode)+"_"+str(disp))
+    
+    def write_file(self, nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm, scffile):
+        return writeSCF(nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm, scffile)
+    
+    def link_file(self, file):
+        return linkQE(file)
     #
 #
 
@@ -168,10 +187,12 @@ class PhonopyParser(CalculatorParser):
 # wrapper code
 
 class ASEParser:
-    def __init__(self, filename, modelist=None):
+    def __init__(self, filename, modelist=None, code_out="VASP"):
         self.filename = filename
         self.modelist = modelist
+        self.code_out = code_out
         self.backend = self.detect_backend()
+        self.code = self.detect_code()
 
     def detect_backend(self):
         fn = self.filename.lower()
@@ -189,6 +210,17 @@ class ASEParser:
             return OwnParser(self.filename)
 
         raise ValueError("Unknown calculator format")
+    
+    def detect_code(self):
+        fn = self.code_out.lower()
+
+        if "vasp" in fn:
+            return VASPParser(self.filename, self.modelist)
+
+        if "qe" in fn:
+            return QEParser(self.filename)
+
+        raise ValueError("Unknown calculator format")
 
     def get_structure(self):
         return self.backend.parse_structure()
@@ -204,5 +236,15 @@ class ASEParser:
     
     def get_epsilon_inf(self):
         return self.backend.parse_eps_inf()
+    
+    def get_epsilon(self, path, mode, disp):
+        return self.code.parse_epsilon(path, mode, disp)
+    
+    def write_file(self, nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm, filename):
+        return self.code.write_file(nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm, filename)
+            
+    def link_file(self, file):
+        return self.code.link_file(file)
+
     #
 #
