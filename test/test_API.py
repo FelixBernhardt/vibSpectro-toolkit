@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(0, "../src")
+
 from RamanPy_API import Phonon
 from IO import writeData, writeRaman, writeConstantRaman, writeRamanSpectrum, writeIRSpectrum, writeReflectanceSpectrum
 
@@ -8,7 +11,7 @@ from IO import writeData, writeRaman, writeConstantRaman, writeRamanSpectrum, wr
 #test.eigenfreqs=[test.eigenfreqs[29-mode] for mode in range(30)]
 
 #path = "/Users/felixbernhardt/Desktop/sqs_00"
-path = "/home/felix/Forschung/sqs_00"
+path = "LiNbO3"
 test = Phonon(file="OUTCAR", path=path, born=True, qdir=(0,0,1), nosym=False, modelist=range(1,31), smearing=5, LOcorr=True)
 
 

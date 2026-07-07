@@ -1,7 +1,7 @@
 System: MySystem
 Source:
-- /home/felix/Forschung/sqs_00/displacements/mode2_1/vasprun.xml
-- /home/felix/Forschung/sqs_00/displacements/mode2_-1/vasprun.xml
+- LiNbO3/displacements/mode2_1/vasprun.xml
+- LiNbO3/displacements/mode2_-1/vasprun.xml
 Units:
   Phonon Wavelength: cm⁻1
   Laser_Frequency: eV
@@ -12,12 +12,12 @@ Mode:
   Wavelength:  659.776959
   Raman_Tensor:
   - Laser_Frequency:  0.000000
-    perpendicular :  2.808841
-    backscattering:  3.245036
+    perpendicular :  3.231660
+    backscattering:  3.731600
     Raman_Tensor:
-    - [  0.000000+0.000000j,   0.809947+0.000000j,   0.020000+0.000000j ]
-    - [  0.809947+0.000000j,   0.000000+0.000000j,   0.000000+0.000000j ]
-    - [  0.020000+0.000000j,   0.000000+0.000000j,   0.000000+0.000000j ]
+    - [  0.000000+0.000000j,   0.932900+0.000000j,   0.000000+0.000000j ]
+    - [  0.932900+0.000000j,   0.000000+0.000000j,   0.000000+0.000000j ]
+    - [  0.000000+0.000000j,   0.000000+0.000000j,   0.000000+0.000000j ]
   - Laser_Frequency:  0.025102
     perpendicular :  12.579842
     backscattering:  14.606605

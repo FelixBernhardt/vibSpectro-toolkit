@@ -1,7 +1,7 @@
 System: MySystem
 Source:
-- /home/felix/Forschung/sqs_00/displacements/mode15_1/vasprun.xml
-- /home/felix/Forschung/sqs_00/displacements/mode15_-1/vasprun.xml
+- LiNbO3/displacements/mode15_1/vasprun.xml
+- LiNbO3/displacements/mode15_-1/vasprun.xml
 Units:
   Phonon Wavelength: cm⁻1
   Laser_Frequency: eV

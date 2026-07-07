@@ -1,7 +1,7 @@
 System: MySystem
-Source: /home/felix/Forschung/sqs_00/Raman.yaml
-        /home/felix/Forschung/sqs_00/qpoints_zz.yaml
-        /home/felix/Forschung/sqs_00/whateverFile
+Source: LiNbO3/Raman.yaml
+        LiNbO3/qpoints_zz.yaml
+        LiNbO3/whateverFile
 Units:
  Frequency: cm⁻1
  Laser_Frequency: eV

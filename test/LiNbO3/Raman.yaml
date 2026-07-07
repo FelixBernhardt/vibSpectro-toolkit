@@ -1,5 +1,5 @@
 System: MySystem
-Source: /home/felix/Forschung/sqs_00/Ramantensors/alpha*.yaml
+Source: LiNbO3/Ramantensors/alpha*.yaml
 Units:
  Frequency: cm⁻1
  Laser_Frequency: eV
