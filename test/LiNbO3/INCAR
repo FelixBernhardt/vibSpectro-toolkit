@@ -1,0 +1,62 @@
+####----- System name -----####
+SYSTEM = Li(NbTa)O_3
+
+LOPTICS = .TRUE.
+NBANDS = 80
+NEDOS = 2000
+ISYM = 0
+ISYM = 0
+NWRITE = 3
+
+####----- Precision parameters ----####
+PREC   = Accurate   #  Highest accuracy for automatic mesh generation
+#NWRITE =    0       #  verbosity of OUTCAR (0-3)
+LREAL  =  .FALSE.   #  Real-space optimization ('AUTO' cells with more than 20 atoms, ROPT according to PREC)
+GGA    =   PS       #  Better results when computing lattice constants
+####-------------------------------####
+
+####----- Starting parameters -----####
+ICHARG =    2       #  Calculate starting charge: 1 - CHGCAR, 2 - atomic charge, +10 -  non self-consistent
+ISTART =    0       #  Initialize orbitals: 0 - INIWAV, 1 - WAVECAR
+INIWAV =    1       #  Initialize orbitals (if ISTART=0): 0 - jellium, 1 - random
+####-------------------------------####
+
+####----- Electronic step parameters -----####
+EDIFF   =    1.E-9  #  Absolute accuracy for total electronic energy (eV)
+NELMIN  =    4      #  Minimum number of el. steps
+NELM    = 1000      #  Maximum number of el. steps
+NELMDL  =   -5      #  No update of charge for NELMDL steps 
+#IALGO   =   38      #  38 - Davidson scheme (more robust), 48 - RMM-DIIS (faster)
+ALGO    =  Normal     #  NELMDL steps Davidson, then RMM-DIIS
+ISMEAR  =   -5      #  occupation: >0 - MP (metals), 0 - Gauss (unversial), -1 - Fermi, -4 - tetrahedron, -5 - tet. with Bloechl corr. (semiconductors and acc. energies)
+SIGMA   =    0.05   #  Decay width of smearing function (eV). Irrelevant when ISMEAR = -5
+ISPIN   =    1      #  Spin polarization: 1 - non-sp, 2 - sp
+AMIX    =    0.4    #  Linear mixing parameter (small value for metals)
+AMIN    =    0.1    #  Minimal mixing parameter
+LMAXMIX =    2      #  Max orbital quantum number for on-site charge densities: 2 - default, 4 - d-elements, 6 - f-elements
+ADDGRID = .True.    #  Finer grid for augmentation charge, reduces noise in forces
+####--------------------------------------####
+
+####----- Ionic step parameters -----####
+NSW     = 0        #  Maximum number of ionic steps
+IBRION  =   7       #  Update of ionic positions: 0 - MD, 1 - RMM-DIIS (close to minimum), 2 - CG (more crude guess), 3 - damped MD (very crude guess), ...
+EDIFFG  =  -0.005   #  Absolute accuracy for structural energy minimization (in eV)
+POTIM   =   0.15    #  Internal scaling factor for forces during update, sensitive for IBRION=1|3
+ISIF    =   2       #  stress tensor - no, relax ions - yes, change cell shape - no, change cell volume - no
+####---------------------------------####
+
+####----- Writing parameters -----####
+LWAVE   = .FALSE.   #  Write the wave functions (WAVECAR) 
+LCHARG  = .FALSE.   #  Write the charge densities (CHG, CHGCAR)
+LVTOT   = .FALSE.   #  Write the total local potential (LOCPOT)
+LVHAR   = .FALSE.   #  Write the Hartree potential (LOCPOT)
+LELF    = .FALSE.   #  Write the electron localisation function (ELFCAR)
+####------------------------------####
+
+####----- Parallelisation parameters -----####
+#LSCALAPACK = .FALSE. #  Use ScaLAPACK (for massively parallel machines)
+LPLANE     = .FALSE. #  Planewise data distribution in real space (check load balance!)
+KPAR       =   1     #  Number of k-points treated parallel (set equal to number of nodes for optimal performance)
+NCORE      =   24     #  Number of cores working on one orbital
+#NPAR       =   1     # 	Number of cores
+####--------------------------------------####
