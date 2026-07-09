@@ -51,7 +51,7 @@ class Phonon:
     decomposition -> phonon decomposition at Gamma point
 
     acoustic -> indices of acoustic phonon modes
-    rotations -> indices of (almost) pure rotational modes, only relevant for isolated molecules
+    rotations -> indices of (almost) pure rotational modes, only relevant for isolated molecules (molecule keyword)
     silent -> indices of raman silent phonon modes
     degenerates -> groupings for degenerate phonon modes
 
@@ -173,8 +173,8 @@ class Phonon:
         if self.nosym == False:
             if os.path.isfile(self.path+"FORCE_CONSTANTS") and self.parser.backend.__class__.__name__ != "OwnParser":
                 self._dataset = get_symmetry_dataset((self.basis, self.direct, [periodTable[element] for element in self.elements]), symprec=1.e-5)
-                #self.pointgroup = str(self._dataset.pointgroup)
-                self.pointgroup = str(self._dataset["pointgroup"])
+                self.pointgroup = str(self._dataset.pointgroup)
+                #self.pointgroup = str(self._dataset["pointgroup"])
                 self._labels_tmp = getIrrepsSymbols(self.path, self.basis, self.direct, self.elements, self.pointgroup)
                 #
                 if self.ordering == "ascending":
@@ -245,10 +245,9 @@ class Phonon:
         self.dielectrictensor = analyzeDielectricTensor(self.pointgroup, varprint=False)    
         self.degenerates = getDegenerates(self.modelist, self.eigenfreqs, self.labels, prec=1e0)
         self.silent = getRamanSilent(self._modelist, self.labels, self.pointgroup)
-        #self.modelist = [mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations]
         self.IRmodelist = np.array([mode for mode in modelist if mode not in self.acoustics and mode not in self.rotations], dtype=int)
         self.Ramanmodelist = np.array([mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations], dtype=int)
-        self.modelist = np.array([mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations and mode not in [x[1] for x in self.degenerates if len(x) > 1]], dtype=int)
+        self.modelist = np.array([mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations and mode not in [x[1] for x in self.degenerates if len(x) > 1] and mode not in [x[2] for x in self.degenerates if len(x) > 2]], dtype=int)
         #
     #
     def print_decomposition(self):

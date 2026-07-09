@@ -26,11 +26,8 @@ with an arbitrary smearing width $\gamma$.
 ## Handling of LO phonon modes
 LO frequencies and eigenvectors can be computed within phonopy using the non-analytical term correction tag for different directions. Here, the LO eigenvectors are, in a first approximation, considered to be identical to theit TO counterparts. This counterpart is determined by the scalar product of the eigenvectors $Q$:<br><br>
 $\braket{Q_{LO}|Q_{TO}}.$<br><br>
-Then, the TO phonon frequencies are modified to their corresponding LO phonon frequencies.
-<br>
-The Raman intensity of LO (longitudinal optical) phonon modes is different to their corresponding TO (transversal optical) intensity:<br><br>
-$I_p,$<br><br>
-where ...
+Then, the TO phonon frequencies are modified to their corresponding LO phonon frequencies, while the Raman tensor is not modified.
+
 
 ## Symmetry considerations
-Not all Raman tensors of all phonon modes need to be calculated: It is sufficient to only include phonon modes that are Raman active according to group symmetry. The phonon mode symmetry analysis is only available when using $phonopy$, and relies on the formulations used therein. Further, only one mode of a pair/triplett of degenerate modes needs to be explicitly calculated, since the Raman tensor of a degenerate mode can be constructed from one of its degenerate partners. Finally, acoustic phonon modes, as well as purely rotational modes (only for molecules), can be excluded from the calculations. The latter consideration is always applied for all calculations.
+Not all Raman tensors of all phonon modes need to be calculated: It is sufficient to only include phonon modes that are Raman active according to group symmetry. The phonon mode symmetry analysis is only available when using $phonopy$ (more specifically, the FORCE_CONSTANTS file has to be present), and relies on the formulations used therein. Further, only one mode per pair/triplett of degenerate modes needs to be explicitly calculated, since the Raman tensor of a degenerate mode can be constructed from one of its degenerate partners. Finally, acoustic phonon modes, as well as purely rotational modes (only for molecules), can be excluded from the calculations. The latter consideration is always applied for all calculations.

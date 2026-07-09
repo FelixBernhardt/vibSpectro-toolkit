@@ -243,7 +243,7 @@ def getLOFreqs(path, modelist, qdir_cart, qdir_direct, ordering, eigvecs, degene
 
     # read the LO modes
     print("[getLOFreqs]: Using cartesian q-direction "+str(qdir_cart))
-    eigvals_tmp, eigvecs_tmp, norms_pt, qpoint_pt, basis, nat, elements, cPos, masses = parsePhonopy(path, [qdir_cart, qdir_direct])
+    eigvals_tmp, eigvecs_tmp, _, _, basis, nat, elements, cPos, _ = parsePhonopy(path, [qdir_cart, qdir_direct])
 
     # phonopy always provides all modes in ascending order
     eigvecs_pt = dict(zip([j for j in range(1,3*nat+1)], eigvecs_tmp))
@@ -251,7 +251,7 @@ def getLOFreqs(path, modelist, qdir_cart, qdir_direct, ordering, eigvecs, degene
 
     if len(modelist) != 3*nat-3:
         # read all the TO modes from phonopy
-        eigvals, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(path, None)
+        eigvals, eigvecs, _, _, basis, nat, elements, cPos, _ = parsePhonopy(path, None)
         direct = np.dot(cPos, np.linalg.inv(basis))
         eigvecs = dict(zip([j for j in range(1,3*nat+1)], eigvecs))
         eigvals = dict(zip([j for j in range(1,3*nat+1)], eigvals))

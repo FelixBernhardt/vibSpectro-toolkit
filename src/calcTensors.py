@@ -68,13 +68,9 @@ def symmetrizeTensors(modes, labels, ramantensors, ramandata):
     #
 
     Rb = []
-    Rb2 = []
     Rb3 = []
     # decompose general tensors into their coefficients
     for letter in ["a", "b", "c", "d", "e", "f"]:
-        find = False
-        Rnc = []
-        tmp_R2 = np.zeros((3,3))
         for R in Rn:
             foundOne = False
             tmp_R = np.zeros((3,3))
@@ -83,7 +79,6 @@ def symmetrizeTensors(modes, labels, ramantensors, ramandata):
                     tmp = re.findall(letter, R[i,j])
                     if tmp != []:
                         foundOne = True
-                        find = True
                         tmp = re.split(letter, R[i,j])
                     
                         if tmp[0] == "":
@@ -106,14 +101,10 @@ def symmetrizeTensors(modes, labels, ramantensors, ramandata):
             #
         
             if foundOne == True:
-                Rnc.append(tmp_R)
                 Rb.append(np.array(tmp_R))
                 Rb3.append([letter, np.array(tmp_R)])
-                tmp_R2 = np.add(tmp_R2, Rb[-1])
             #
         #
-        if find == True:
-            Rb2.append(np.array(tmp_R2))
     #
 
     # reorder matrices by letters
@@ -131,7 +122,6 @@ def symmetrizeTensors(modes, labels, ramantensors, ramandata):
 
     w = []
     I = []
-    #for i in [10]:
     for i in range(len(data)):
         w.append(np.real(data[i,0]))
         A = np.zeros((3,3), dtype=complex)
