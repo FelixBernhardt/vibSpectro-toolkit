@@ -34,7 +34,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from Symmetries import eps0, c_cm, h, kb, ev2rcm
+from src.Symmetries import eps0, c_cm, h, kb, ev2rcm
 
 def Lorentz(hw, ab, gam=0.001):
     fmax = max(hw)

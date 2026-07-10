@@ -1,8 +1,8 @@
 import sys
-sys.path.insert(0, "../src")
+print(sys.path)
 
-from RamanPy_API import Phonon
-from IO import writeData, writeRaman, writeConstantRaman, writeRamanSpectrum, writeIRSpectrum, writeReflectanceSpectrum
+from src.RamanPy_API import Phonon
+
 
 # files created by displace in ascending or descending order is important!! Here, all use the VASP default
 # reordering works like this
@@ -40,9 +40,9 @@ test.plot_reflectance()
 #test.ramantensors = analyzeRamanTensors(test.pointgroup)
 test.print_ramanselection()
 """
-test.calc_raman_tensors()
-test.write_raman_tensors()
+#test.calc_raman_tensors()
+#test.write_raman_tensors()
 #test.load_raman_tensors()
-test.calc_raman_spectrum()
-test.plot_raman()
-test.write_raman_spectrum()
+#test.calc_raman_spectrum()
+#test.plot_raman()
+#test.write_raman_spectrum()

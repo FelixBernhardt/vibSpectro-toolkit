@@ -2,7 +2,7 @@ System: MySystem
 Units:
  Frequency: cm⁻1
 Source:
-- /home/felix/Forschung/sqs_00/OUTCAR
+- /home/felix/Downloads/RamanPy/examples/LiNbO3/OUTCAR
 Geometry:
 - Polarization: E || x
   Spectrum:

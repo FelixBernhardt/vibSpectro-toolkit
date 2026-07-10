@@ -7,7 +7,7 @@
 import sys
 import datetime
 import numpy as np
-from RamanPy_API import Phonon
+from src.RamanPy_API import Phonon
 import argparse
 
 sys.dont_write_bytecode = True
@@ -139,7 +139,7 @@ if __name__ == '__main__':
 
     if args.version == True:
         print("[__main__]: Version "+version)
-        sys.exit(1)
+        sys.exit(0)
 
     ###################################
     # checks
@@ -184,7 +184,7 @@ if __name__ == '__main__':
         ph.print_dielectrictensor()
         ph.print_ramanselection()
         ph.print_irselection()
-        sys.exit(1)
+        sys.exit(0)
 
     #######################
     # Infrared spectroscopy

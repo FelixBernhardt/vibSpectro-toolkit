@@ -6,9 +6,9 @@
 
 
 import numpy as np
-from parser.parserPhonopy import parsePhonopy
+from src.parser.parserPhonopy import parsePhonopy
 from spglib import get_symmetry_dataset
-from Symmetries import periodTable, getIrrepsSymbols, getDegenerates
+from src.Symmetries import periodTable, getIrrepsSymbols, getDegenerates
 
 def normalize(v):
     return v / np.linalg.norm(v)

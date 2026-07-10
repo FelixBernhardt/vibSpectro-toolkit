@@ -1,5 +1,5 @@
 import numpy as np
-from Symmetries import portoq, findInListOfList
+from src.Symmetries import portoq, findInListOfList
 import yaml
 
 ####################

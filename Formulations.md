@@ -31,3 +31,84 @@ Then, the TO phonon frequencies are modified to their corresponding LO phonon fr
 
 ## Symmetry considerations
 Not all Raman tensors of all phonon modes need to be calculated: It is sufficient to only include phonon modes that are Raman active according to group symmetry. The phonon mode symmetry analysis is only available when using $phonopy$ (more specifically, the FORCE_CONSTANTS file has to be present), and relies on the formulations used therein. Further, only one mode per pair/triplett of degenerate modes needs to be explicitly calculated, since the Raman tensor of a degenerate mode can be constructed from one of its degenerate partners. Finally, acoustic phonon modes, as well as purely rotational modes (only for molecules), can be excluded from the calculations. The latter consideration is always applied for all calculations.
+
+## Phonon modes and frequencies at Γ-point
+In order to start the script you need the phononic eigenmodes at Γ. Usage of the $phonopy$ format is recommended, but VASP is supported as well. The following files are needed:
+- FORCE_CONSTANTS
+- phonopy.yaml
+- qpoints.yaml
+
+Phonopy writes the $phonopy.yaml$ file per default. FORCE_CONSTANTS can be calculated from FORCE_SETS or different DFT calculators by
+```bash
+phonopy --writefc --dim="x y z"
+```
+where $x,y,z$ are the dimensions of the supercell used, if finite-displacement method is chosen. The dynamical matrix (qpoints.yaml) at Γ can be obtained by
+```bash
+phonopy --readfc --writedm --qpoints=\"0 0 0\"
+```
+
+Further information is written in the documentation at https://phonopy.github.io/phonopy/.
+<br>
+If you have calculated the phonon modes in VASP, you just need the OUTCAR file containing the phononic eigenvectors and eigenfrequencies.
+- OUTCAR
+
+<br><br>
+
+# Running calculations
+## Raman spectroscopy
+- Prepare your structures by displacing the ions along the phonon eigenvector in plus and minus direction, for each phonon mode
+```bash
+python RamanPy -d
+```
+This creates folders for all considered modes and displacements (only one folder for each direction, i.e. two folder per mode). As a default, silent modes are ignored. Make sure to include the necessary files specified in the following in the parent folder where you run RamanPy.
+
+- The electronic contribution to the dielectric function needs to be calculated for all created structurs. For VASP, a possible INCAR looks like this:
+```bash
+LOPTICS = .TRUE. # calculate the dielectric function as a sum over bands
+NBANDS  = ...    # number of bands, check for convergence
+EDIFF   = 1.e-8  # low value for accurate eigenvalues
+ISMEAR  = 0      # Do not use -5 !
+SIGMA   = 0.02   # depends on system, 0.02 (VASP default) should be fine
+```
+As for all optical calculations, check for k-point convergence! Additionally to the INCAR file, KPOINTS and POTCAR need to be supplied in the parent folder. Finally, run a VASP calculation in every subfolder within the "displacements" folder.
+
+- Collect the results and calculate the Raman tensors via
+```bash
+python RamanPy -t
+```
+- calculate the Raman intensity and apply the smearing
+```bash
+python RamanPy -s
+```
+- plot the spectra
+```bash
+python RamanPy --plotRaman
+```
+<br><br>
+
+## IR spectroscopy
+- If the effective ionic charges are present in phonopy.yaml or OUTCAR, simply run
+```bash
+python RamanPy -IR --plotIR
+```
+- For a calculation of the reflectance, run
+```bash
+python RamanPy -R --plotReflectance
+```
+<br><br>
+
+## Limitations
+More options can be enabled by applying additional flags when executing RamanPy. Check
+```bash
+python RamanPy -h
+```
+for a complete set of flags. Note, that some options are only available from the python API. Two examplary calculations can be found in the examples subfolder.
+<br>
+
+- The phonon modes are ordered by their frequencies in ascending/descending order, depending on the file used to read the phonons!
+- Symmetry analysis is only possible if FORCE_CONSTANTS are present. This allows to exclude silent modes and minimizes the numerical costs.
+- Molecular point groups are not supported by the symmetry analysis.
+- Only the intensity of TO modes can be calculated! Check the selection rules on which photon propagation directions are affected.
+- The unit of the Raman tensors is not checked. Use arbitrary units for showcasing results (as is standard in literature).
+
+<br>

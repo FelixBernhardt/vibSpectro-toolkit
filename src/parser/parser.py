@@ -31,7 +31,7 @@ class CalculatorParser:
 #
 
 # Own format
-from IO import loadAtomsData, loadPhononsData, loadBornData, loadEpsInfData
+from src.IO import loadAtomsData, loadPhononsData, loadBornData, loadEpsInfData
 class OwnParser(CalculatorParser):
     def parse_structure(self):
         symbols, positions, cell = loadAtomsData(self.filename)
@@ -53,7 +53,7 @@ class OwnParser(CalculatorParser):
 #
 
 # VASP
-from parser.parserVASP import getModesVASP, getBornVASP, getEpsInfVASP, getOpticsVASP, writePOSCAR, linkVASP
+from src.parser.parserVASP import getModesVASP, getBornVASP, getEpsInfVASP, getOpticsVASP, writePOSCAR, linkVASP
 
 class VASPParser(CalculatorParser):
     def parse_structure(self):
@@ -107,7 +107,7 @@ class VASPParser(CalculatorParser):
 #
 
 # QE
-from parser.parserQE import getOpticsQE, linkQE, writeSCF
+from src.parser.parserQE import getOpticsQE, linkQE, writeSCF
 class QEParser(CalculatorParser):
     def parse_structure(self):
         return read(self.filename)
@@ -151,7 +151,7 @@ class QEParser(CalculatorParser):
 #
 
 # phonopy
-from parser.parserPhonopy import parsePhonopy
+from src.parser.parserPhonopy import parsePhonopy
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 
 class PhonopyParser(CalculatorParser):

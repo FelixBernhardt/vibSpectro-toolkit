@@ -7,15 +7,15 @@ import os
 import numpy as np
 from numpy.typing import NDArray
 from spglib import get_symmetry_dataset
-from Symmetries import periodTable, getAcoustics, getRotations, getDegenerates, getDecomposition, getRamanSilent, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols
-from IO import writeData, writeRaman, writeRamanSpectrum, writeConstantRaman, writeIRSpectrum, writeReflectanceSpectrum, loadSymmetryData, loadPhononsData, loadRamanTensor, loadConstantRaman, loadSpectrum, loadIR, loadReflectance
-from IR import calcIR, calcReflectance
-from LoTo import getLOFreqs
-from displace import calcDisplace
-from calcTensors import calcTensors
-from calcSpectrum import calcSpectrum
-from plotSpectrum import plotRamanSpectrum, plotIRSpectrum, plotReflectanceSpectrum
-from parser.parser import ASEParser
+from src.Symmetries import periodTable, getAcoustics, getRotations, getDegenerates, getDecomposition, getRamanSilent, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols
+from src.IO import writeData, writeRaman, writeRamanSpectrum, writeConstantRaman, writeIRSpectrum, writeReflectanceSpectrum, loadSymmetryData, loadPhononsData, loadRamanTensor, loadConstantRaman, loadSpectrum, loadIR, loadReflectance
+from src.IR import calcIR, calcReflectance
+from src.LoTo import getLOFreqs
+from src.displace import calcDisplace
+from src.calcTensors import calcTensors
+from src.calcSpectrum import calcSpectrum
+from src.plotSpectrum import plotRamanSpectrum, plotIRSpectrum, plotReflectanceSpectrum
+from src.parser.parser import ASEParser
 
 class Phonon:
     """

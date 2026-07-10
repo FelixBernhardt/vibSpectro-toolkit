@@ -120,7 +120,7 @@ def linkQE(file):
 
     import os
     os.chdir(file)
-    os.system("ln -s ../../*.upf ./")
-    os.system("ln -s ../../epsilon.in ./")
+    os.system("ln -s ../../*.upf ./  >/dev/null 2>&1")
+    os.system("ln -s ../../epsilon.in ./  >/dev/null 2>&1")
     os.chdir("../..")
 #

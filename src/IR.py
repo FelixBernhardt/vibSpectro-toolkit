@@ -5,7 +5,7 @@
 #
 
 import numpy as np
-from Symmetries import eps0, c_cm, e_charge, amu
+from src.Symmetries import eps0, c_cm, e_charge, amu
 
 def LorentzIR(hw, ab, gam=0.001):
     fmax = max(hw)

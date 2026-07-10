@@ -6,7 +6,7 @@
 
 import os, re
 import numpy as np
-from Symmetries import eps0, findInListOfList
+from src.Symmetries import eps0, findInListOfList
 
 def placzeckInvs(Intensity, col):
     # get Placzeck-invariants
