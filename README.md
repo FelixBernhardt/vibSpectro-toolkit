@@ -14,7 +14,7 @@ Check the examples folder for tutorials on how to perform the calculations.
 
 ## Installation
 
-Install all the libraries listed in the requirements.txt file. Place the files of this script in whatever directory you want
+Install all the libraries listed in the requirements.txt file. Place the files of this script in whatever directory you want.
 
 If you want to use the command line interface, consider putting the <> script in your PATH, e.g. by adding the following line in ~/.bashrc:
 ```bash

@@ -1,0 +1,12 @@
+&inputpp
+ outdir = "out"
+ prefix = "pwscf"
+ calculation = "offdiag"
+/
+&energy_grid
+ smeartype = "gauss"
+ intersmear = 0.2
+ wmin =  0.0
+ wmax = 30.0
+ nw = 1000
+/

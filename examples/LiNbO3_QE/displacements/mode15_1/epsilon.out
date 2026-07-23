@@ -1,0 +1,67 @@
+
+     Program epsilon v.7.5 starts on 21Dec2025 at 16: 4:17 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on    96 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =      96
+     352040 MiB available memory on the printing compute node when the environment starts
+ 
+
+
+     Reading input file...
+     Broadcasting variables...
+     Reading PW restart file...
+
+     Reading xml data from directory:
+
+     out/pwscf.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PBESOL
+                           (   1   4  10   8   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min          29      29      8                  998      998     149
+     Max          30      30      9                 1003     1003     154
+     Sum        2813    2813    803                96001    96001   14483
+ 
+     Using Pencil Decomposition
+ 
+
+
+     Fermi energy [eV] is:  9.23749
+     The system is a metal (occupations are not fixed)...
+     metallic system: redefining wmin =     0.001000
+
+     Performing offdiag calculation...
+
+     Writing output on file...
+
+
+     offdiag      :    155.56s CPU    159.38s WALL (       1 calls)
+     dipole_calc  :    150.48s CPU    154.22s WALL (     216 calls)
+ 
+ 
+     epsilon      :   2m40.00s CPU   2m44.03s WALL
+
+ 
+   This run was terminated on:  16: 7: 1  21Dec2025            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

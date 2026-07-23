@@ -197,7 +197,7 @@ def ModeParserVASP(outcar_fh, modelist, nat, case):
         #
         for j in range(nat):
             tmp = outcar_fh.readline().split()
-            # stupid VASP spacing bug...
+            # VASP spacing bug... check for missing spaces between values
             if len(tmp) < 6:
                 tmp3 = []
                 for s in range(len(tmp)):

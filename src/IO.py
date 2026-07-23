@@ -40,7 +40,7 @@ def writeData(Phonon):
         lines.append("  Mass: {: .6f}".format(Phonon.masses[atom]))
     
     lines.append("Modes:")
-    for mode in Phonon._modelist:
+    for mode in Phonon.IRmodelist:
         lines.append("- Mode: "+str(mode))
         lines.append("  Label: \"" + Phonon.labels[mode] +"\"")
         lines.append("  Frequency: {: .6f}".format(Phonon.eigenfreqs[mode]))

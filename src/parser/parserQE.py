@@ -7,6 +7,7 @@
 import os
 import numpy as np
 from collections import Counter
+from src.Symmetries import periodTableMasses, periodTable
 
 def getOpticsQE(folder):
     Im, Re = [], []
@@ -21,6 +22,105 @@ def getOpticsQE(folder):
     return np.array(w), np.array(Im), np.array(Re)
 #
 
+def getModesQE(path):
+    freqs = []
+    modes = []
+    with open(path+"matdyn") as f:
+        lines = f.readlines()
+
+    atom = {}
+    i = 7
+    while i < len(lines):
+        line = lines[i]
+        if len(line.split()) == 4:
+            atom[int(line.split()[0])] = line.split()[1][1:]
+            i += 1
+        else:
+            break
+    #
+    elements = {}
+    while i < len(lines):
+        line = lines[i]
+        if len(line.split()) == 5:
+            elements[int(line.split()[0])] = int(line.split()[1])
+            i += 1
+        else:
+            break
+        #
+    #
+
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if "freq" in line.lower():
+            parts = line.split()
+            freq = float(parts[-2])  # cm^-1
+            freqs.append(freq)
+
+            mode = []
+            atomidx = 1
+            i += 1
+            while i < len(lines) and len(lines[i].split()) == 8:
+                dx, idx, dy, idy, dz, idz = map(float, lines[i].split()[1:-1])
+                norm = np.sqrt(periodTableMasses[atom[elements[atomidx]]])
+                mode.append([dx/norm, dy/norm, dz/norm])
+                i += 1
+                atomidx += 1
+            modes.append(np.array(mode))
+        else:
+            i += 1
+    #
+
+    eigenvecs = []
+    for mode in modes:
+        eigenvec = mode/np.linalg.norm(mode)
+        eigenvecs.append(eigenvec)
+
+    return np.array(freqs), eigenvecs
+#
+
+def getEpsInfQE(path):
+    eps_inf = np.zeros((3, 3))
+    try:
+        ff = open(path+"matdyn", "r")
+        lines = [l.strip() for l in ff.readlines()] # Read the whole file removing tailoring spaces
+        ff.close()
+    except IOError:
+        print("[getEpsInfQE]: ERROR Couldn't open "+path+"matdyn.")
+        return eps_inf
+    #
+
+    eps_start = lines.index(next(l for l in lines if len(l) > 1 if (l.split()[0]=="Dielectric" and l.split()[1]=="Tensor:" )) )
+
+    for j in range(3):
+        line = eps_start+2+j
+        eps_inf[j] = ( float(lines[line].split()[0]), float(lines[line].split()[1]), float(lines[line].split()[2]))
+    #
+
+    return eps_inf
+#
+
+def getBornQE(path, nat):
+    born = np.zeros((nat, 3, 3))
+    try:
+        ff = open(path+"/matdyn", "r")
+        lines = [l.strip() for l in ff.readlines()] # Read the whole file removing tailoring spaces
+        ff.close()
+    except IOError:
+        print("[getBornQE]: ERROR Couldn't open "+path+"/matdyn.out.")
+        return born
+    #
+
+    born_start = lines.index(next(l for l in lines if len(l) > 3 if (l.split()[0]=="Effective" and l.split()[1]=="Charges" and l.split()[2]=="E-U:" and l.split()[3]=="Z_{alpha}{s,beta}") ))
+    for atom in range(nat):
+        for j in range(3):
+            line = born_start+4*atom+j+3
+            born[atom][j] = ( float(lines[line].split()[0]), float(lines[line].split()[1]), float(lines[line].split()[2]) )
+        #
+    #
+
+    return born
+#
 
 def writeSCF(nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm, scffile):
     # read some information from scf-file

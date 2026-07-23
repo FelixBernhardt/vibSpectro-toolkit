@@ -9,7 +9,8 @@ from ase import Atoms
 import numpy as np
 
 class CalculatorParser:
-    def __init__(self, filename, modelist=None):
+    def __init__(self, path, filename, modelist=None):
+        self.path = path
         self.filename = filename
         self.modelist = modelist
 
@@ -95,8 +96,8 @@ class VASPParser(CalculatorParser):
             nat = len(atoms)
             return np.zeros((nat, 3, 3))
     
-    def parse_epsilon(self, path, mode, disp):
-        return getOpticsVASP(path+"displacements/mode"+str(mode)+"_"+str(disp)+"/vasprun.xml")
+    def parse_epsilon(self, mode, disp):
+        return getOpticsVASP(self.path+"displacements/mode"+str(mode)+"_"+str(disp)+"/vasprun.xml")
     
     def write_file(self, nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm, filename):
         return writePOSCAR(nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm)
@@ -107,40 +108,34 @@ class VASPParser(CalculatorParser):
 #
 
 # QE
-from src.parser.parserQE import getOpticsQE, linkQE, writeSCF
+from src.parser.parserQE import getOpticsQE, getModesQE, getEpsInfQE, getBornQE, linkQE, writeSCF
 class QEParser(CalculatorParser):
     def parse_structure(self):
         return read(self.filename)
 
     def parse_vibrations(self):
-        freqs = []
-        modes = []
-
-        with open("matdyn.modes") as f:
-            lines = f.readlines()
-
-        i = 0
-        while i < len(lines):
-            line = lines[i]
-            if "freq" in line.lower():
-                parts = line.split()
-                freq = float(parts[-2])  # cm^-1
-                freqs.append(freq)
-
-                mode = []
-                i += 1
-                while i < len(lines) and len(lines[i].split()) == 6:
-                    x, y, z, dx, dy, dz = map(float, lines[i].split())
-                    mode.append([dx, dy, dz])
-                    i += 1
-                modes.append(np.array(mode))
-            else:
-                i += 1
-
-        return np.array(freqs), modes
+        return getModesQE(self.path)
     
-    def parse_epsilon(self, path, mode, disp):
-        return getOpticsQE(path+"displacements/mode"+str(mode)+"_"+str(disp))
+    def parse_epsilon(self, mode, disp):
+        return getOpticsQE(self.path+"displacements/mode"+str(mode)+"_"+str(disp))
+    
+    def parse_eps_inf(self):
+        try:
+            epsInf = getEpsInfQE(self.path)
+            return epsInf
+        except Exception:
+            return np.zeros((3, 3))
+
+    def parse_born_charges(self):
+        try:
+            atoms = read(self.filename)
+            nat = len(atoms)
+            born = getBornQE(self.path, nat)
+            return born
+        except Exception:
+            atoms = read(self.filename)
+            nat = len(atoms)
+            return np.zeros((nat, 3, 3))
     
     def write_file(self, nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm, scffile):
         return writeSCF(nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm, scffile)
@@ -164,7 +159,7 @@ class PhonopyParser(CalculatorParser):
 
         return Atoms(symbols=symbols, positions=positions, cell=cell)
 
-    def parse_vibrations(self):
+    def parse_vibrations(self, path):
         frequencies, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(self.filename, None)
 
         return np.array(frequencies), np.array(eigvecs)
@@ -187,8 +182,10 @@ class PhonopyParser(CalculatorParser):
 # wrapper code
 
 class ASEParser:
-    def __init__(self, filename, modelist=None, code_out="VASP"):
-        self.filename = filename
+    def __init__(self, path, file, modelist=None, code_out="VASP"):
+        self.file = file
+        self.path = path
+        self.filename = self.path + "/" + self.file
         self.modelist = modelist
         self.code_out = code_out
         self.backend = self.detect_backend()
@@ -198,16 +195,16 @@ class ASEParser:
         fn = self.filename.lower()
 
         if "poscar" in fn or "contcar" in fn or "outcar" in fn:
-            return VASPParser(self.filename, self.modelist)
+            return VASPParser(self.path, self.filename, self.modelist)
 
         if fn.endswith(".pwo") or fn.endswith(".out") or "qe" in fn:
-            return QEParser(self.filename)
+            return QEParser(self.path, self.filename)
 
         if "phonopy.yaml" in fn:
-            return PhonopyParser(self.filename)
+            return PhonopyParser(self.path, self.filename)
         
         if ".yaml" in fn:
-            return OwnParser(self.filename)
+            return OwnParser(self.path, self.filename)
 
         raise ValueError("Unknown calculator format")
     
@@ -215,10 +212,10 @@ class ASEParser:
         fn = self.code_out.lower()
 
         if "vasp" in fn:
-            return VASPParser(self.filename, self.modelist)
+            return VASPParser(self.path, self.filename, self.modelist)
 
         if "qe" in fn:
-            return QEParser(self.filename)
+            return QEParser(self.path, self.filename)
 
         raise ValueError("Unknown calculator format")
 
@@ -237,8 +234,8 @@ class ASEParser:
     def get_epsilon_inf(self):
         return self.backend.parse_eps_inf()
     
-    def get_epsilon(self, path, mode, disp):
-        return self.code.parse_epsilon(path, mode, disp)
+    def get_epsilon(self, mode, disp):
+        return self.code.parse_epsilon(mode, disp)
     
     def write_file(self, nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm, filename):
         return self.code.write_file(nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm, filename)

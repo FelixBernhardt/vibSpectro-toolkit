@@ -179,8 +179,8 @@ def calcTensors(path, modelist, parser, basis, degenerates, labels, ramantensors
         os.system("mkdir "+path+"Ramantensors")
     #
     for mode in modelist:
-        w1, Im1, Re1 = parser.get_epsilon(path, mode , disps[0])
-        w2, Im2, Re2 = parser.get_epsilon(path, mode , disps[1])
+        w1, Im1, Re1 = parser.get_epsilon(mode, disps[0])
+        w2, Im2, Re2 = parser.get_epsilon(mode, disps[1])
 
         w, Im1, Re1, Im2, Re2 = alignOmega(w1, w2, Im1, Re1, Im2, Re2)
         ramantensor[mode] = calcRaman(w, Im1, Re1, Im2, Re2, stepsize, basis) # the unsymmetrized Raman tensor

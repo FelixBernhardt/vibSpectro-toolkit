@@ -1,0 +1,49 @@
+&CONTROL
+restart_mode = 'from_scratch' ! start from scratch
+pseudo_dir = './',
+outdir = 'out',
+prefix = 'pwscf'
+wf_collect = .true.           ! get wavefunction to be read by yambo
+calculation = 'scf'           ! scf calculation (set 'nscf' for nscf run)
+/
+&SYSTEM
+ibrav = 0,
+nat = 10,
+ntyp = 3,
+ecutwfc = 100,
+occupations = 'smearing',
+smearing = 'gaussian',
+degauss = 0.02
+force_symmorphic= .true.      ! get wavefunction to be read by yambo
+nbnd = 60                    ! check bands for convergence
+nosym = .true.
+noinv = .true.
+/
+&ELECTRONS
+conv_thr = 1.d-10             ! low value for accurate eigenvalues
+/
+&IONS
+/
+&CELL
+/
+K_POINTS (automatic)
+6 6 6 0 0 0
+ATOMIC_SPECIES
+Li  6.941 Li.upf
+Nb 92.906  Nb.upf
+O 16.00 O.upf
+CELL_PARAMETERS (angstrom)
+   2.5690887291    1.4832640693    4.6081534368
+  -2.5690887291    1.4832640693    4.6081534368
+   0.0000000000   -2.9665281386    4.6081534368
+ATOMIC_POSITIONS (angstrom)
+Li   -0.0001793693    0.0000813766    9.9252725449
+Li    0.0001978616   -0.0000189462    3.0130422249
+Nb    0.0001580269    0.0000536110    0.0079802193
+Nb   -0.0001103004    0.0001255930    6.9202103981
+O    1.5639922233   -0.1639963320    8.3307050334
+O   -0.9235907704   -1.2726137093    8.3311432694
+O   -0.6398385474    1.4358949434    8.3312127786
+O   -1.6455998900    0.2107965864    6.0271974107
+O    1.0049884116    1.3193776785    6.0266504963
+O    0.6397649724   -1.5305105070    6.0269831228

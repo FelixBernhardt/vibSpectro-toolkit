@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from RamanPy_API import Phonon
 from Datastruct import writeData, writeRaman, writeConstantRaman, writeRamanSpectrum, writeIRSpectrum, writeReflectanceSpectrum
 import sys

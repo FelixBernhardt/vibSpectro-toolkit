@@ -110,7 +110,7 @@ class Phonon:
         modelist = np.array(modelist)
 
         # setup the parsers to utilize
-        self.parser = ASEParser(self.path+self.file, modelist=modelist, code_out=code_out)
+        self.parser = ASEParser(self.path, self.file, modelist=modelist, code_out=code_out)
         
         # get the structure
         atoms = self.parser.get_structure()
