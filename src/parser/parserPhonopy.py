@@ -29,7 +29,11 @@ CASTEP    | Angstrom   AMU           eV/angstrom   eV/angstrom^2
 ABACUS    | au (bohr)  AMU           eV/angstrom   eV/angstrom.au
 LAMMPS    | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
 QLM       | au (bohr)  AMU           Ry/au         Ry/au^2
+
+effective charges and dielectric tensor have consistent units within phonopy.yaml
 """
+
+
 
 # conversions and constants from WolframAlpha https://www.wolframalpha.com
 
@@ -89,7 +93,7 @@ def parsePhonopy(file, qdirs):
             dataC = yaml.safe_load(stream)
         #
     except IOError:
-        print("[parsePhonopy]: Couldn't open "+path+"phonopy.yaml.")
+        print("[parsePhonopy]: ERROR, couldn't open "+path+"phonopy.yaml.")
         return None
     #
 
@@ -115,9 +119,10 @@ def parsePhonopy(file, qdirs):
         elements.append( dataC["primitive_cell"]["points"][j]["symbol"] )
     #
 
+    # very primitive sanity check
     nat2 = dataDM["natom"]
     if nat != nat2:
-        print("[parsePhonopy]: phonopy.yaml and qpoints.yaml files don't match!")
+        print("[parsePhonopy]: WARNING, phonopy.yaml and qpoints.yaml files don't match!")
         return None
     #
 
@@ -153,25 +158,26 @@ def parsePhonopy(file, qdirs):
     elif length == "angstrom":
         pass
     else:
-        print("[parsePhonopy]: The unit "+length+" is currently not supported for lengths.")
+        print("[parsePhonopy]: WARNING, the unit "+length+" is currently not supported for lengths.")
         return None
     #
     # force constants in eV/angstrom^2
     # frequencies in cm^-1
+
     if force_constants == "Ry/au^2":
-        frequencies = frequencies*np.sqrt(Ry2eV*eV2J)*au2angstrom
+        frequencies = frequencies*np.sqrt(Ry2eV*eV2J)/au2angstrom
     elif force_constants == "mRy/au^2":
-        frequencies = frequencies*np.sqrt(mRy2eV*eV2J)*au2angstrom
+        frequencies = frequencies*np.sqrt(mRy2eV*eV2J)/au2angstrom
     elif force_constants == "eV/Angstrom.au":
         frequencies = frequencies*np.sqrt(eV2J)*np.sqrt(angstrom2m/au2angstrom)
     elif force_constants == "hartree/au^2":
-        frequencies = frequencies*np.sqrt(hartree2eV*eV2J)*au2angstrom
+        frequencies = frequencies*np.sqrt(hartree2eV*eV2J)/au2angstrom
     elif force_constants == "hartree/Angstrom.au":
-        frequencies = frequencies*np.sqrt(hartree2eV*eV2J)*np.sqrt(angstrom2m/au2angstrom)
+        frequencies = frequencies*np.sqrt(hartree2eV*eV2J)/np.sqrt(au2angstrom)
     elif force_constants == "eV/angstrom^2":
         frequencies = frequencies*np.sqrt(eV2J)
     else:
-        print("[parsePhonopy]: The unit "+force_constants+" is currently not supported for force constants.")
+        print("[parsePhonopy]: WARNING, the unit "+force_constants+" is currently not supported for force constants.")
         return None
     #
 

@@ -33,6 +33,7 @@ class CalculatorParser:
 
 # Own format
 from src.IO import loadAtomsData, loadPhononsData, loadBornData, loadEpsInfData
+
 class OwnParser(CalculatorParser):
     def parse_structure(self):
         symbols, positions, cell = loadAtomsData(self.filename)
@@ -109,6 +110,7 @@ class VASPParser(CalculatorParser):
 
 # QE
 from src.parser.parserQE import getOpticsQE, getModesQE, getEpsInfQE, getBornQE, linkQE, writeSCF
+
 class QEParser(CalculatorParser):
     def parse_structure(self):
         return read(self.filename)
@@ -159,7 +161,7 @@ class PhonopyParser(CalculatorParser):
 
         return Atoms(symbols=symbols, positions=positions, cell=cell)
 
-    def parse_vibrations(self, path):
+    def parse_vibrations(self):
         frequencies, eigvecs, norms, qpoint, basis, nat, elements, cPos, masses = parsePhonopy(self.filename, None)
 
         return np.array(frequencies), np.array(eigvecs)
@@ -185,14 +187,14 @@ class ASEParser:
     def __init__(self, path, file, modelist=None, code_out="VASP"):
         self.file = file
         self.path = path
-        self.filename = self.path + "/" + self.file
+        self.filename = self.path + self.file
         self.modelist = modelist
         self.code_out = code_out
         self.backend = self.detect_backend()
         self.code = self.detect_code()
 
     def detect_backend(self):
-        fn = self.filename.lower()
+        fn = self.file.lower()
 
         if "poscar" in fn or "contcar" in fn or "outcar" in fn:
             return VASPParser(self.path, self.filename, self.modelist)

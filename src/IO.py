@@ -21,8 +21,6 @@ def writeData(Phonon):
     lines.append("- \""+Phonon.path+Phonon.file+"\"")
     if Phonon.file == "phonopy.yaml":
         lines.append("- \""+Phonon.path+"qpoints.yaml\"")
-        if np.any(Phonon.born != 0):
-            lines.append(" \""+Phonon.path+"BORN\"")
     if Phonon.pointgroup == "":
         lines.append("Symmetry: \"Off\"")
     else:

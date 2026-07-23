@@ -2400,6 +2400,10 @@ def matchLabels(class_characters, char_table):
     table_labels = list(char_table.keys())
     table_rows = np.array(list(char_table.values()), dtype=float)
 
+    #print(table_rows)
+    #print(char_table)
+    #print(class_characters)
+
     for chi in class_characters:
         dists = np.sum((table_rows - chi)**2, axis=1)
         best = np.argmin(dists)
@@ -2423,6 +2427,8 @@ def getIrrepsSymbols(path, basis, coord, elements, pointgroup):
     characters = ir.get_characters() # shape: (n_irreps, n_sym_ops)
     rotations = ir.get_rotations() # shape: (n_sym_ops, 3, 3)
     classes = classifyRotations(rotations)
+
+    print(classes)
 
     # class_characters[i_irrep][i_class]
     class_characters = []

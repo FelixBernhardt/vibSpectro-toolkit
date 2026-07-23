@@ -7,18 +7,36 @@ Units:
 Laser_frequency:  2.000000
 Geometry: x(..)-x
 Modes:
+- Mode: 2
+  Label: "A"
+  Frequency:  17.824191
+  Tensor:
+  - [  0.885939,   0.000000,   0.000465 ]
+  - [  0.000000,   0.885638,   0.001882 ]
+  - [  0.000465,   0.001882,   4.240521 ]
+  - perpendicular :  4.746297
+  - backscattering:  12.266152
+- Mode: 3
+  Label: "A"
+  Frequency:  17.824259
+  Tensor:
+  - [  0.214384,   0.178878,   0.879885 ]
+  - [  0.178878,   0.216758,   1.065821 ]
+  - [  0.879885,   1.065821,   0.004986 ]
+  - perpendicular :  3.454258
+  - backscattering:  3.988656
 - Mode: 4
   Label: "A"
-  Frequency:  69.671256
+  Frequency:  69.675443
   Tensor:
   - [  0.178243,   0.215346,   1.066535 ]
   - [  0.215346,   0.180505,   0.880639 ]
   - [  1.066535,   0.880639,   0.004238 ]
   - perpendicular :  3.456801
-  - backscattering:  3.991587
+  - backscattering:  3.991588
 - Mode: 5
   Label: "A"
-  Frequency:  69.671256
+  Frequency:  69.675465
   Tensor:
   - [  0.001245,   0.000941,   0.005197 ]
   - [  0.000941,   0.000471,   0.000665 ]
@@ -27,25 +45,25 @@ Modes:
   - backscattering:  0.015358
 - Mode: 6
   Label: "A"
-  Frequency:  140.710482
+  Frequency:  140.719565
   Tensor:
   - [  0.056639,   0.216644,   0.607266 ]
   - [  0.216644,   0.059272,   0.161978 ]
   - [  0.607266,   0.161978,   0.000974 ]
   - perpendicular :  1.634569
-  - backscattering:  1.887449
+  - backscattering:  1.887450
 - Mode: 7
   Label: "A"
-  Frequency:  193.428929
+  Frequency:  193.439280
   Tensor:
-  - [  0.217572,   0.057864,   0.161468 ]
+  - [  0.217572,   0.057864,   0.161469 ]
   - [  0.057864,   0.214766,   0.605849 ]
-  - [  0.161468,   0.605849,   0.001902 ]
+  - [  0.161469,   0.605849,   0.001902 ]
   - perpendicular :  1.630710
-  - backscattering:  1.883001
+  - backscattering:  1.883002
 - Mode: 8
   Label: "A"
-  Frequency:  204.773653
+  Frequency:  204.787271
   Tensor:
   - [  0.000941,   0.000000,   0.000000 ]
   - [  0.000000,   0.000941,   0.000000 ]
@@ -54,7 +72,7 @@ Modes:
   - backscattering:  0.007982
 - Mode: 9
   Label: "A"
-  Frequency:  204.773658
+  Frequency:  204.787305
   Tensor:
   - [  0.000000,   0.000471,   0.004235 ]
   - [  0.000471,   0.000471,   0.000471 ]
@@ -63,7 +81,7 @@ Modes:
   - backscattering:  0.012179
 - Mode: 10
   Label: "A"
-  Frequency:  246.222839
+  Frequency:  246.239931
   Tensor:
   - [  0.000510,   0.000000,   0.000471 ]
   - [  0.000000,   0.000279,   0.005176 ]
@@ -72,7 +90,7 @@ Modes:
   - backscattering:  0.015008
 - Mode: 11
   Label: "A"
-  Frequency:  246.222843
+  Frequency:  246.239932
   Tensor:
   - [  0.020046,   0.001488,   0.002744 ]
   - [  0.001488,   0.021172,   0.001696 ]
@@ -81,7 +99,7 @@ Modes:
   - backscattering:  0.110143
 - Mode: 12
   Label: "A"
-  Frequency:  250.878392
+  Frequency:  250.891615
   Tensor:
   - [  0.188185,   0.496829,   0.181259 ]
   - [  0.496829,   0.159060,   0.064875 ]
@@ -90,43 +108,43 @@ Modes:
   - backscattering:  1.586906
 - Mode: 13
   Label: "A"
-  Frequency:  297.828608
+  Frequency:  297.847280
   Tensor:
   - [  0.479838,   0.172378,   0.064049 ]
   - [  0.172378,   0.510180,   0.185247 ]
   - [  0.064049,   0.185247,   0.013665 ]
-  - perpendicular :  1.370773
+  - perpendicular :  1.370774
   - backscattering:  1.584877
 - Mode: 14
   Label: "A"
-  Frequency:  327.963606
+  Frequency:  327.982686
   Tensor:
-  - [  4.601059,   0.000000,   0.000000 ]
-  - [  0.000000,   4.601523,   0.000471 ]
-  - [  0.000000,   0.000471,   6.469047 ]
+  - [  4.601060,   0.000000,   0.000000 ]
+  - [  0.000000,   4.601524,   0.000471 ]
+  - [  0.000000,   0.000471,   6.469048 ]
   - perpendicular :  2.642144
-  - backscattering:  28.774325
+  - backscattering:  28.774331
 - Mode: 15
   Label: "A"
-  Frequency:  327.963613
+  Frequency:  327.982694
   Tensor:
   - [  0.006135,   0.552225,   2.160734 ]
   - [  0.552225,   0.004729,   0.024792 ]
   - [  2.160734,   0.024792,   0.000471 ]
-  - perpendicular :  5.463172
-  - backscattering:  6.308329
+  - perpendicular :  5.463173
+  - backscattering:  6.308330
 - Mode: 16
   Label: "A"
-  Frequency:  364.883466
+  Frequency:  364.909430
   Tensor:
   - [  0.551461,   0.005723,   0.025245 ]
-  - [  0.005723,   0.552202,   2.159962 ]
-  - [  0.025245,   2.159962,   0.000000 ]
-  - perpendicular :  5.461117
-  - backscattering:  6.305955
+  - [  0.005723,   0.552202,   2.159963 ]
+  - [  0.025245,   2.159963,   0.000000 ]
+  - perpendicular :  5.461118
+  - backscattering:  6.305956
 - Mode: 17
   Label: "A"
-  Frequency:  383.894528
+  Frequency:  383.916050
   Tensor:
   - [  0.000000,   0.000471,   0.000941 ]
   - [  0.000471,   0.000197,   0.000471 ]
@@ -135,25 +153,25 @@ Modes:
   - backscattering:  0.003339
 - Mode: 18
   Label: "A"
-  Frequency:  383.894532
+  Frequency:  383.916061
   Tensor:
-  - [  0.000941,   0.958891,   0.615728 ]
-  - [  0.958891,   0.000941,   0.001488 ]
+  - [  0.000941,   0.958892,   0.615728 ]
+  - [  0.958892,   0.000941,   0.001488 ]
   - [  0.615728,   0.001488,   0.000471 ]
-  - perpendicular :  2.791340
-  - backscattering:  3.223162
+  - perpendicular :  2.791341
+  - backscattering:  3.223163
 - Mode: 19
   Label: "A"
-  Frequency:  398.380728
+  Frequency:  398.402467
   Tensor:
   - [  0.959837,   0.001412,   0.001882 ]
-  - [  0.001412,   0.962183,   0.619765 ]
-  - [  0.001882,   0.619765,   0.001406 ]
-  - perpendicular :  2.801058
-  - backscattering:  3.234391
+  - [  0.001412,   0.962183,   0.619766 ]
+  - [  0.001882,   0.619766,   0.001406 ]
+  - perpendicular :  2.801059
+  - backscattering:  3.234392
 - Mode: 20
   Label: "A"
-  Frequency:  398.380736
+  Frequency:  398.402486
   Tensor:
   - [  0.000000,   0.000471,   0.000471 ]
   - [  0.000471,   0.000471,   0.000471 ]
@@ -162,25 +180,25 @@ Modes:
   - backscattering:  0.002577
 - Mode: 21
   Label: "A"
-  Frequency:  408.890133
+  Frequency:  408.916523
   Tensor:
   - [  0.040297,   0.194905,   0.924332 ]
   - [  0.194905,   0.036716,   0.175715 ]
   - [  0.924332,   0.175715,   0.001876 ]
-  - perpendicular :  2.355507
-  - backscattering:  2.719924
+  - perpendicular :  2.355508
+  - backscattering:  2.719925
 - Mode: 22
   Label: "A"
-  Frequency:  431.023033
+  Frequency:  431.053662
   Tensor:
   - [  0.196777,   0.034656,   0.177793 ]
   - [  0.034656,   0.193760,   0.925743 ]
   - [  0.177793,   0.925743,   0.001882 ]
-  - perpendicular :  2.359586
-  - backscattering:  2.724630
+  - perpendicular :  2.359587
+  - backscattering:  2.724631
 - Mode: 23
   Label: "A"
-  Frequency:  431.023045
+  Frequency:  431.053676
   Tensor:
   - [  0.223232,   0.081027,   0.061445 ]
   - [  0.081027,   0.218244,   0.180962 ]
@@ -189,7 +207,7 @@ Modes:
   - backscattering:  0.857124
 - Mode: 24
   Label: "A"
-  Frequency:  436.188379
+  Frequency:  436.216669
   Tensor:
   - [  0.081492,   0.225108,   0.164298 ]
   - [  0.225108,   0.078123,   0.087143 ]
@@ -198,34 +216,34 @@ Modes:
   - backscattering:  0.856217
 - Mode: 25
   Label: "A"
-  Frequency:  493.974079
+  Frequency:  494.009128
   Tensor:
   - [  1.027253,   0.000000,   0.000471 ]
   - [  0.000000,   1.033377,   0.001412 ]
   - [  0.000471,   0.001412,   0.591235 ]
   - perpendicular :  0.621593
-  - backscattering:  4.894290
+  - backscattering:  4.894291
 - Mode: 26
   Label: "A"
-  Frequency:  498.685499
+  Frequency:  498.720971
   Tensor:
   - [  0.135322,   0.595479,   1.106817 ]
   - [  0.595479,   0.134187,   0.250172 ]
   - [  1.106817,   0.250172,   0.000941 ]
   - perpendicular :  3.156313
-  - backscattering:  3.644598
+  - backscattering:  3.644599
 - Mode: 27
   Label: "A"
-  Frequency:  498.685517
+  Frequency:  498.720984
   Tensor:
-  - [  0.594054,   0.132490,   0.249232 ]
-  - [  0.132490,   0.592643,   1.092405 ]
+  - [  0.594054,   0.132491,   0.249232 ]
+  - [  0.132491,   0.592643,   1.092405 ]
   - [  0.249232,   1.092405,   0.001882 ]
-  - perpendicular :  3.122579
-  - backscattering:  3.605649
+  - perpendicular :  3.122580
+  - backscattering:  3.605650
 - Mode: 28
   Label: "A"
-  Frequency:  565.029428
+  Frequency:  565.068141
   Tensor:
   - [  0.001438,   0.000941,   0.003327 ]
   - [  0.000941,   0.000000,   0.000471 ]
@@ -234,19 +252,19 @@ Modes:
   - backscattering:  0.010740
 - Mode: 29
   Label: "A"
-  Frequency:  565.029447
+  Frequency:  565.068158
   Tensor:
   - [  0.272292,   0.000000,   0.000471 ]
   - [  0.000000,   0.271277,   0.000471 ]
-  - [  0.000471,   0.000471,   0.891923 ]
+  - [  0.000471,   0.000471,   0.891924 ]
   - perpendicular :  0.877481
   - backscattering:  2.809396
 - Mode: 30
   Label: "A"
-  Frequency:  825.960204
+  Frequency:  826.019009
   Tensor:
   - [  0.262503,   0.176894,   0.329753 ]
   - [  0.176894,   0.263170,   0.489353 ]
   - [  0.329753,   0.489353,   0.003288 ]
   - perpendicular :  1.640576
-  - backscattering:  1.894387
+  - backscattering:  1.894388
