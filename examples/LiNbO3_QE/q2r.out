@@ -1,19 +1,26 @@
 
-     Program Q2R v.6.7MaX starts on 23Jul2026 at 22:53:24 
+     Program Q2R v.7.5 starts on 24Jul2026 at 23:46:23 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
          "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     1 processors
+     Parallel version (MPI & OpenMP), running on       8 processor cores
+     Number of MPI processes:                 4
+     Threads/MPI process:                     2
 
      MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+     4036 MiB available memory on the printing compute node when the environment starts
 
-     reading grid info from file matdyn0    
+
+  reading grid info from file matdyn0    
+
   reading force constants from file matdyn1
   Dielectric Tensor not found
   nqs=            1
@@ -23,10 +30,10 @@
 
       fft-check success (sum of imaginary terms < 10^-12)
 
-     Q2R          :      0.00s CPU      0.00s WALL
+     Q2R          :      0.01s CPU      0.01s WALL
 
 
-   This run was terminated on:  22:53:24  23Jul2026            
+   This run was terminated on:  23:46:23  24Jul2026            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

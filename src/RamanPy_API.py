@@ -44,6 +44,8 @@ class Phonon:
     eigenfreqs -> phononic eigenfrequencies in cm^-1
 
     nosym -> do we want to ignore symmetries? Symmetries require a FORCE_CONSTANTS file, as well as all 3*_nat phonon modes to be present in "file"
+    symprec -> the tolerance for symmetry search used for phonopy
+    degeneracy_tolerance -> the tolerance for degenerate mode search for phonopy
     pointgroup -> pointgroup of the unit cell
     ramantensors -> general raman tensor associated with the point group
     dielectrictensor -> general dielectric tensor associated with the point group
@@ -76,6 +78,8 @@ class Phonon:
         code_out: str = "VASP",
         modelist: NDArray[int] = None,
         nosym: bool = False,
+        symprec: float = 1.e-3,
+        degeneracy_tolerance: float = 1.e-3,
         molecule: bool = False,
         stepsize: float = 0.01,
         smearing: float = 5.0,
@@ -105,6 +109,8 @@ class Phonon:
         #
         self.file = file
         self.nosym = nosym
+        self.symprec = symprec
+        self.degeneracy_tolerance = degeneracy_tolerance
 
         # just in case
         modelist = np.array(modelist)
@@ -172,10 +178,7 @@ class Phonon:
         # symmetry analysis of modes and pointgroup
         if self.nosym == False:
             if os.path.isfile(self.path+"FORCE_CONSTANTS") and self.parser.backend.__class__.__name__ != "OwnParser":
-                self._dataset = get_symmetry_dataset((self.basis, self.direct, [periodTable[element] for element in self.elements]), symprec=1.e-5)
-                self.pointgroup = str(self._dataset.pointgroup)
-                #self.pointgroup = str(self._dataset["pointgroup"])
-                self._labels_tmp = getIrrepsSymbols(self.path, self.basis, self.direct, self.elements, self.pointgroup)
+                self._labels_tmp, self.pointgroup = getIrrepsSymbols(self.path, self.basis, self.direct, self.elements, self.symprec, self.degeneracy_tolerance)
                 #
                 if self.ordering == "ascending":
                     self.labels = dict(enumerate([self._labels_tmp[i-1] for i in self._modelist], start=1))
@@ -250,6 +253,9 @@ class Phonon:
         self.modelist = np.array([mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations and mode not in [x[1] for x in self.degenerates if len(x) > 1] and mode not in [x[2] for x in self.degenerates if len(x) > 2]], dtype=int)
         #
     #
+    def print_pointgroup(self):
+        print("Pointgroup: ", self.pointgroup)
+
     def print_decomposition(self):
         if self.pointgroup == "":
             print("[print_ramantensors]: ERROR, need pointgroup")

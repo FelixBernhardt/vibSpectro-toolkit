@@ -1,0 +1,158 @@
+q-position: [    0.0000000,    0.0000000,    0.0000000 ]
+point_group: 3m
+transformation_matrix:
+- [  0.3333333,  0.3333333, -0.6666667 ]
+- [  0.6666667, -0.3333333, -0.3333333 ]
+- [ -0.3333333, -0.3333333, -0.3333333 ]
+rotations:
+- matrix:
+  - [  1,  0,  0 ]
+  - [  0,  1,  0 ]
+  - [  0,  0,  1 ]
+  symbol: E
+- matrix:
+  - [  0, -1,  0 ]
+  - [  1, -1,  0 ]
+  - [  0,  0,  1 ]
+  symbol: C3
+- matrix:
+  - [ -1,  1,  0 ]
+  - [ -1,  0,  0 ]
+  - [  0,  0,  1 ]
+  symbol: C3
+- matrix:
+  - [  0, -1,  0 ]
+  - [ -1,  0,  0 ]
+  - [  0,  0,  1 ]
+  symbol: sgv
+- matrix:
+  - [ -1,  1,  0 ]
+  - [  0,  1,  0 ]
+  - [  0,  0,  1 ]
+  symbol: sgv
+- matrix:
+  - [  1,  0,  0 ]
+  - [  1, -1,  0 ]
+  - [  0,  0,  1 ]
+  symbol: sgv
+normal_modes:
+- band_indices: [ 1 ]
+  frequency: -0.0412480456  
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  0, 180.0 ], [  0, 180.0 ], [  0, 180.0 ], [  1, 180.0 ], [  1,   0.0 ] ]
+- band_indices: [ 2 ]
+  frequency: -0.0369497181  
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  0, 180.0 ], [  0, 180.0 ], [  0,   0.0 ], [  1,   0.0 ], [  1, 180.0 ] ]
+- band_indices: [ 3 ]
+  frequency: -0.0261002807  
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ] ]
+- band_indices: [ 4 ]
+  frequency: 4.4690056484   
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  0, 180.0 ], [  0, 180.0 ], [  1, 180.0 ], [  0,   0.0 ], [  1,   0.0 ] ]
+- band_indices: [ 5 ]
+  frequency: 4.4715307133   
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  0, 180.0 ], [  0, 180.0 ], [  1,   0.0 ], [  0, 180.0 ], [  1, 180.0 ] ]
+- band_indices: [ 6 ]
+  frequency: 6.4844192540   
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ], [  1, 180.0 ], [  1, 180.0 ], [  1, 180.0 ] ]
+- band_indices: [ 7 ]
+  frequency: 6.5807452720   
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  0, 180.0 ], [  0, 180.0 ], [  1, 180.0 ], [  1,   0.0 ], [  0, 180.0 ] ]
+- band_indices: [ 8 ]
+  frequency: 6.5825871799   
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  0, 180.0 ], [  0, 180.0 ], [  1,   0.0 ], [  1, 180.0 ], [  0,   0.0 ] ]
+- band_indices: [ 9 ]
+  frequency: 7.2414155974   
+  ir_label: A1
+  characters: [ [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ] ]
+- band_indices: [ 10 ]
+  frequency: 7.7285137743   
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  0, 180.0 ], [  0, 180.0 ], [  1, 180.0 ], [  1,   0.0 ], [  0, 180.0 ] ]
+- band_indices: [ 11 ]
+  frequency: 7.7297071781   
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  0, 180.0 ], [  0, 180.0 ], [  1,   0.0 ], [  1, 180.0 ], [  0,   0.0 ] ]
+- band_indices: [ 12 ]
+  frequency: 8.2200407644   
+  ir_label: A1
+  characters: [ [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ] ]
+- band_indices: [ 13 ]
+  frequency: 8.6531500321   
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ], [  1, 180.0 ], [  1, 180.0 ], [  1, 180.0 ] ]
+- band_indices: [ 14 ]
+  frequency: 9.5211195496   
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  0, 180.0 ], [  0, 180.0 ], [  0, 180.0 ], [  1, 180.0 ], [  1,   0.0 ] ]
+- band_indices: [ 15 ]
+  frequency: 9.5273981263   
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  0, 180.0 ], [  0, 180.0 ], [  0,   0.0 ], [  1,   0.0 ], [  1, 180.0 ] ]
+- band_indices: [ 16 ]
+  frequency: 10.0228911100  
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ] ]
+- band_indices: [ 17 ]
+  frequency: 10.6090005634  
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  0, 180.0 ], [  0, 180.0 ], [  1,   0.0 ], [  0, 180.0 ], [  1, 180.0 ] ]
+- band_indices: [ 18 ]
+  frequency: 10.6197697265  
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  0, 180.0 ], [  0, 180.0 ], [  1, 180.0 ], [  0,   0.0 ], [  1,   0.0 ] ]
+- band_indices: [ 19 ]
+  frequency: 10.9685784020  
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  0, 180.0 ], [  0, 180.0 ], [  1, 180.0 ], [  0, 180.0 ], [  1,   0.0 ] ]
+- band_indices: [ 20 ]
+  frequency: 10.9812957066  
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  0, 180.0 ], [  0, 180.0 ], [  1,   0.0 ], [  0,   0.0 ], [  1, 180.0 ] ]
+- band_indices: [ 21 ]
+  frequency: 11.9087350465  
+  ir_label: A2
+  characters: [ [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ], [  1, 180.0 ], [  1, 180.0 ], [  1, 180.0 ] ]
+- band_indices: [ 22 ]
+  frequency: 12.5744908950  
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  0, 180.0 ], [  0, 180.0 ], [  1, 180.0 ], [  0, 180.0 ], [  1,   0.0 ] ]
+- band_indices: [ 23 ]
+  frequency: 12.5761190047  
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  0, 180.0 ], [  0, 180.0 ], [  1,   0.0 ], [  0,   0.0 ], [  1, 180.0 ] ]
+- band_indices: [ 24 ]
+  frequency: 13.2566470272  
+  ir_label: A2
+  characters: [ [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ], [  1, 180.0 ], [  1, 180.0 ], [  1, 180.0 ] ]
+- band_indices: [ 25 ]
+  frequency: 17.0614219360  
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  0, 180.0 ], [  0, 180.0 ], [  0, 180.0 ], [  1, 180.0 ], [  1,   0.0 ] ]
+- band_indices: [ 26 ]
+  frequency: 17.0618962129  
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  0, 180.0 ], [  0, 180.0 ], [  0,   0.0 ], [  1,   0.0 ], [  1, 180.0 ] ]
+- band_indices: [ 27 ]
+  frequency: 18.2613478719  
+  ir_label: A1
+  characters: [ [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ] ]
+- band_indices: [ 28 ]
+  frequency: 19.7805583177  
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  0, 180.0 ], [  0, 180.0 ], [  0,   0.0 ], [  1, 180.0 ], [  1,   0.0 ] ]
+- band_indices: [ 29 ]
+  frequency: 19.7807303441  
+  ir_label: None
+  characters: [ [  1,   0.0 ], [  0, 180.0 ], [  0, 180.0 ], [  0, 180.0 ], [  1,   0.0 ], [  1, 180.0 ] ]
+- band_indices: [ 30 ]
+  frequency: 26.2714190154  
+  ir_label: A2
+  characters: [ [  1,   0.0 ], [  1,   0.0 ], [  1,   0.0 ], [  1, 180.0 ], [  1, 180.0 ], [  1, 180.0 ] ]

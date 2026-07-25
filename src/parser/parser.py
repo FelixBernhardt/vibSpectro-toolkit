@@ -140,7 +140,7 @@ class QEParser(CalculatorParser):
             return np.zeros((nat, 3, 3))
     
     def write_file(self, nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm, scffile):
-        return writeSCF(nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm, scffile)
+        return writeSCF(nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm, self.path+scffile)
     
     def link_file(self, file):
         return linkQE(file)

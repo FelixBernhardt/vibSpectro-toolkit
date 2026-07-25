@@ -4,6 +4,7 @@
 # library for VASP_Raman.py
 #
 
+import os
 import numpy as np
 import heapq
 import phonopy
@@ -2385,62 +2386,45 @@ def findInListOfList(mylist, char):
 # phonon symmetry analysis
 #############
 
-def classifyRotations(rotations):
-    classes = {}
-    for i, R in enumerate(rotations):
-        det = round(np.linalg.det(R))
-        trace = np.trace(R)
-        key = (det, trace)
-        classes.setdefault(key, []).append(i)
-    return list(classes.values())
-#
-
-def matchLabels(class_characters, char_table):
-    labels = []
-    table_labels = list(char_table.keys())
-    table_rows = np.array(list(char_table.values()), dtype=float)
-
-    #print(table_rows)
-    #print(char_table)
-    #print(class_characters)
-
-    for chi in class_characters:
-        dists = np.sum((table_rows - chi)**2, axis=1)
-        best = np.argmin(dists)
-        labels.append(table_labels[best])
-    return labels
-#
-
-def getIrrepsSymbols(path, basis, coord, elements, pointgroup):
-    # set up a phonopy structure and get irreps
-    # works for phonopy 2.32
-    import os
+def getIrrepsSymbols(path, basis, coord, elements, symprec, degeneracy_tolerance):
     pwd = os.getcwd()
     os.chdir(path)
-    cell = PhonopyAtoms( symbols=elements, cell=basis, scaled_positions=coord )
-    phonopy_instance = phonopy.load(unitcell=cell, supercell_matrix=np.eye(3), primitive_matrix="auto", force_constants_filename="FORCE_CONSTANTS")
+
+    cell = PhonopyAtoms(
+        symbols=elements,
+        cell=basis,
+        scaled_positions=coord,
+    )
+
+    phonopy_instance = phonopy.load(
+        unitcell=cell,
+        supercell_matrix=np.eye(3),
+        primitive_matrix="auto",
+        force_constants_filename="FORCE_CONSTANTS",
+    )
+
     os.chdir(pwd)
 
-    ir = IrReps(phonopy_instance.dynamical_matrix, q=[0, 0, 0])
+    ir = IrReps(
+        phonopy_instance.dynamical_matrix,
+        np.array([0.0, 0.0, 0.0], dtype=float),
+        phonopy_instance.primitive_symmetry,
+        symprec=symprec,
+        degeneracy_tolerance=degeneracy_tolerance
+    )
+
     ir.run()
 
-    characters = ir.get_characters() # shape: (n_irreps, n_sym_ops)
-    rotations = ir.get_rotations() # shape: (n_sym_ops, 3, 3)
-    classes = classifyRotations(rotations)
+    tmp_labels = ir._get_ir_labels()
 
-    print(classes)
-
-    # class_characters[i_irrep][i_class]
-    class_characters = []
-    for chi in characters:
-        class_row = [np.mean(chi[idxs]) for idxs in classes]
-        class_characters.append(class_row)
+    labels = []
+    for j in range(len(ir._degenerate_sets)):
+        for i in range(len(ir._degenerate_sets[j])):
+            labels.append(tmp_labels[j])
+        #
     #
-    class_characters = np.array(class_characters)
-    
-    labels = matchLabels(class_characters, CHAR_TABLES[HM_TO_SCHOENFLIES[pointgroup]])
 
-    return labels
+    return labels, ir._pointgroup_symbol
 #
 
 ###########
