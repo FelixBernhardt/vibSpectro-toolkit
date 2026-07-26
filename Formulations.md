@@ -10,12 +10,12 @@ The reflectance $R$ in the infrared regime can then be calculated by:<br><br>
 $R_{ij}(\omega)=\left(\frac{n-1}{n+1}\right)^2, \quad\quad n=\sqrt{\Re(\epsilon_{ij}(\omega))+i\Im(\epsilon_{ij}(\omega))}$
 
 ## Raman spectroscopy
-The Raman tensor $\alpha_p$ of phonon mode $p$ is approximated as:<br><br>
+The first order Raman tensor $\alpha_p$ of phonon mode $p$ is approximated as:<br><br>
 $\alpha_p(\omega_0)\approx\dfrac{\partial \epsilon(\omega_0)}{\partial Q}=\dfrac{\epsilon_{q^+}(\omega_0)-\epsilon_{q^-}(\omega_0)}{2\Delta q},$<br><br>
 with $\omega_0$ being the laser wavelength, $\epsilon$ the dielectric function and $Q$ a phonon eigenmode. The right hand side is a numerical implementation of the differential for ionic displacements in + and - direction of the phonon mode $Q$ by a distance of $\Delta q$. As momentum has to be conserved, only phonons near $\Gamma$ can contribute to Raman scattering (in a first approximation at least).<br><br>
 The Stokes intensity $I_p$ of phonon mode $p$ can then be calculated as:<br><br>
 $I_p\sim|\hat{e}_s\alpha\hat{e}_i|^2\dfrac{(\omega_0-\omega_p)^4}{\omega_p}(n+1),$<br><br>
-with $n$ being the Bose-Einstein occupation number, $\omega_p$ the phonon frequency and $\hat{e}$ the polarization direction of the incident and scattered light respectively. Both resonant and non-resonant Raman spectra can be obtained in this formulation.
+with $n$ being the Bose-Einstein occupation number, $\omega_p$ the phonon frequency and $\hat{e}$ the polarization direction of the incident and scattered light respectively. Both resonant and non-resonant Raman spectra can be obtained in this formulation (again, as a first approximation).
 The anti-Stokes intensity is instead calculated as:<br><br>
 $I_p\sim|\hat{e}_s\alpha\hat{e}_i|^2\dfrac{(\omega_0+\omega_p)^4}{\omega_p}n$.
 <br><br>
@@ -24,16 +24,16 @@ $I(\omega)=\sum\limits_p I_p \gamma / ([\omega_p-\omega_0]^2+\gamma^2 ),$<br><br
 with an arbitrary smearing width $\gamma$.
 
 ## Handling of LO phonon modes
-LO frequencies and eigenvectors can be computed within phonopy using the non-analytical term correction tag for different directions. Here, the LO eigenvectors are, in a first approximation, considered to be identical to theit TO counterparts. This counterpart is determined by the scalar product of the eigenvectors $Q$:<br><br>
+LO frequencies and eigenvectors can be computed within phonopy using the non-analytical term correction tag for different directions. Here, the LO eigenvectors are, in a first approximation, considered to be identical to their TO counterparts. This counterpart is determined by the scalar product of the eigenvectors $Q$:<br><br>
 $\braket{Q_{LO}|Q_{TO}}.$<br><br>
 Then, the TO phonon frequencies are modified to their corresponding LO phonon frequencies, while the Raman tensor is not modified.
 
 
 ## Symmetry considerations
-Not all Raman tensors of all phonon modes need to be calculated: It is sufficient to only include phonon modes that are Raman active according to group symmetry. The phonon mode symmetry analysis is only available when using $phonopy$ (more specifically, the FORCE_CONSTANTS file has to be present), and relies on the formulations used therein. Further, only one mode per pair/triplett of degenerate modes needs to be explicitly calculated, since the Raman tensor of a degenerate mode can be constructed from one of its degenerate partners. Finally, acoustic phonon modes, as well as purely rotational modes (only for molecules), can be excluded from the calculations. The latter consideration is always applied for all calculations.
+Not all Raman tensors of all phonon modes need to be calculated: It is sufficient to only include phonon modes that are Raman active according to group symmetry. The phonon mode symmetry analysis is only available when using $phonopy$ (more specifically, the FORCE_CONSTANTS file has to be present), and relies on the formulations used therein. Further, only one mode per pair/triplett of degenerate modes needs to be explicitly calculated, since the Raman tensor of a degenerate mode can be constructed from one of its degenerate partners. Finally, purely rotational modes (only for molecules), as well as acoustic phonon modes, can be excluded from the calculations. The latter consideration is always applied for all calculations.
 
 ## Phonon modes and frequencies at Γ-point
-In order to start the script you need the phononic eigenmodes at Γ. Usage of the $phonopy$ format is recommended, but VASP is supported as well. The following files are needed:
+In order to start the script you need the phononic eigenmodes at Γ. Usage of the $phonopy$ format is recommended, but VASP and QuantumEspresso are supported as well. The following files are needed:
 - FORCE_CONSTANTS
 - phonopy.yaml
 - qpoints.yaml
@@ -52,15 +52,20 @@ Further information is written in the documentation at https://phonopy.github.io
 If you have calculated the phonon modes in VASP, you just need the OUTCAR file containing the phononic eigenvectors and eigenfrequencies.
 - OUTCAR
 
+For QuantumEspresso, check the example python script for a full workflow.
+
 <br><br>
 
 # Running calculations
+Check the examples folder, or the helper function of the command-line interface script. Note, that some options are only available from the python API.
+
+<!--
 ## Raman spectroscopy
 - Prepare your structures by displacing the ions along the phonon eigenvector in plus and minus direction, for each phonon mode
 ```bash
-python RamanPy -d
+python vibSpectro-toolkit -d
 ```
-This creates folders for all considered modes and displacements (only one folder for each direction, i.e. two folder per mode). As a default, silent modes are ignored. Make sure to include the necessary files specified in the following in the parent folder where you run RamanPy.
+This creates folders for all considered modes and displacements (only one folder for each direction, i.e. two folder per mode). As a default, silent modes are ignored. Make sure to include the necessary files specified in the following in the parent folder where you run vibSpectro-toolkit.
 
 - The electronic contribution to the dielectric function needs to be calculated for all created structurs. For VASP, a possible INCAR looks like this:
 ```bash
@@ -74,41 +79,40 @@ As for all optical calculations, check for k-point convergence! Additionally to 
 
 - Collect the results and calculate the Raman tensors via
 ```bash
-python RamanPy -t
+python vibSpectro-toolkit -t
 ```
 - calculate the Raman intensity and apply the smearing
 ```bash
-python RamanPy -s
+python vibSpectro-toolkit -s
 ```
 - plot the spectra
 ```bash
-python RamanPy --plotRaman
+python vibSpectro-toolkit --plotRaman
 ```
 <br><br>
 
 ## IR spectroscopy
 - If the effective ionic charges are present in phonopy.yaml or OUTCAR, simply run
 ```bash
-python RamanPy -IR --plotIR
+python vibSpectro-toolkit -IR --plotIR
 ```
 - For a calculation of the reflectance, run
 ```bash
-python RamanPy -R --plotReflectance
+python vibSpectro-toolkit -R --plotReflectance
 ```
 <br><br>
 
-## Limitations
-More options can be enabled by applying additional flags when executing RamanPy. Check
+More options can be enabled by applying additional flags when executing vibSpectro-toolkit. Check
 ```bash
-python RamanPy -h
+python vibSpectro-toolkit -h
 ```
 for a complete set of flags. Note, that some options are only available from the python API. Two examplary calculations can be found in the examples subfolder.
 <br>
+-->
+
+## Limitations
 
 - The phonon modes are ordered by their frequencies in ascending/descending order, depending on the file used to read the phonons!
 - Symmetry analysis is only possible if FORCE_CONSTANTS are present. This allows to exclude silent modes and minimizes the numerical costs.
 - Molecular point groups are not supported by the symmetry analysis.
-- Only the intensity of TO modes can be calculated! Check the selection rules on which photon propagation directions are affected.
 - The unit of the Raman tensors is not checked. Use arbitrary units for showcasing results (as is standard in literature).
-
-<br>

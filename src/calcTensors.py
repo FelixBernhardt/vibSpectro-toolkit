@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #
-# This lib calculates the Raman tensors
+# calculates the Raman tensors
 #
 
 import os, re

@@ -1,0 +1,250 @@
+#!/usr/bin/env python
+
+#
+# command line interface for the Phonon class API 
+#
+
+import sys
+import datetime
+import numpy as np
+from src.API import Phonon
+import argparse
+
+sys.dont_write_bytecode = True
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--name", type=str, default="MySystem",\
+                    help="The system name.")
+parser.add_argument("--path", type=str, default="./",\
+                    help="The path where the input information can be found.")
+parser.add_argument("--file", type=str, default="phonopy.yaml",\
+                    help="The file where the input information can be found.")
+parser.add_argument("-m", "--modelist", type=str, default=None,\
+                    help="The phonon modes to be considered for the calculations. \n\
+                    The labelling is in ascending/descending order according to the used input file. \
+                    Format of modelist:\
+                    - single modes: integers separated by blank \" \"\
+                    - range of modes: lower and upper limit separated by hyphen \"-\"\
+                     example: '3-6 8 11-15' will consider modes 3, 4, 5, 6, 8, 11, 12, 13, 14, 15")
+parser.add_argument("-LO", "--LOcorr", action="store_true",\
+                    help="Incorporate an LO correction term when calculating the Raman spectrum.")
+parser.add_argument("--photon", type=float, default=2.0,\
+                    help="The excitation energy used for calculating the spectrum (eV).")
+parser.add_argument("--temperature", type=float, default=300.0,\
+                    help="The temperature used for calculating the spectrum (K).")
+parser.add_argument("--smearing", type=float, default=5.0,\
+                    help="The smearing used for calculating the spectrum (cm^-1).")
+parser.add_argument("--stepsize", type=float, default=0.01,\
+                    help="The prefactor for the displacements used for generating the input files")
+parser.add_argument("--porto", type=str, default="",\
+                    help="The polarization used when plotting the spectrum using porto's notation\
+                         .(xx). , where \"xx\" can be set to all combinations of cartesian directions.\
+                         A spatially averaged spectrum can be plotted by setting to \"back\" or \"perp\".")
+parser.add_argument("--stokes", action="store_true", default=True,\
+                    help="Calculate Stokes Intensity (default).")
+parser.add_argument("--antistokes", action="store_true",\
+                    help="Calculate anti-Stokes Raman Intensity.")
+parser.add_argument("-q", "--qdir", type=str, default="1 0 0",\
+                    help="The propagation direction used when plotting the spectrum using porto's notation\
+                         q(..)q , where \"qq\" can be set to backscattering or right angle scattering (without the sign).\
+                         Only used in combination with the LO flag.")
+parser.add_argument("-P", "--code_out", type=str, default="VASP",\
+                    help="The software package to write the created cells into and read the dielectric function from.\
+                          currently supported: VASP (default), QE")
+parser.add_argument("-scf", "--QEinputfile", type=str, default="scf.in",\
+                    help="The pw.x input file to be duplicated for the Raman calculations.")
+parser.add_argument("-nosym", "--no_symmetry", action="store_true",\
+                    help="Disables symmetry considerations.")
+parser.add_argument("--symprec", type=float, default=1.e-3,\
+                    help="Tolerance for symmetry detection.")
+parser.add_argument("--degeneracy_tolerance", type=float, default=1.e-3,\
+                    help="Tolerance for degenerate mode detection.")
+parser.add_argument("--molecule", action="store_true",\
+                    help="Consider pure rotations for symmetry.")
+parser.add_argument("-lua", "--lualatex", action="store_true",\
+                    help="Use LuaLatex for plotting.")
+
+parser.add_argument("-v", "--version", action="store_true",\
+                    help="Prints the version number.")
+parser.add_argument("-a", "--analysis", action="store_true",\
+                    help="Analyzes the symmetries of the structure and prints information.")
+parser.add_argument("-d", "--displace", action="store_true",\
+                    help="Add the ionic displacements according to the phonon modes provided by the --modelist option.")
+parser.add_argument("-t", "--tensors", action="store_true",\
+                    help="Calculate the Raman tensors of the phonon modes provided by the --modelist option")
+parser.add_argument("-s", "--spectrum", action="store_true",\
+                    help="Calculate the Raman spectrum for all polarization directions of all phonon modes provided by the --modelist option.")
+parser.add_argument("--plotRaman", action="store_true",\
+                    help="plot the Raman spectrum of the configuration specified using the --porto option. Only the phonon modes considered for the calculation of the spectrum are considered.")
+parser.add_argument("-IR", "--infrared", action="store_true",\
+                    help="Calculate the IR spectrum of the phonon modes provided by the --modelist option.")
+parser.add_argument("--plotIR", action="store_true",\
+                    help="Plot the IR spectrum of the phonon modes provided by the --modelist option.")
+parser.add_argument("-R", "--reflectance", action="store_true",\
+                    help="Calculate the reflectance spectrum of the phonon modes provided by the --modelist option.")
+parser.add_argument("--plotReflectance", action="store_true",\
+                    help="Plot the reflectance spectrum of the phonon modes provided by the --modelist option.")
+
+args = parser.parse_args()
+
+# weird but works
+args.qdir = tuple(map(int, args.qdir.split()))
+
+if __name__ == '__main__':
+
+    print("")
+    print("__     ___ _    ____                  _             ")
+    print("\\ \\   / (_) |__/ ___| _ __   ___  ___| |_ _ __ ___ ") 
+    print("_\\ \\ / /| | '_ \\___ \\| '_ \\ / _ \\/ __| __| '__/ _ \\ ")
+    print("_ \\ V / | | |_) |__) | |_) |  __/ (__| |_| | | (_) |")
+    print("_  \\_/  |_|_.__/____/| .__/ \\___|\\___|\\__|_|  \\___/ ")
+    print("_                    |_|                            ")
+    print("")
+    print("")
+    print("    Started at: "+datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
+    print("")
+    
+    #
+    version = "1.0.0"
+    disps = [-1, 1]
+    
+    ###################################
+    #
+    # setup which modes to calculate
+    if args.modelist == None :
+        pass
+    else:
+        # check the modes
+        modelist = []
+        for j in args.modelist.split():
+            if j.isdigit() == True:
+                modelist.append(int(j))
+            elif j.split("-")[0].isdigit() == True and j.split("-")[-1].isdigit() == True:
+                if int(j.split("-")[0]) < int(j.split("-")[-1]):
+                    for k in range(int(j.split("-")[0]),int(j.split("-")[-1])+1):
+                        modelist.append(int(k))
+                    #
+                else:
+                    print("[__main__]: First limit of modelist range has to be SMALLER than second, exiting...")
+                    sys.exit(1)
+                #
+            else:
+                print("[__main__]: I don't understand which phonon modes you want to have put out, exiting...")
+                sys.exit(1)
+            #
+        #
+        modelist.sort()
+        args.modelist = np.array(list(dict.fromkeys(modelist)))
+        #
+    #
+    ###################################
+
+    if args.version == True:
+        print("[__main__]: Version "+version)
+        sys.exit(0)
+
+    ###################################
+    # checks
+    ###################################
+    if args.antistokes == True and args.stokes == False:
+        stokes = False
+    elif args.antistokes == False and args.stokes == True:
+        stokes = True
+    else:
+        print("[__main__]: arguments stokes and antistokes cannot both be True, resetting to defaults")
+        stokes = True
+    #
+    if args.infrared == True or args.LOcorr == True:
+        born = True
+    else:
+        born = False
+    #
+
+    # setup the Phonon object
+    ph = Phonon(
+        name = args.name,
+        path = args.path,
+        file = args.file, 
+        code_out = args.code_out, 
+        modelist = args.modelist,
+        nosym = args.no_symmetry,
+        symprec = args.symprec,
+        degeneracy_tolerance = args.degeneracy_tolerance,
+        molecule = args.molecule,
+        stepsize = args.stepsize,
+        smearing = args.smearing,
+        temperature = args.temperature,
+        photon_freq= args.photon,
+        stokes = stokes,
+        born = born,
+        qdir = args.qdir,
+        LOcorr = args.LOcorr )
+
+    if args.analysis == True and args.no_symmetry == False:
+        print("[__main__]: Analyzing symmetries")
+        print("Pointgroup: "+ph.pointgroup)
+        ph.print_decomposition()
+        ph.print_ramantensors()
+        ph.print_dielectrictensor()
+        ph.print_ramanselection()
+        ph.print_irselection()
+        sys.exit(0)
+
+    #######################
+    # Infrared spectroscopy
+    #######################
+    if args.infrared == True:
+        print("[__main__]: Calculating IR spectrum")
+        ph.calc_ir()
+        ph.write_ir()
+
+    if args.plotIR == True:
+        print("[__main__]: Plotting IR spectrum")
+        ph.plot_ir(lualatex=args.lualatex)
+    
+    # IR Reflectance
+    if args.reflectance == True:
+        print("[__main__]: Calculating Reflectance")
+        ph.calc_reflectance()
+        ph.write_reflectance()
+
+    if args.plotReflectance == True:
+        print("[__main__]: Plotting Reflectance")
+        ph.plot_reflectance(lualatex=args.lualatex)
+
+    # avoid combinations of IR and Raman processing in a single command
+    if args.infrared == True or args.plotIR == True or args.reflectance == True or args.plotReflectance == True:
+        sys.exit(1)
+    #
+    ###########
+
+    ####################
+    # Raman spectroscopy
+    ####################
+    print("[__main__]: Calculating Raman modes "+str(ph.modelist))
+
+    if args.displace == True:
+        print("[__main__]: Displacing modes")
+        ph.calc_raman_displace(args.QEinputfile)
+        sys.exit(0)
+    
+    if args.tensors == True:
+        print("[__main__]: Calculating Raman tensors")
+        ph.calc_raman_tensors()
+        ph.write_raman_tensors()
+
+    if args.spectrum == True:
+        print("[__main__]: Calculating Raman spectrum")
+        ph.calc_raman_spectrum()
+        ph.write_raman_spectrum() 
+    
+    if args.plotRaman == True:
+        print("[__main__]: Plotting Raman spectrum", args.porto)
+        if args.porto == "":
+            ph.plot_raman(lualatex=args.lualatex)
+        else:
+            ph.plot_raman(porto=args.porto, lualatex=args.lualatex)
+        #
+    #
+    print("[__main__]: Done.")
+#

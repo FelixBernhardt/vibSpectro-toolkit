@@ -1,5 +1,5 @@
 
-# RamanPy
+# Vibrational SPectroscopy toolkit
 Some utility scripts to calculate and analyze IR- and Raman spectra.
 
 ## Features
@@ -16,9 +16,10 @@ Check the examples folder for tutorials on how to perform the calculations.
 
 Install all the libraries listed in the requirements.txt file. Place the files of this script in whatever directory you want.
 
-If you want to use the command line interface, consider putting the <> script in your PATH, e.g. by adding the following line in ~/.bashrc:
+You can access the scripts by adding the following line in ~/.bashrc:
 ```bash
-export PATH="${PATH}:path_to_your_install_directory/RamanPy"
+export PATH="${PATH}:path_to_your_install_directory/vibSpectro-toolkit"
+export PYTHONPATH="${PYTHONPATH$:}:path_to_your_install_directory/vibSpectro-toolkit"
 ```
 
 ## Cite
