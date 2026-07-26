@@ -1,5 +1,5 @@
 
-# Vibrational SPectroscopy toolkit
+# Vibrational Spectroscopy toolkit
 Some utility scripts to calculate and analyze IR- and Raman spectra.
 
 ## Features
