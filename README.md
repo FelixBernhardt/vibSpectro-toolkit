@@ -16,7 +16,7 @@ Check the examples folder for tutorials on how to perform the calculations.
 
 Install all the libraries listed in the requirements.txt file. Place the files of this script in whatever directory you want.
 
-You can access the scripts by adding the following line in ~/.bashrc:
+You can access the scripts by adding the following lines in ~/.bashrc:
 ```bash
 export PATH="${PATH}:path_to_your_install_directory/vibSpectro-toolkit"
 export PYTHONPATH="${PYTHONPATH$:}:path_to_your_install_directory/vibSpectro-toolkit"
