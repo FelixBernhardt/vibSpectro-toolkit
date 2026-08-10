@@ -33,7 +33,7 @@ def calcDisplace(path, modelist, stepsize, parser, eigvecs, norms, basis, nat, e
     print("[calcDisplace]: Done.")
 #
 
-def calcDisplaceSecondOrder(path, combinedmodelist, stepsize, parser, eigvecs, basis, nat, elements, positions, scffile):
+def calcDisplaceOvertones(path, combinedmodelist, stepsize, parser, eigvecs, basis, nat, elements, positions, scffile):
     
     # write unit cells with displacements
     disps1 = [-1, 1]
