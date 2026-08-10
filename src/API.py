@@ -5,12 +5,13 @@
 #
 import os
 import numpy as np
+import itertools
 from numpy.typing import NDArray
-from src.Symmetries import getAcoustics, getRotations, getDegenerates, getDecomposition, getRamanSilent, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols
+from src.Symmetries import getAcoustics, getRotations, getDegenerates, getDecomposition, getRamanSilent, getRamanSilentSecondOrder, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols
 from src.IO import writeData, writeRaman, writeRamanSpectrum, writeConstantRaman, writeIRSpectrum, writeReflectanceSpectrum, loadSymmetryData, loadPhononsData, loadRamanTensor, loadConstantRaman, loadSpectrum, loadIR, loadReflectance
 from src.IR import calcIR, calcReflectance
 from src.LoTo import getLOFreqs
-from src.displace import calcDisplace
+from src.displace import calcDisplace, calcDisplaceSecondOrder
 from src.calcTensors import calcTensors
 from src.calcSpectrum import calcSpectrum
 from src.plotSpectrum import plotRamanSpectrum, plotIRSpectrum, plotReflectanceSpectrum
@@ -27,6 +28,10 @@ class Phonon:
 
     path -> the folder path where the calculated phonon eigenmodes can be found, and where the subsequent calculations are run
     modelist -> the modes the user wants to calculate, the ordering of modes is the same as used in the "file" software
+                if symmetries are considered, only the relevant modes are kept
+    IRmodelist -> same as modelist, unaffected by symmetries (excpet acoustics and rotations)
+    Ramanmodelist -> same as modelist, but degenerate modes are added back in 
+    modelist2nd -> the combinations of modes needed for second order raman spectra, generated from modelist
     parser -> defines what codes are used to read and write datafiles
 
     ordering -> are the phonons ordered by ascending/descending frequency?
@@ -213,6 +218,7 @@ class Phonon:
             self.silent = []
             self.IRmodelist = self.modelist
             self.Ramanmodelist = self.modelist
+            self.modelist2nd = [list(combinations) for combinations in itertools.combinations(self.IRmodelist, 2)]
         #
 
         # effective charges for LO or IR
@@ -250,6 +256,7 @@ class Phonon:
         self.IRmodelist = np.array([mode for mode in modelist if mode not in self.acoustics and mode not in self.rotations], dtype=int)
         self.Ramanmodelist = np.array([mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations], dtype=int)
         self.modelist = np.array([mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations and mode not in [x[1] for x in self.degenerates if len(x) > 1] and mode not in [x[2] for x in self.degenerates if len(x) > 2]], dtype=int)
+        self.modelist2nd = getRamanSilentSecondOrder(self.pointgroup, self.ramantensors, self.IRmodelist, self.labels)
         #
     #
     def print_pointgroup(self):
@@ -334,6 +341,13 @@ class Phonon:
     ####################
     def calc_raman_displace(self, scffile="scf.in"):
         calcDisplace(self.path, self.modelist, self.stepsize, self.parser, self.eigenvecs, self._norms, self.basis, self._nat, self.elements, self.cartesian, scffile)
+    #
+    def calc_raman_displace_secondorder(self, scffile="scf.in"):
+        #print(self.modelist2nd)
+        print(len(self.modelist2nd))
+        print(self.modelist)
+        print(len(self.modelist))
+        #calcDisplaceSecondOrder(self.path, self.modelist2nd, self.stepsize, self.parser, self.eigenvecs, self.basis, self._nat, self.elements, self.cartesian, scffile)
     #
     def calc_raman_tensors(self):
         # format [mode_index][[w, xx, yy, zz, xy, yz, xz, perp, back]]
