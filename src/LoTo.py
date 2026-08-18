@@ -284,3 +284,24 @@ def getLOFreqs(path, modelist, qdir_cart, qdir_direct, ordering, eigvecs, degene
 
     return eigvalsLO
 #
+
+def calcLST(path, IRmodelist, atoms, ordering, eigenvecs, eigenfreqs, degenerates, labels, eps_inf):
+    counter_dict = {0: (0,0), 1: (1,1), 2: (2,2), 3: (0,1), 4: (0,2), 5: (1,2)}
+    counter = 0
+    eps_zero = np.zeros((3,3))
+    for qdir_cartesian in [(1,0,0), (0,1,0), (0,0,1), (1,1,0), (1,0,1), (0,1,1)]:
+        qdir_direct = np.linalg.solve(atoms.cell.reciprocal().T, np.array(qdir_cartesian))
+        eigenfreqs_LO = getLOFreqs(path, IRmodelist, qdir_cartesian, qdir_direct, ordering, eigenvecs, degenerates, labels)
+
+        eps_tmp = eps_inf[counter_dict[counter]]
+        for mode in IRmodelist:
+            eps_tmp = eps_tmp * eigenfreqs_LO[mode]**2 / eigenfreqs[mode]**2
+        #
+        eps_zero[counter_dict[counter]] = eps_tmp
+        counter += 1
+    #
+    eps_zero[1,0] = eps_zero[0,1]
+    eps_zero[2,0] = eps_zero[0,2]
+    eps_zero[2,1] = eps_zero[1,2]
+    return eps_zero
+#

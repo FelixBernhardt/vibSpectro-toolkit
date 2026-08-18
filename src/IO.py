@@ -54,9 +54,14 @@ def writeData(Phonon):
             lines.append("- # "+str(atom+1)+" ("+Phonon.elements[atom]+")")
             for k in range(3):
                 lines.append("  - [ {: .6f},  {: .6f},  {: .6f} ]".format(Phonon.born[atom][k][0], Phonon.born[atom][k][1], Phonon.born[atom][k][2]))
-        lines.append("Dielectric_Tensor:")
+        lines.append("Dielectric_Tensor (high-frequency):")
         for j in range(3):
             lines.append("- [ {: .6f},  {: .6f},  {: .6f} ]".format(Phonon.eps_inf[j][0], Phonon.eps_inf[j][1], Phonon.eps_inf[j][2]))
+
+    if np.any(Phonon.eps_zero != 0):
+        lines.append("Dielectric_Tensor (static):")
+        for j in range(3):
+            lines.append("- [ {: .6f},  {: .6f},  {: .6f} ]".format(Phonon.eps_zero[j][0], Phonon.eps_zero[j][1], Phonon.eps_zero[j][2]))
     
     with open(Phonon.path+Phonon.name+".yaml", "w") as w:
         w.write("\n".join(lines))

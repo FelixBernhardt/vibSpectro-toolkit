@@ -10,7 +10,7 @@ from numpy.typing import NDArray
 from src.Symmetries import getAcoustics, getRotations, getDegenerates, getDecomposition, getRamanSilent, getRamanSilentOvertones, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols
 from src.IO import writeData, writeRaman, writeRamanSpectrum, writeConstantRaman, writeIRSpectrum, writeReflectanceSpectrum, loadSymmetryData, loadPhononsData, loadRamanTensor, loadConstantRaman, loadSpectrum, loadIR, loadReflectance
 from src.IR import calcIR, calcReflectance
-from src.LoTo import getLOFreqs
+from src.LoTo import getLOFreqs, calcLST
 from src.displace import calcDisplace, calcDisplaceOvertones
 from src.calcTensors import calcTensors
 from src.calcSpectrum import calcSpectrum
@@ -39,6 +39,7 @@ class Phonon:
     born -> do we need effective charges?
     molecule -> can we consider pure rotations?
 
+    atoms -> ase atoms object of the unit cell
     basis -> basis vectors of unit cell in angstrom
     cartesian -> positions of ions in cartesian coords. (angstrom)
     direct -> position of ions in direct coords.
@@ -124,6 +125,7 @@ class Phonon:
         
         # get the structure
         atoms = self.parser.get_structure()
+        self.atoms = atoms
         self._nat = len(atoms)
         self.elements = atoms.get_chemical_symbols()
         self.cartesian = atoms.get_positions()
@@ -230,6 +232,7 @@ class Phonon:
             self.born = np.zeros((self._nat, 3, 3))
             self.eps_inf = np.zeros((3, 3))
         #
+        self.eps_zero = np.zeros((3, 3))
 
         # final calculation parameters
         self.code_out = code_out
@@ -334,6 +337,9 @@ class Phonon:
     #
     def plot_reflectance(self, lualatex=False):
         plotReflectanceSpectrum(self.reflectance_data, self.path, lualatex)
+    #
+    def calc_LST(self):
+        self.eps_zero = calcLST(self.path, self.IRmodelist, self.atoms, self.ordering, self.eigenvecs, self.eigenfreqs, self.degenerates, self.labels, self.eps_inf)
     #
 
     ####################

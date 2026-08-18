@@ -58,6 +58,7 @@ def calcDisplaceOvertones(path, combinedmodelist, stepsize, parser, eigvecs, bas
                 norm = np.linalg.norm(displacement)
                 parser.write_file(nat, basis, positions, elements, file, mode, 1, stepsize, displacement, norm, scffile)
                 parser.link_file(file)
+            #
         #
     #
 
