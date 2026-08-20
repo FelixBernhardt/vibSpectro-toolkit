@@ -6,12 +6,12 @@
 import numpy as np
 from src.Symmetries import eps0, c_cm, h, kb, ev2rcm
 
-def Lorentz(hw, ab, gam=0.001):
-    fmax = max(hw)
-    erange = np.arange(0, 1.1*fmax, gam/10)
+def Lorentz(hw, ab, smear):
+    fmax = np.max(hw)
+    erange = np.arange(0, 1.1*fmax, np.max(smear)/10)
     spectrum = 0.0 * erange
     for i in range(len(hw)):
-        spectrum +=  ab[i] * gam  / ( (hw[i]-erange)**2 + gam**2 )
+        spectrum +=  ab[i] * smear[i]  / ( (hw[i]-erange)**2 + smear[i]**2 )
     #
     return erange, spectrum
 #
@@ -34,7 +34,7 @@ def broadenData(modelist, raman, eigvals, w0, col, temp, smear, stokes):
         #
     #
 
-    w, Spectrum = Lorentz([eigvals[mode] for mode in modelist], intensity, smear)
+    w, Spectrum = Lorentz([eigvals[mode] for mode in modelist], intensity, [smear[mode] for mode in modelist])
 
     return np.array([w, Spectrum])
 #
@@ -59,7 +59,6 @@ def calcSpectrum(ramantensors, modelist, Ramanmodelist, eigvals, w0, temp, smear
     #print("[calcSpectrum]: Note: check e.g. https://www.cryst.ehu.es/cryst/polarizationselrules.html for selection rules")
     print("[calcSpectrum]: Laser frequency set to "+str(w0)+"eV")
     print("[calcSpectrum]: Temperature set to "+str(temp)+"K")
-    print("[calcSpectrum]: Smearing width set to "+str(smear)+"cm^-1")
     raman = getConstantRaman(ramantensors, Ramanmodelist, w0)
     spectrum = []
     for col in range(8):

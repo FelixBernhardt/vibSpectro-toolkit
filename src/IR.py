@@ -7,12 +7,12 @@
 import numpy as np
 from src.Symmetries import eps0, c_cm, e_charge, amu
 
-def LorentzIR(hw, ab, gam=0.001):
-    fmax = max(hw)
-    erange = np.arange(0, 1.1*fmax, gam/10)
+def LorentzIR(hw, ab, smear):
+    fmax = np.max(hw)
+    erange = np.arange(0, 1.1*fmax, np.max(smear)/10)
     spectrum = 0.0 * erange
     for i in range(len(hw)):
-        spectrum +=  ab[i] * gam * hw[i]  / ( (hw[i]**2 - erange**2)**2 + erange**2 * gam**2 )
+        spectrum +=  ab[i] * smear[i] * hw[i]  / ( (hw[i]**2 - erange**2)**2 + erange**2 * smear[i]**2 )
     #
     return erange, spectrum
 #
@@ -68,7 +68,7 @@ def calcIR(modelist, eigvals, eigvecs, basis, nat, masses, born, smearing):
 
     # apply the smearing
     for alpha in range(3):
-        w, tmp = LorentzIR([eigvals[mode] for mode in modelist], Sm[alpha], smearing)
+        w, tmp = LorentzIR([eigvals[mode] for mode in modelist], Sm[alpha], [smearing[mode] for mode in modelist])
         IR_Im.append(tmp)
     #
     IR_Im = np.array(IR_Im)
@@ -79,7 +79,7 @@ def calcIR(modelist, eigvals, eigvecs, basis, nat, masses, born, smearing):
         for freq in range(len(w)):
             counter = 0
             for mode in modelist:
-                IR_Re[dir][freq] += Sm[dir][counter] * ( eigvals[mode]**2 - w[freq]**2 ) / ( (eigvals[mode]**2 - w[freq]**2)**2 + smearing**2 * w[freq]**2 )
+                IR_Re[dir][freq] += Sm[dir][counter] * ( eigvals[mode]**2 - w[freq]**2 ) / ( (eigvals[mode]**2 - w[freq]**2)**2 + smearing[mode]**2 * w[freq]**2 )
                 counter += 1
             #
         #

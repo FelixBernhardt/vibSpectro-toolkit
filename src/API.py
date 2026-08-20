@@ -87,7 +87,7 @@ class Phonon:
         degeneracy_tolerance: float = 1.e-3,
         molecule: bool = False,
         stepsize: float = 0.01,
-        smearing: float = 5.0,
+        smearing: NDArray[float] = None,
         temperature: float = 300,
         stokes: str = "stokes",
         photon_freq: float = 2.0,
@@ -119,6 +119,7 @@ class Phonon:
 
         # just in case
         modelist = np.array(modelist)
+        smearing = np.array(smearing)
 
         # setup the parsers to utilize
         self.parser = ASEParser(self.path, self.file, modelist=modelist, code_out=code_out)
@@ -148,6 +149,20 @@ class Phonon:
             modelist = [mode for mode in modelist if mode in self._modelist]
        
         eigenfreqs, eigenvecs = self.parser.get_vibrations()
+
+        # set values for smearing
+        if np.all(smearing == None):
+            self.smearing = dict(zip(modelist, [5.0]*len(modelist)))
+        else:
+            if isinstance(smearing, float):
+                self.smearing = dict(zip(modelist, [smearing]*len(modelist)))
+            elif isinstance(smearing, list) and len(smearing) == len(modelist):
+                self.smearing = dict(zip(modelist, [smearing[mode-1] for mode in modelist]))
+            else:
+                print("[__init__]: WARNING: inconsistent modelist and smearing list, resorting to default.")
+                self.smearing = dict(zip(modelist, [5.0]*len(modelist)))
+            #
+        #
 
         # setup for q-direction
         # phonopy uses q-direction in reciprocal direct coords, input qdir is assumed to be cartesian
@@ -236,7 +251,6 @@ class Phonon:
 
         # final calculation parameters
         self.code_out = code_out
-        self.smearing = smearing
         self.temperature = temperature
         self.photon_freq = photon_freq
         self.stokes = stokes

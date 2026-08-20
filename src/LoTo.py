@@ -237,12 +237,14 @@ def LOTOassign(E0_dict, ENAC_dict, degenerate_groups, irrep_label, qdir):
     return results
 #
 
-def getLOFreqs(path, modelist, qdir_cart, qdir_direct, ordering, eigvecs, degenerates, labels):
+def getLOFreqs(path, modelist, qdir_cart, qdir_direct, ordering, eigvecs, degenerates, labels, quiet=False):
     # get the LO modes corresponding to the direction to be analyzed
     #<phonopy --readfc --sym-fc --writedm --qpoints="0 0 0" --nac --q-direction="0 0 1">
 
     # read the LO modes
-    print("[getLOFreqs]: Using cartesian q-direction "+str(qdir_cart))
+    if quiet == False:
+        print("[getLOFreqs]: Using cartesian q-direction "+str(qdir_cart))
+    #
     eigvals_tmp, eigvecs_tmp, _, _, basis, nat, elements, cPos, _ = parsePhonopy(path, [qdir_cart, qdir_direct])
 
     # phonopy always provides all modes in ascending order
@@ -291,7 +293,7 @@ def calcLST(path, IRmodelist, atoms, ordering, eigenvecs, eigenfreqs, degenerate
     eps_zero = np.zeros((3,3))
     for qdir_cartesian in [(1,0,0), (0,1,0), (0,0,1), (1,1,0), (1,0,1), (0,1,1)]:
         qdir_direct = np.linalg.solve(atoms.cell.reciprocal().T, np.array(qdir_cartesian))
-        eigenfreqs_LO = getLOFreqs(path, IRmodelist, qdir_cartesian, qdir_direct, ordering, eigenvecs, degenerates, labels)
+        eigenfreqs_LO = getLOFreqs(path, IRmodelist, qdir_cartesian, qdir_direct, ordering, eigenvecs, degenerates, labels, quiet=True)
 
         eps_tmp = eps_inf[counter_dict[counter]]
         for mode in IRmodelist:
