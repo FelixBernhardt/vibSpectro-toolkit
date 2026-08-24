@@ -2609,7 +2609,7 @@ def getRamanSilent(modelist, labels, pointgroup):
     return silent
 #
 
-def getRamanSilentOvertones(pointgroup, ramantensors, modelist, labels):
+def getRamanActiveOvertones(pointgroup, ramantensors, modelist, labels):
     chartable = CHAR_TABLES[HM_TO_SCHOENFLIES[pointgroup]]
     class_sizes = []
     for label in chartable["classes"]:

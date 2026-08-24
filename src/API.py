@@ -7,14 +7,14 @@ import os
 import numpy as np
 import itertools
 from numpy.typing import NDArray
-from src.Symmetries import getAcoustics, getRotations, getDegenerates, getDecomposition, getRamanSilent, getRamanSilentOvertones, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols
+from src.Symmetries import getAcoustics, getRotations, getDegenerates, getDecomposition, getRamanSilent, getRamanActiveOvertones, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols
 from src.IO import writeData, writeRaman, writeRamanSpectrum, writeConstantRaman, writeIRSpectrum, writeReflectanceSpectrum, loadSymmetryData, loadPhononsData, loadRamanTensor, loadConstantRaman, loadSpectrum, loadIR, loadReflectance
 from src.IR import calcIR, calcReflectance
 from src.LoTo import getLOFreqs, calcLST
 from src.displace import calcDisplace, calcDisplaceOvertones
 from src.calcTensors import calcTensors
 from src.calcSpectrum import calcSpectrum
-from src.plotSpectrum import plotRamanSpectrum, plotIRSpectrum, plotReflectanceSpectrum
+from src.plotSpectrum import plotRamanSpectrum, plotPolarRaman, plotIRSpectrum, plotReflectanceSpectrum
 from src.parser.parser import ASEParser
 
 class Phonon:
@@ -273,7 +273,7 @@ class Phonon:
         self.IRmodelist = np.array([mode for mode in modelist if mode not in self.acoustics and mode not in self.rotations], dtype=int)
         self.Ramanmodelist = np.array([mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations], dtype=int)
         self.modelist = np.array([mode for mode in modelist if mode not in self.silent and mode not in self.acoustics and mode not in self.rotations and mode not in [x[1] for x in self.degenerates if len(x) > 1] and mode not in [x[2] for x in self.degenerates if len(x) > 2]], dtype=int)
-        self.modelistovertones = getRamanSilentOvertones(self.pointgroup, self.ramantensors, self.IRmodelist, self.labels)
+        self.modelistovertones = getRamanActiveOvertones(self.pointgroup, self.ramantensors, self.IRmodelist, self.labels)
         #
     #
     def print_pointgroup(self):
@@ -391,6 +391,12 @@ class Phonon:
     #
     def plot_raman(self, porto=["xx", "yy", "zz", "xy", "yz", "xz", "perp", "back"], lualatex=False):
         plotRamanSpectrum(self.ramanspectrum_data, self.path, self.photon_freq, self.qdir_cartesian, porto, lualatex)
+    #
+
+    def plot_polar_raman(self, zero_axis=np.array([1,0,0]), rotation_axis=np.array([0,0,1]), modes=None):
+        if modes == None:
+            modes = self.modelist[-1]
+        plotPolarRaman(self.ramantensors_data, self.path, zero_axis, rotation_axis, modes, self.photon_freq, self.qdir_cartesian)
     #
 
     ########

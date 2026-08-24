@@ -8,8 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
-def _plotRamanSpectrum(ramandata, path, w0, porto, qdir, lualatex=False):
-
+def qdir2ks(qdir):
     if qdir == (1,0,0):
         ki = "x"
         ko = "-x"
@@ -29,9 +28,15 @@ def _plotRamanSpectrum(ramandata, path, w0, porto, qdir, lualatex=False):
         ki = "x"
         ko = "z"
     else:
-        print("[_plotRamanSpectrum]: ERROR: invalid propagation direction specified")
-        return 0
+        print("[qdir2ks]: ERROR: invalid propagation direction specified")
+        return "a", "a"
     #
+    return ki, ko
+#
+
+def _plotRamanSpectrum(ramandata, path, w0, porto, qdir, lualatex=False):
+
+    ki, ko = qdir2ks(qdir)
     
     if str(porto) == "yx":
         porto = "xy"
@@ -108,6 +113,101 @@ def plotRamanSpectrum(ramanspectrum_data, path, photon_freq, qdir_cartesian, por
         _plotRamanSpectrum(ramanspectrum_data, path, photon_freq, pt, qdir_cartesian, lualatex)
     #
     print("[plotRamanSpectrum]: Done.") 
+#
+
+def rotation_matrix(rot_axis, theta):
+    axis = rot_axis/np.linalg.norm(rot_axis)
+    rot_matrix = np.zeros((3,3))
+    rot_matrix[0,0] = axis[0]**2*(1-np.cos(theta)) + np.cos(theta)
+    rot_matrix[1,1] = axis[1]**2*(1-np.cos(theta)) + np.cos(theta)
+    rot_matrix[2,2] = axis[2]**2*(1-np.cos(theta)) + np.cos(theta)
+    rot_matrix[0,1] = axis[0]*axis[1]*(1-np.cos(theta)) - axis[2]*np.sin(theta)
+    rot_matrix[1,0] = axis[0]*axis[1]*(1-np.cos(theta)) + axis[2]*np.sin(theta)
+    rot_matrix[0,2] = axis[0]*axis[2]*(1-np.cos(theta)) + axis[1]*np.sin(theta)
+    rot_matrix[2,0] = axis[0]*axis[2]*(1-np.cos(theta)) - axis[1]*np.sin(theta)
+    rot_matrix[1,2] = axis[1]*axis[2]*(1-np.cos(theta)) - axis[0]*np.sin(theta)
+    rot_matrix[2,1] = axis[1]*axis[2]*(1-np.cos(theta)) + axis[0]*np.sin(theta)
+    return rot_matrix
+#
+
+def plotPolarRaman(ramantensors_data, path, zero_axis, rotation_axis, modes, w0, qdir):
+
+    print("[plotPolarRaman]: Mode: "+str(modes))
+    print("[plotPolarRaman]: zero axis    : "+str(zero_axis))
+    print("[plotPolarRaman]: rotation axis: "+str(rotation_axis))
+
+    w_list = np.real(ramantensors_data[modes[0]][:,0])
+    ki, ko = qdir2ks(qdir)
+
+    if np.array_equal(zero_axis, np.array([1,0,0])):
+        if np.array_equal(rotation_axis,np.array([0,1,0])):
+            porto = "x-z"
+        elif np.array_equal(rotation_axis, np.array([0,0,1])):
+            porto = "x-y"
+        else:
+            porto ="x-"+str(rotation_axis)
+        #
+    elif np.array_equal(zero_axis, np.array([0,1,0])):
+        if np.array_equal(rotation_axis, np.array([1,0,0])):
+            porto = "y-z"
+        elif np.array_equal(rotation_axis, np.array([0,0,1])):
+            porto = "y-x"
+        else:
+            porto ="y-"+str(rotation_axis)
+        #
+    elif np.array_equal(zero_axis, np.array([0,0,1])):
+        if np.array_equal(rotation_axis, np.array([1,0,0])):
+            porto = "z-y"
+        elif np.array_equal(rotation_axis, np.array([0,1,0])):
+            porto = "z-x"
+        else:
+            porto ="z-"+str(rotation_axis)
+        #
+    else:
+        porto = str(zero_axis)+"-"+str(rotation_axis)
+    #
+
+    theta = np.arange(0, 2*np.pi, 0.01*np.pi)
+    rplot = []
+    for mode in modes:
+
+        ramantensor = np.zeros((3,3))
+        ramantensor[0,0] = np.abs(np.interp([w0], w_list, ramantensors_data[mode][:,1]))[0]
+        ramantensor[1,1] = np.abs(np.interp([w0], w_list, ramantensors_data[mode][:,2]))[0]
+        ramantensor[2,2] = np.abs(np.interp([w0], w_list, ramantensors_data[mode][:,3]))[0]
+        ramantensor[0,1] = np.abs(np.interp([w0], w_list, ramantensors_data[mode][:,4]))[0]
+        ramantensor[1,2] = np.abs(np.interp([w0], w_list, ramantensors_data[mode][:,5]))[0]
+        ramantensor[0,2] = np.abs(np.interp([w0], w_list, ramantensors_data[mode][:,6]))[0]
+        ramantensor[1,0] = ramantensor[0,1]
+        ramantensor[2,1] = ramantensor[1,2]
+        ramantensor[2,0] = ramantensor[0,2]
+
+        r = np.empty_like(theta)
+        for i in range(len(theta)):
+            r[i] = np.abs(np.dot(zero_axis, np.dot(ramantensor, np.dot(rotation_matrix(rotation_axis, theta[i]), zero_axis))))
+        #
+        rplot.append(r)
+    #
+
+    fig, ax = plt.subplots(1,1, subplot_kw={"projection": "polar"}, layout="constrained")
+
+    for i in range(len(modes)):
+        ax.plot(theta, rplot[i], label=modes[i])
+    if np.max(rplot) < 1.0:
+        ax.set_rmax(10)
+    else:
+        ax.set_rmax(np.max(rplot))
+    #
+    ax.set_rticks([])
+    ax.grid(True)
+    if len(modes) == 1:
+        fig.suptitle("Mode "+str(modes)+", "+porto)
+    else:
+        ax.legend(loc="upper right", bbox_to_anchor=(1.6, 1))
+        fig.suptitle("Modes "+str(modes)+", "+porto)
+    plt.savefig(path+"Raman_"+str(ki)+str(porto)+str(ko)+"_"+str(w0)+"eV_mode"+str(modes)+".pdf")
+    plt.close()
+    print("[plotPolarRaman]: Done.")
 #
 
 def plotIRSpectrum(IRdata, path, file, lualatex=False):
