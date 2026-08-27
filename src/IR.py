@@ -14,15 +14,15 @@ def LorentzIR(hw, ab, smear):
     for i in range(len(hw)):
         spectrum +=  ab[i] * smear[i] * hw[i]  / ( (hw[i]**2 - erange**2)**2 + erange**2 * smear[i]**2 )
     #
-    return erange, spectrum
+    return np.array(erange), np.array(spectrum)
 #
 
 def calcReflectance(IRdata):
-    w = np.array(IRdata[0]).real
     col = []
-    for j in range(1,4):
-        epsi = np.array(IRdata[j]).imag
-        epsr = np.array(IRdata[j]).real
+    for j in ["x", "y", "z"]:
+        w = np.array(IRdata[j][0])
+        epsi = np.imag(IRdata[j][1])
+        epsr = np.real(IRdata[j][1])
         #
         tmp = []
         for i in range(len(w)):
@@ -34,12 +34,16 @@ def calcReflectance(IRdata):
             r = (n_complex - 1) / (n_complex + 1)
             R = np.abs(r)**2
 
-            tmp.append(R)
+            tmp.append(np.real(R))
         #
         col.append(tmp)
     #
     print("[calcReflectance]: Done.")
-    return np.array([w, col[0], col[1], col[2]])
+    rdata_dict = {}
+    rdata_dict["x"] = [w, col[0]]
+    rdata_dict["y"] = [w, col[1]]
+    rdata_dict["z"] = [w, col[2]]
+    return rdata_dict
 #
 
 def calcIR(modelist, eigvals, eigvecs, basis, nat, masses, born, smearing): 
@@ -86,10 +90,11 @@ def calcIR(modelist, eigvals, eigvecs, basis, nat, masses, born, smearing):
     #
 
     # write output
-    IRdata = np.array([w, [complex(IR_Re[0][i], IR_Im[0][i]) for i in range(len(w))],
-                          [complex(IR_Re[1][i], IR_Im[1][i]) for i in range(len(w))], 
-                          [complex(IR_Re[2][i], IR_Im[2][i]) for i in range(len(w))]])
-        
+    IRdata_dict = {}
+    IRdata_dict["x"] = [w, [complex(IR_Re[0][i], IR_Im[0][i]) for i in range(len(w))]]
+    IRdata_dict["y"] = [w, [complex(IR_Re[1][i], IR_Im[1][i]) for i in range(len(w))]]
+    IRdata_dict["z"] = [w, [complex(IR_Re[2][i], IR_Im[2][i]) for i in range(len(w))]]
+
     print("[calcIR]: Done.")
-    return IRdata
+    return IRdata_dict
 #

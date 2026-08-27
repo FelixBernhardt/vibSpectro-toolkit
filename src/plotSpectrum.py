@@ -71,11 +71,9 @@ def _plotRamanSpectrum(ramandata, path, w0, porto, qdir, lualatex=False):
     mpl.rcParams['ytick.labelsize'] = size
     mpl.rcParams['legend.fontsize'] = size
     mpl.rcParams['figure.titlesize'] = size
-    
-    dict = {"xx": 0, "yy": 1, "zz": 2, "xy": 3, "yz": 4, "xz": 5, "perp": 6, "back": 7}
 
-    x_data = ramandata[dict[porto]][0]
-    y_data = ramandata[dict[porto]][1]
+    x_data = ramandata[porto][0]
+    y_data = ramandata[porto][1]
 
     ymax = np.max(y_data)
     """
@@ -130,13 +128,12 @@ def rotation_matrix(rot_axis, theta):
     return rot_matrix
 #
 
-def plotPolarRaman(ramantensors_data, path, zero_axis, rotation_axis, modes, w0, qdir):
+def plotPolarRaman(intensity_data, path, zero_axis, rotation_axis, modes, w0, qdir):
 
-    print("[plotPolarRaman]: Mode: "+str(modes))
+    print("[plotPolarRaman]: modes        : "+str(modes))
     print("[plotPolarRaman]: zero axis    : "+str(zero_axis))
     print("[plotPolarRaman]: rotation axis: "+str(rotation_axis))
 
-    w_list = np.real(ramantensors_data[modes[0]][:,0])
     ki, ko = qdir2ks(qdir)
 
     if np.array_equal(zero_axis, np.array([1,0,0])):
@@ -172,19 +169,19 @@ def plotPolarRaman(ramantensors_data, path, zero_axis, rotation_axis, modes, w0,
     for mode in modes:
 
         ramantensor = np.zeros((3,3))
-        ramantensor[0,0] = np.abs(np.interp([w0], w_list, ramantensors_data[mode][:,1]))[0]
-        ramantensor[1,1] = np.abs(np.interp([w0], w_list, ramantensors_data[mode][:,2]))[0]
-        ramantensor[2,2] = np.abs(np.interp([w0], w_list, ramantensors_data[mode][:,3]))[0]
-        ramantensor[0,1] = np.abs(np.interp([w0], w_list, ramantensors_data[mode][:,4]))[0]
-        ramantensor[1,2] = np.abs(np.interp([w0], w_list, ramantensors_data[mode][:,5]))[0]
-        ramantensor[0,2] = np.abs(np.interp([w0], w_list, ramantensors_data[mode][:,6]))[0]
+        ramantensor[0,0] = intensity_data["xx"][mode]
+        ramantensor[1,1] = intensity_data["yy"][mode]
+        ramantensor[2,2] = intensity_data["zz"][mode]
+        ramantensor[0,1] = intensity_data["xy"][mode]
+        ramantensor[1,2] = intensity_data["yz"][mode]
+        ramantensor[0,2] = intensity_data["xz"][mode]
         ramantensor[1,0] = ramantensor[0,1]
         ramantensor[2,1] = ramantensor[1,2]
         ramantensor[2,0] = ramantensor[0,2]
 
         r = np.empty_like(theta)
         for i in range(len(theta)):
-            r[i] = np.abs(np.dot(zero_axis, np.dot(ramantensor, np.dot(rotation_matrix(rotation_axis, theta[i]), zero_axis))))
+            r[i] = np.abs(np.dot(zero_axis, np.dot(ramantensor*10**30, np.dot(rotation_matrix(rotation_axis, theta[i]), zero_axis))))
         #
         rplot.append(r)
     #
@@ -211,9 +208,6 @@ def plotPolarRaman(ramantensors_data, path, zero_axis, rotation_axis, modes, w0,
 #
 
 def plotIRSpectrum(IRdata, path, file, lualatex=False):
-    dict = {1: "x", 2: "y", 3: "z", 4: "avg"}
-    w_data = IRdata[0].real
-
     # Fonts
     if lualatex == True:
         plt.rcParams.update({
@@ -234,37 +228,30 @@ def plotIRSpectrum(IRdata, path, file, lualatex=False):
     mpl.rcParams['legend.fontsize'] = size
     mpl.rcParams['figure.titlesize'] = size
 
-    for j in range(1,4):
+    for j in ["x", "y", "z"]:
         # plotting    
         fig, ((ax1, ax2)) = plt.subplots(1,2, layout="constrained")
-        if j == 4:
-            fig.suptitle("spatially averaged polarization")
-        else:
-            fig.suptitle("IR: E||"+dict[j]+" polarization")
+        fig.suptitle("IR: E||"+j+" polarization")
         #
-        ax1.set_xlim([w_data[0], w_data[-1]])
-        ax1.plot(w_data, IRdata[j].real, color="black", label="Real")
+        ax1.set_xlim([IRdata[j][0][0], IRdata[j][0][-1]])
+        ax1.plot(IRdata[j][0], np.real(IRdata[j][1]), color="black", label="Real")
         ax1.axhline(ls="dashed")
         ax1.set_xlabel("Wavenumber (cm$^{-1}$)")
         ax1.set_ylabel("Re($\\varepsilon$)")
 
-        ax2.set_xlim([w_data[0], w_data[-1]])
-        ax2.set_ylim([0, np.max(IRdata[j].imag)*1.1])
-        ax2.plot(w_data, IRdata[j].imag, color="black", label="Imag")
+        ax2.set_xlim([IRdata[j][0][0], IRdata[j][0][-1]])
+        ax2.set_ylim([0, np.max(np.imag(IRdata[j][1]))*1.1])
+        ax2.plot(IRdata[j][0], np.imag(IRdata[j][1]), color="black", label="Imag")
         ax2.set_xlabel("Wavenumber (cm$^{-1}$)")
         ax2.set_ylabel("Im($\\varepsilon$)")
     
-        plt.savefig(path+"IR_"+dict[j]+".pdf")
+        plt.savefig(path+"IR_"+j+".pdf")
         plt.close()
     #
     print("[plotIRSpectrum]: Done.") 
 #
 
 def plotReflectanceSpectrum(R_data, path, file, lualatex=False):
-    dict = {1: "x", 2: "y", 3: "z", 4: "avg"}
-    w_data = R_data[0]
-
-
     # Fonts
     if lualatex == True:
         plt.rcParams.update({
@@ -285,18 +272,18 @@ def plotReflectanceSpectrum(R_data, path, file, lualatex=False):
     mpl.rcParams['legend.fontsize'] = size
     mpl.rcParams['figure.titlesize'] = size
 
-    for j in range(1,4):
+    for j in ["x", "y", "z"]:
         # plotting    
         fig, ax = plt.subplots(1,1, layout="constrained")
-        fig.suptitle("Reflectance: E||"+dict[j]+" polarization")
+        fig.suptitle("Reflectance: E||"+j+" polarization")
         #
-        ax.set_xlim([w_data[0], w_data[-1]])
+        ax.set_xlim([R_data[j][0][0], R_data[j][0][-1]])
         ax.set_ylim([0, 1.05])
-        ax.plot(w_data, R_data[j], color="black", label="T")
+        ax.plot(R_data[j][0], R_data[j][1], color="black", label="T")
         ax.set_xlabel("Wavenumber (cm$^{-1}$)")
         ax.set_ylabel("Reflectance")
     
-        plt.savefig(path+"R_"+dict[j]+".pdf")
+        plt.savefig(path+"R_"+j+".pdf")
         plt.close()
     #
     print("[plotReflectanceSpectrum]: Done.") 

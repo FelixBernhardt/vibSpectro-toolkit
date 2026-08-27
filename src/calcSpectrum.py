@@ -16,27 +16,29 @@ def Lorentz(hw, ab, smear):
     return erange, spectrum
 #
 
-def broadenData(modelist, raman, eigvals, w0, col, temp, smear, stokes):
-    # apply smearing to Raman tensors from "writeConstantRaman"
+def broadenData(intensity, eigvals, modelist, smear):
+    # apply smearing to Raman tensors from "getConstantRaman"
     
-    # calculate the Raman intensity for each mode and component
-    intensity = []
+    w, Spectrum = Lorentz([eigvals[mode] for mode in modelist], [intensity[mode] for mode in modelist], [smear[mode] for mode in modelist])
+
+    return np.array([w, Spectrum])
+#
+
+def getRamanIntensity(modelist, raman, eigvals, w0, polarization, temp, stokes):
+    intensity = {}
     for mode in modelist:
         cm1 = eigvals[mode]
         n  = (-np.exp(-h * cm1 * c_cm/(kb * temp))+1)**(-1)
         prefactor = h / (32 * np.pi**3 * (c_cm/100)**4 * eps0**2) * ( 2 * np.pi * c_cm )**3 * 10**(-30)
         # anti-stokes
         if stokes == False:
-            intensity.append( prefactor*np.abs(raman[mode][col])**2 * (ev2rcm*w0 + cm1)**4 * (n-1)/cm1 )
+            intensity[mode] = ( prefactor*np.abs(raman[mode][polarization])**2 * (ev2rcm*w0 + cm1)**4 * (n-1)/cm1 )
         # Stokes
         else:
-            intensity.append( prefactor*np.abs(raman[mode][col])**2 * (ev2rcm*w0 - cm1)**4 * n/cm1 )
+            intensity[mode] = ( prefactor*np.abs(raman[mode][polarization])**2 * (ev2rcm*w0 - cm1)**4 * n/cm1 )
         #
     #
-
-    w, Spectrum = Lorentz([eigvals[mode] for mode in modelist], intensity, [smear[mode] for mode in modelist])
-
-    return np.array([w, Spectrum])
+    return intensity
 #
 
 def getConstantRaman(ramantensors, modelist, w0):
@@ -48,22 +50,39 @@ def getConstantRaman(ramantensors, modelist, w0):
         for i in range(1, 9):
             alpha.append(np.abs(np.interp([w0], w_list, ramantensors[mode][:,i]))[0])
         #
-        Raman[mode] = alpha
+        Raman[mode] = {}
+        Raman[mode]["xx"] = alpha[0]
+        Raman[mode]["yy"] = alpha[1]
+        Raman[mode]["zz"] = alpha[2]
+        Raman[mode]["xy"] = alpha[3]
+        Raman[mode]["yz"] = alpha[4]
+        Raman[mode]["xz"] = alpha[5]
+        Raman[mode]["perp"] = alpha[6]
+        Raman[mode]["back"] = alpha[7]
     #
 
     return Raman
 #
 
-def calcSpectrum(ramantensors, modelist, Ramanmodelist, eigvals, w0, temp, smear, stokes):
-    print("[calcSpectrum]: Calculating Raman spectrum of modes "+str(modelist))
+def calcSpectrum(ramantensors, Ramanmodelist, eigvals, w0, temp, smear, stokes):
+    print("[calcSpectrum]: Calculating Raman spectrum of modes "+str(Ramanmodelist))
     #print("[calcSpectrum]: Note: check e.g. https://www.cryst.ehu.es/cryst/polarizationselrules.html for selection rules")
     print("[calcSpectrum]: Laser frequency set to "+str(w0)+"eV")
     print("[calcSpectrum]: Temperature set to "+str(temp)+"K")
     raman = getConstantRaman(ramantensors, Ramanmodelist, w0)
-    spectrum = []
-    for col in range(8):
-        spectrum.append(broadenData(Ramanmodelist, raman, eigvals, w0, col, temp, smear, stokes))
+    spectrum = {}
+    intensity = {}
+    for polarization in ["xx", "yy", "zz", "xy", "yz", "xz", "perp", "back"]:
+        intensity[polarization] = getRamanIntensity(Ramanmodelist, raman, eigvals, w0, polarization, temp, stokes)
+        spectrum[polarization] = broadenData(intensity[polarization], eigvals, Ramanmodelist, smear)
     #
+    intensity["yx"] = intensity["xy"]
+    intensity["zy"] = intensity["yz"]
+    intensity["zx"] = intensity["xz"]
+    spectrum["yx"] = spectrum["xy"]
+    spectrum["zy"] = spectrum["yz"]
+    spectrum["zx"] = spectrum["xz"]
+
     print("[calcSpectrum]: Done.")
-    return raman, np.array(spectrum)
+    return raman, intensity, spectrum
 #

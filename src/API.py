@@ -8,7 +8,7 @@ import numpy as np
 import itertools
 from numpy.typing import NDArray
 from src.Symmetries import getAcoustics, getRotations, getDegenerates, getDecomposition, getRamanSilent, getRamanActiveOvertones, analyzeDielectricTensor, analyzeRamanTensors, RamanSelection, IRSelection, getIrrepsSymbols
-from src.IO import writeData, writeRaman, writeRamanSpectrum, writeConstantRaman, writeIRSpectrum, writeReflectanceSpectrum, loadSymmetryData, loadPhononsData, loadRamanTensor, loadConstantRaman, loadSpectrum, loadIR, loadReflectance
+from src.IO import writeData, writeRaman, writeRamanSpectrum, writeConstantRaman, writeRamanIntensity, writeIRSpectrum, writeReflectanceSpectrum, loadSymmetryData, loadPhononsData, loadRamanTensor, loadConstantRaman, loadRamanIntensity, loadSpectrum, loadIR, loadReflectance
 from src.IR import calcIR, calcReflectance
 from src.LoTo import getLOFreqs, calcLST
 from src.displace import calcDisplace, calcDisplaceOvertones
@@ -383,10 +383,11 @@ class Phonon:
         else:
             self.eigenfreqs_LO = self.eigenfreqs
         #
-        self.constantraman_data, self.ramanspectrum_data = calcSpectrum(self.ramantensors_data, self.modelist, self.Ramanmodelist, self.eigenfreqs_LO, self.photon_freq, self.temperature, self.smearing, self.stokes)        
+        self.constantraman_data, self.ramanintensity_data, self.ramanspectrum_data = calcSpectrum(self.ramantensors_data, self.Ramanmodelist, self.eigenfreqs_LO, self.photon_freq, self.temperature, self.smearing, self.stokes)        
     #
     def write_raman_spectrum(self):
         writeConstantRaman(self)
+        writeRamanIntensity(self)
         writeRamanSpectrum(self)
     #
     def plot_raman(self, porto=["xx", "yy", "zz", "xy", "yz", "xz", "perp", "back"], lualatex=False):
@@ -396,7 +397,7 @@ class Phonon:
     def plot_polar_raman(self, zero_axis=np.array([1,0,0]), rotation_axis=np.array([0,0,1]), modes=None):
         if modes == None:
             modes = self.modelist[-1]
-        plotPolarRaman(self.ramantensors_data, self.path, zero_axis, rotation_axis, modes, self.photon_freq, self.qdir_cartesian)
+        plotPolarRaman(self.ramanintensity_data, self.path, zero_axis, rotation_axis, modes, self.photon_freq, self.qdir_cartesian)
     #
 
     ########
@@ -411,10 +412,13 @@ class Phonon:
         for mode in self.Ramanmodelist:
             self.ramantensors_data[mode] = loadRamanTensor(self.path, mode)
     #
-    def load_raman_tensors_const(self, filename="Raman.yaml"):
+    def load_raman_tensors_const(self, filename="Ramantensors.yaml"):
         self.constantraman_data = loadConstantRaman(self.path+filename)
     #
-    def load_raman_spectrum(self, filename="Intensity.yaml"):
+    def load_raman_intensity(self, filename="Ramanintensity.yaml"):
+        self.ramanintensity_data = loadRamanIntensity(self.path+filename)
+    #
+    def load_raman_spectrum(self, filename="Ramanspectrum.yaml"):
         self.ramanspectrum_data, self.qdir = loadSpectrum(self.path+filename)
     #
     def load_ir(self, filename="IR.yaml"):

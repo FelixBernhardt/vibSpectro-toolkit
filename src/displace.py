@@ -38,7 +38,7 @@ def calcDisplaceOvertones(path, combinedmodelist, stepsize, parser, eigvecs, bas
     # write unit cells with displacements
     disps1 = [-1, 1]
     disps2 = [-1, 1]
-    print("[calcDisplaceSecondOrder]: Generating displacements...")
+    print("[calcDisplaceOvertones]: Generating displacements...")
     if os.path.isdir(path+"displacements") == False:
         os.system("mkdir "+path+"displacements")
     #
@@ -62,5 +62,5 @@ def calcDisplaceOvertones(path, combinedmodelist, stepsize, parser, eigvecs, bas
         #
     #
 
-    print("[calcDisplaceSecondOrder]: Done.")
+    print("[calcDisplaceOvertones]: Done.")
 #
