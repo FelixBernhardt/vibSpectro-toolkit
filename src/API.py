@@ -373,6 +373,10 @@ class Phonon:
         # format [mode_index][[w, xx, yy, zz, xy, yz, xz, perp, back]]
         self.ramantensors_data = calcTensors(self.path, self.modelist, self.parser, self.basis, self.degenerates, self.labels, self.ramantensors, self.stepsize, self.nosym)
     #
+    def calc_raman_tensors_overtones(self):
+        # format [mode_index][[w, xx, yy, zz, xy, yz, xz, perp, back]]
+        self.ramantensors_data = calcTensors(self.path, self.modelistovertones, self.parser, self.basis, self.degenerates, self.labels, self.ramantensors, self.stepsize, self.nosym)
+    #
     def write_raman_tensors(self):
         writeRaman(self)
     #

@@ -640,7 +640,7 @@ RamanTensorComponents = {
     "3m": [
         "A1", np.array([["a", 0, 0], [0, "a", 0], [0, 0, "b"]], dtype= "str"),
         "E", np.array([[0, "c", "d"], ["c", 0, 0], ["d", 0, 0]], dtype= "str"),
-        "E", np.array([["c", 0, 0], [0, "-c", "d"], [0, "d", 0]], dtype= "str"),
+        "E", np.array([["c", 0, 0], [0, "-c", "d"], [0, "d", 0]], dtype= "str"), 
     ],
 
     "-3m": [
@@ -751,6 +751,19 @@ RamanTensorComponents = {
     ]
 }
 
+RamanTensorComponents2ndorder = {
+    "3m": {
+            str(["A1", "A1"]): "A1",
+            str(["A2", "A2"]): "A1",
+            str(["A1", "A2"]): "A2",
+            str(["A2", "A1"]): "A2",
+            str(["E", "A1"]): "E",
+            str(["A1", "E"]): "E",
+            str(["E", "A2"]): "E",
+            str(["A2", "E"]): "E",
+            str(["E", "E"]): ["A1", "A2", "E"]
+    },
+}
 
 def RamanSelectionRules(pointgroup, RTs):
     if pointgroup == "1":

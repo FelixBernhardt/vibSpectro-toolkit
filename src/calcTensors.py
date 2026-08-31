@@ -23,7 +23,7 @@ def placzeckInvs(Intensity, col):
 #
 
 def alignOmega(w1, w2, Im1_tmp, Re1_tmp, Im2_tmp, Re2_tmp):
-    w = np.linspace(0, np.min([w1[-1], w2[-1]]), num=np.min([len(w1), len(w2)]))
+    w = np.linspace(0, w1[-1], num=len(w1))
 
     Im1 = np.empty((6, len(w)))
     Re1 = np.empty((6, len(w)))
@@ -48,6 +48,22 @@ def calcRaman(w, Im1, Re1, Im2, Re2, stepsize, basis):
     for i in range(len(w)):
         for j in range(6):
             I[j][i] = (complex(Re1[j][i]-Re2[j][i], Im1[j][i]-Im2[j][i]))/( 2*stepsize*10**(-10) ) * eps0 * V0
+        #
+        perp, back = placzeckInvs(I, i)
+        ramantensor.append([w[i], I[0][i-1], I[1][i-1], I[2][i-1], I[3][i-1], I[4][i-1], I[5][i-1], perp, back])
+    #
+    return np.array(ramantensor)
+#
+
+def calcRamanOvertones(w, Im1, Re1, Im2, Re2, Im3, Re3, Im4, Re4, stepsize, basis):
+    # get the second derivative with respect to phonon-modes
+    ramantensor = []
+    V0 = np.linalg.det(basis) # angst^3
+
+    I = np.empty((6, len(w)), dtype=complex)
+    for i in range(len(w)):
+        for j in range(6):
+            I[j][i] = (complex(Re1[j][i]-Re2[j][i]-Re3[j][i]+Re4[j][i], Im1[j][i]-Im2[j][i]-Im3[j][i]+Im4[j][i]))/( 4*stepsize*10**(-10) ) * eps0 * V0
         #
         perp, back = placzeckInvs(I, i)
         ramantensor.append([w[i], I[0][i-1], I[1][i-1], I[2][i-1], I[3][i-1], I[4][i-1], I[5][i-1], perp, back])
@@ -179,8 +195,8 @@ def calcTensors(path, modelist, parser, basis, degenerates, labels, ramantensors
         os.system("mkdir "+path+"Ramantensors")
     #
     for mode in modelist:
-        w1, Im1, Re1 = parser.get_epsilon(mode, disps[0])
-        w2, Im2, Re2 = parser.get_epsilon(mode, disps[1])
+        w1, Im1, Re1 = parser.get_epsilon("displacements/mode"+str(mode)+"_"+str(disps[0]))
+        w2, Im2, Re2 = parser.get_epsilon("displacements/mode"+str(mode)+"_"+str(disps[1]))
 
         w, Im1, Re1, Im2, Re2 = alignOmega(w1, w2, Im1, Re1, Im2, Re2)
         ramantensor[mode] = calcRaman(w, Im1, Re1, Im2, Re2, stepsize, basis) # the unsymmetrized Raman tensor
@@ -197,5 +213,42 @@ def calcTensors(path, modelist, parser, basis, degenerates, labels, ramantensors
         #
     #
     print("[calcTensors]: Done.")
+    return ramantensor
+#
+
+def calcTensorsOvertones(path, modelist, parser, basis, degenerates, labels, ramantensors, stepsize, nosym):
+    disps1 = [-1, 1]
+    disps2 = [-1, 1]
+    ramantensor = {}
+
+    print("[calcTensors]: Calculating Raman overtone tensors...")
+    if os.path.isdir(path+"Ramantensors") == False:
+        os.system("mkdir "+path+"Ramantensors")
+    #
+    for mode in modelist:
+        w1, Im1, Re1 = parser.get_epsilon("displacements/mode"+str(mode[0])+"_"+str(mode[1])+"_"+str(disps1[0])+"_"+str(disps2[0]))
+        w2, Im2, Re2 = parser.get_epsilon("displacements/mode"+str(mode[0])+"_"+str(mode[1])+"_"+str(disps1[0])+"_"+str(disps2[1]))
+        w3, Im3, Re3 = parser.get_epsilon("displacements/mode"+str(mode[0])+"_"+str(mode[1])+"_"+str(disps1[1])+"_"+str(disps2[0]))
+        w4, Im4, Re4 = parser.get_epsilon("displacements/mode"+str(mode[0])+"_"+str(mode[1])+"_"+str(disps1[1])+"_"+str(disps2[1]))
+
+        # align three times for consistency
+        w, Im1, Re1, Im2, Re2 = alignOmega(w1, w2, Im1, Re1, Im2, Re2)
+        w, Im1, Re1, Im3, Re3 = alignOmega(w1, w3, Im1, Re1, Im3, Re3)
+        w, Im1, Re1, Im4, Re4 = alignOmega(w1, w4, Im1, Re1, Im4, Re4)
+
+        ramantensor[mode] = calcRamanOvertones(w, Im1, Re1, Im2, Re2, Im3, Re3, Im4, Re4, stepsize, basis) # the unsymmetrized Raman tensor
+
+        # symmetrize tensors and calculate degenerate ones
+        if nosym == False:
+            idx = findInListOfList(degenerates, mode)
+            degeneratetensors = symmetrizeTensors(degenerates[idx[0]], labels, ramantensors, ramantensor[mode])
+            counter = 0
+            for degen in degenerates[idx[0]]:
+                ramantensor[degen] = degeneratetensors[:,:,counter]
+                counter += 1
+            #
+        #
+    #
+    print("[calcTensorsOvertones]: Done.")
     return ramantensor
 #

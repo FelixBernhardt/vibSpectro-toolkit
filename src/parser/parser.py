@@ -97,8 +97,8 @@ class VASPParser(CalculatorParser):
             nat = len(atoms)
             return np.zeros((nat, 3, 3))
     
-    def parse_epsilon(self, mode, disp):
-        return getOpticsVASP(self.path+"displacements/mode"+str(mode)+"_"+str(disp)+"/vasprun.xml")
+    def parse_epsilon(self,folder):
+        return getOpticsVASP(self.path+folder+"/vasprun.xml")
     
     def write_file(self, nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm, filename):
         return writePOSCAR(nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm)
@@ -118,8 +118,8 @@ class QEParser(CalculatorParser):
     def parse_vibrations(self):
         return getModesQE(self.path)
     
-    def parse_epsilon(self, mode, disp):
-        return getOpticsQE(self.path+"displacements/mode"+str(mode)+"_"+str(disp))
+    def parse_epsilon(self, folder):
+        return getOpticsQE(self.path+folder)
     
     def parse_eps_inf(self):
         try:
@@ -236,8 +236,8 @@ class ASEParser:
     def get_epsilon_inf(self):
         return self.backend.parse_eps_inf()
     
-    def get_epsilon(self, mode, disp):
-        return self.code.parse_epsilon(mode, disp)
+    def get_epsilon(self, folder):
+        return self.code.parse_epsilon(folder)
     
     def write_file(self, nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm, filename):
         return self.code.write_file(nat, basis, positions, elements, file, mode, disp, stepsize, eigvec, norm, filename)
